@@ -1,0 +1,238 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Hero Section Management - Admin Dashboard{% endblock %}
+
+{% block header %}Hero Section Management{% endblock %}
+{% block breadcrumb %}Hero Sections{% endblock %}
+
+{% block content %}
+    <div class="mb-6">
+        <p class="text-gray-600">Manage hero sections that appear at the top of various pages on your site. Upload background images and customize titles and subtitles.</p>
+    </div>
+    
+    <!-- Hero Sections Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for hero in hero_sections %}
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="relative">
+                    {% if hero.background_image %}
+                        <img src="{{ hero.background_image.url }}" alt="{{ hero.get_section_type_display }}" class="w-full h-48 object-cover">
+                    {% else %}
+                        <div class="w-full h-48 bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-image text-5xl text-blue-300"></i>
+                        </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-white p-4">
+                        <h3 class="text-xl font-bold">{{ hero.title }}</h3>
+                        <p class="text-sm mt-2">{{ hero.subtitle }}</p>
+                    </div>
+                </div>
+                
+                <div class="p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">{{ hero.get_section_type_display }}</h3>
+                        <span class="px-2 py-1 text-xs rounded-full {% if hero.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {% if hero.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-500">Last updated: {{ hero.updated_at|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button type="button" class="btn-action btn-edit" data-toggle="modal" data-target="#editHeroModal{{ hero.id }}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Modal -->
+                <div class="modal fade" id="editHeroModal{{ hero.id }}" tabindex="-1" role="dialog" aria-labelledby="editHeroModalLabel{{ hero.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editHeroModalLabel{{ hero.id }}">Edit {{ hero.get_section_type_display }} Hero Section</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <form action="{% url 'custom_admin:hero_section_management' %}" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="edit">
+                                <input type="hidden" name="hero_id" value="{{ hero.id }}">
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-4">
+                                                <label for="edit-title-{{ hero.id }}" class="block text-gray-700 text-sm font-bold mb-2">Title:</label>
+                                                <input type="text" id="edit-title-{{ hero.id }}" name="title" value="{{ hero.title }}" class="form-control" required>
+                                            </div>
+                                            <div class="form-group mb-4">
+                                                <label for="edit-subtitle-{{ hero.id }}" class="block text-gray-700 text-sm font-bold mb-2">Subtitle:</label>
+                                                <input type="text" id="edit-subtitle-{{ hero.id }}" name="subtitle" value="{{ hero.subtitle }}" class="form-control" required>
+                                            </div>
+                                            <div class="form-group mb-4">
+                                                <div class="custom-control custom-switch">
+                                                    <input type="checkbox" class="custom-control-input" id="edit-is-active-{{ hero.id }}" name="is_active" {% if hero.is_active %}checked{% endif %}>
+                                                    <label class="custom-control-label" for="edit-is-active-{{ hero.id }}">Active</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-4">
+                                                <label for="edit-background-{{ hero.id }}" class="block text-gray-700 text-sm font-bold mb-2">Background Image:</label>
+                                                {% if hero.background_image %}
+                                                    <div class="mb-2">
+                                                        <img src="{{ hero.background_image.url }}" alt="Current background" class="max-h-32 rounded">
+                                                    </div>
+                                                {% endif %}
+                                                <input type="file" id="edit-background-{{ hero.id }}" name="background_image" class="form-control-file">
+                                                <small class="text-muted">Recommended size: 1920x600px</small>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-mobile-background-{{ hero.id }}" class="block text-gray-700 text-sm font-bold mb-2">Mobile Background Image:</label>
+                                                {% if hero.mobile_background_image %}
+                                                    <div class="mb-2">
+                                                        <img src="{{ hero.mobile_background_image.url }}" alt="Current mobile background" class="max-h-32 rounded">
+                                                    </div>
+                                                {% endif %}
+                                                <input type="file" id="edit-mobile-background-{{ hero.id }}" name="mobile_background_image" class="form-control-file">
+                                                <small class="text-muted">Recommended size: 768x500px</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-span-full bg-white rounded-lg shadow p-8 text-center">
+                <i class="fas fa-image text-gray-400 text-5xl mb-4"></i>
+                <h3 class="text-xl font-medium text-gray-900 mb-2">No Hero Sections Found</h3>
+                <p class="text-gray-500 mb-4">Hero sections will be created automatically when needed.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Preview Section -->
+    <div class="mt-8 bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Hero Section Preview</h3>
+        <div class="mb-4">
+            <select id="preview-selector" class="form-control">
+                <option value="">Select a hero section to preview</option>
+                {% for hero in hero_sections %}
+                    <option value="{{ hero.id }}">{{ hero.get_section_type_display }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div id="preview-container" class="hidden">
+            <div class="relative rounded overflow-hidden">
+                <img id="preview-image" src="" alt="Preview" class="w-full h-64 object-cover">
+                <div class="absolute inset-0 bg-black bg-opacity-40 flex flex-col items-center justify-center text-white p-4">
+                    <h3 id="preview-title" class="text-2xl font-bold"></h3>
+                    <p id="preview-subtitle" class="text-lg mt-2"></p>
+                </div>
+            </div>
+            
+            <div class="mt-4 flex justify-between">
+                <div>
+                    <span class="text-sm font-medium">Desktop View</span>
+                </div>
+                <div>
+                    <button id="toggle-mobile-view" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-mobile-alt mr-1"></i> Show Mobile View
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="no-preview-message" class="text-center py-8">
+            <i class="fas fa-eye-slash text-gray-400 text-4xl mb-3"></i>
+            <p class="text-gray-500">Select a hero section to preview</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Hero section preview functionality
+    const previewSelector = document.getElementById('preview-selector');
+    const previewContainer = document.getElementById('preview-container');
+    const noPreviewMessage = document.getElementById('no-preview-message');
+    const previewImage = document.getElementById('preview-image');
+    const previewTitle = document.getElementById('preview-title');
+    const previewSubtitle = document.getElementById('preview-subtitle');
+    const toggleMobileViewBtn = document.getElementById('toggle-mobile-view');
+    
+    let isMobileView = false;
+    let selectedHero = null;
+    
+    // Hero section data
+    const heroData = {
+        {% for hero in hero_sections %}
+        "{{ hero.id }}": {
+            "title": "{{ hero.title }}",
+            "subtitle": "{{ hero.subtitle }}",
+            "desktop_image": "{% if hero.background_image %}{{ hero.background_image.url }}{% endif %}",
+            "mobile_image": "{% if hero.mobile_background_image %}{{ hero.mobile_background_image.url }}{% endif %}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+    
+    previewSelector.addEventListener('change', function() {
+        const heroId = this.value;
+        
+        if (heroId) {
+            selectedHero = heroData[heroId];
+            updatePreview();
+            previewContainer.classList.remove('hidden');
+            noPreviewMessage.classList.add('hidden');
+        } else {
+            previewContainer.classList.add('hidden');
+            noPreviewMessage.classList.remove('hidden');
+        }
+    });
+    
+    toggleMobileViewBtn.addEventListener('click', function() {
+        isMobileView = !isMobileView;
+        updatePreview();
+        
+        if (isMobileView) {
+            this.innerHTML = '<i class="fas fa-desktop mr-1"></i> Show Desktop View';
+            previewContainer.querySelector('.relative').classList.add('max-w-sm', 'mx-auto');
+        } else {
+            this.innerHTML = '<i class="fas fa-mobile-alt mr-1"></i> Show Mobile View';
+            previewContainer.querySelector('.relative').classList.remove('max-w-sm', 'mx-auto');
+        }
+    });
+    
+    function updatePreview() {
+        if (!selectedHero) return;
+        
+        previewTitle.textContent = selectedHero.title;
+        previewSubtitle.textContent = selectedHero.subtitle;
+        
+        if (isMobileView && selectedHero.mobile_image) {
+            previewImage.src = selectedHero.mobile_image;
+        } else {
+            previewImage.src = selectedHero.desktop_image || '';
+        }
+        
+        // If no image is available
+        if (!previewImage.src || previewImage.src === window.location.href) {
+            previewImage.style.display = 'none';
+        } else {
+            previewImage.style.display = 'block';
+        }
+    }
+</script>
+{% endblock %}

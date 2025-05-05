@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Resume Analysis" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analysis-card {
+        transition: all 0.3s ease;
+    }
+    .analysis-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .file-upload-area {
+        border: 2px dashed #CBD5E0;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .file-upload-area:hover {
+        border-color: #3B82F6;
+        background-color: #F3F4F6;
+    }
+    .file-upload-area.dragover {
+        border-color: #3B82F6;
+        background-color: #EFF6FF;
+    }
+    .previous-analysis-item {
+        transition: all 0.2s ease;
+    }
+    .previous-analysis-item:hover {
+        background-color: #F3F4F6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "AI Resume Analysis" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Get professional feedback on your resume" %}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8 analysis-card">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "How It Works" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-upload text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">{% trans "1. Upload Your Resume" %}</h3>
+                        <p class="text-gray-600 text-sm">{% trans "Upload your current resume in PDF, DOCX, or TXT format" %}</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-search text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">{% trans "2. AI Analysis" %}</h3>
+                        <p class="text-gray-600 text-sm">{% trans "Our AI analyzes your resume for strengths and areas of improvement" %}</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-lightbulb text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">{% trans "3. Get Recommendations" %}</h3>
+                        <p class="text-gray-600 text-sm">{% trans "Receive personalized suggestions to improve your resume" %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 analysis-card">
+                    <div class="p-6 bg-blue-50 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold text-gray-800">{% trans "Upload Your Resume" %}</h2>
+                    </div>
+                    <div class="p-6">
+                        <form method="post" action="{% url 'subscriptions:resume_analysis' %}" enctype="multipart/form-data" id="resume-upload-form">
+                            {% csrf_token %}
+
+                            <div class="mb-6">
+                                <div class="file-upload-area" id="file-upload-area">
+                                    <input type="file" name="resume_file" id="resume_file" class="hidden" accept=".pdf,.docx,.doc,.txt">
+                                    <div class="mb-4">
+                                        <i class="fas fa-file-upload text-blue-500 text-4xl"></i>
+                                    </div>
+                                    <p class="text-gray-700 mb-2">{% trans "Drag and drop your resume here or" %}</p>
+                                    <button type="button" id="browse-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                                        {% trans "Browse Files" %}
+                                    </button>
+                                    <p class="text-sm text-gray-500 mt-2">{% trans "Supported formats: PDF, DOCX, TXT" %}</p>
+                                    <p class="text-sm text-red-500 mt-2 hidden" id="file-error"></p>
+                                </div>
+                                <div id="file-selected" class="hidden mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-file-alt text-blue-500 mr-3"></i>
+                                            <span id="file-name" class="font-medium"></span>
+                                        </div>
+                                        <button type="button" id="remove-file" class="text-red-500 hover:text-red-700">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <a href="{% url 'jobs:job_seeker_dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-300">
+                                    {% trans "Cancel" %}
+                                </a>
+                                <button type="submit" id="analyze-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300" disabled>
+                                    {% trans "Analyze Resume" %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 analysis-card">
+                    <div class="p-4 bg-blue-50 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "Previous Analyses" %}</h2>
+                    </div>
+                    <div class="p-4">
+                        {% if previous_analyses %}
+                            <div class="space-y-3">
+                                {% for analysis in previous_analyses %}
+                                    <a href="{% url 'subscriptions:resume_analysis_result' analysis_id=analysis.id %}" class="block previous-analysis-item p-3 rounded-lg border border-gray-200">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="font-medium text-gray-800">{% trans "Analysis" %} #{{ analysis.id }}</p>
+                                                <p class="text-sm text-gray-500">{{ analysis.created_at|date:"F j, Y" }}</p>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <span class="text-lg font-bold text-blue-600">{{ analysis.overall_score }}%</span>
+                                                <i class="fas fa-chevron-right ml-2 text-gray-400"></i>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-gray-500">{% trans "No previous analyses found" %}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('resume_file');
+        const browseBtn = document.getElementById('browse-btn');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileSelected = document.getElementById('file-selected');
+        const fileName = document.getElementById('file-name');
+        const removeFile = document.getElementById('remove-file');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resumeForm = document.getElementById('resume-upload-form');
+        const fileError = document.getElementById('file-error');
+
+        // Handle browse button click
+        browseBtn.addEventListener('click', function() {
+            fileInput.click();
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', function() {
+            if (fileInput.files.length > 0) {
+                validateAndShowFile(fileInput.files[0]);
+            }
+        });
+
+        // Handle drag and drop
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.add('dragover');
+        });
+
+        fileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.remove('dragover');
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileUploadArea.classList.remove('dragover');
+
+            if (e.dataTransfer.files.length > 0) {
+                validateAndShowFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Handle remove file
+        removeFile.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fileInput.value = '';
+            fileUploadArea.classList.remove('hidden');
+            fileSelected.classList.add('hidden');
+            analyzeBtn.disabled = true;
+            fileError.classList.add('hidden');
+        });
+
+        // Validate and show selected file
+        function validateAndShowFile(file) {
+            // Check file type
+            const allowedTypes = ['.pdf', '.docx', '.doc', '.txt'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+
+            if (!allowedTypes.includes(fileExtension)) {
+                fileError.textContent = 'Invalid file format. Please upload a PDF, DOCX, or TXT file.';
+                fileError.classList.remove('hidden');
+                return;
+            }
+
+            // Check file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                fileError.textContent = 'File size too large. Maximum file size is 5MB.';
+                fileError.classList.remove('hidden');
+                return;
+            }
+
+            // Valid file, show it
+            fileError.classList.add('hidden');
+            fileName.textContent = file.name;
+            fileUploadArea.classList.add('hidden');
+            fileSelected.classList.remove('hidden');
+            analyzeBtn.disabled = false;
+        }
+
+        // Handle form submission
+        resumeForm.addEventListener('submit', function(e) {
+            if (fileInput.files.length === 0) {
+                e.preventDefault();
+                fileError.textContent = 'Please select a file to upload';
+                fileError.classList.remove('hidden');
+                return false;
+            }
+
+            // Show loading state
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Analyzing...';
+
+            // Allow form submission
+            return true;
+        });
+    });
+</script>
+{% endblock %}

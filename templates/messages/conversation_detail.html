@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}Conversation with {{ other_user.first_name|default:other_user.email }} - SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row gap-6">
+        <!-- Sidebar -->
+        <div class="w-full md:w-1/4">
+            <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                <h2 class="text-xl font-bold mb-4">Messages</h2>
+                <nav class="space-y-2">
+                    <a href="{% url 'messaging:inbox' %}" class="block px-4 py-2 rounded-md {% if active_tab == 'inbox' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                        <i class="fas fa-inbox mr-2"></i> Inbox
+                    </a>
+                    <a href="{% url 'messaging:connections' %}" class="block px-4 py-2 rounded-md {% if active_tab == 'connections' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                        <i class="fas fa-user-friends mr-2"></i> Connections
+                    </a>
+                </nav>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h3 class="font-semibold mb-4">About {{ other_user.first_name|default:other_user.email }}</h3>
+                <div class="flex flex-col items-center mb-4">
+                    {% if other_user.profile_picture %}
+                        <img src="{{ other_user.profile_picture.url }}" alt="{{ other_user.first_name }}" class="w-20 h-20 rounded-full object-cover mb-2">
+                    {% else %}
+                        <div class="w-20 h-20 rounded-full bg-blue-600 text-white flex items-center justify-center mb-2 text-xl">
+                            {{ other_user.first_name|first|upper }}{{ other_user.last_name|first|upper }}
+                        </div>
+                    {% endif %}
+                    <h4 class="font-semibold">{{ other_user.first_name|default:other_user.email }}</h4>
+                    <p class="text-sm text-gray-600">{{ other_user.user_type|title }}</p>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                    {% if other_user.user_type == 'employer' %}
+                        {% if other_user.company_name %}
+                            <div class="flex items-start">
+                                <i class="fas fa-building text-gray-500 mt-1 mr-2 w-5"></i>
+                                <span>{{ other_user.company_name }}</span>
+                            </div>
+                        {% endif %}
+                        {% if other_user.company_website %}
+                            <div class="flex items-start">
+                                <i class="fas fa-globe text-gray-500 mt-1 mr-2 w-5"></i>
+                                <a href="{{ other_user.company_website }}" target="_blank" class="text-blue-600 hover:text-blue-800">{{ other_user.company_website }}</a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        {% if other_user.job_title %}
+                            <div class="flex items-start">
+                                <i class="fas fa-briefcase text-gray-500 mt-1 mr-2 w-5"></i>
+                                <span>{{ other_user.job_title }}</span>
+                            </div>
+                        {% endif %}
+                        {% if other_user.skills %}
+                            <div class="flex items-start">
+                                <i class="fas fa-tools text-gray-500 mt-1 mr-2 w-5"></i>
+                                <span>{{ other_user.skills }}</span>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    {% if other_user.location %}
+                        <div class="flex items-start">
+                            <i class="fas fa-map-marker-alt text-gray-500 mt-1 mr-2 w-5"></i>
+                            <span>{{ other_user.location }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-4">
+                    <a href="{% url 'accounts:profile_detail' user_id=other_user.id %}" class="block text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="w-full md:w-3/4">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-4">
+                <div class="flex items-center mb-6">
+                    <a href="{% url 'messaging:inbox' %}" class="text-blue-600 hover:text-blue-800 mr-4">
+                        <i class="fas fa-arrow-left"></i> Back to Inbox
+                    </a>
+                    <h1 class="text-2xl font-bold">{{ other_user.get_full_name|default:other_user.email }}</h1>
+                </div>
+
+                <!-- Messages Container -->
+                <div id="messages-container" class="space-y-4 mb-6 max-h-96 overflow-y-auto p-2">
+                    {% for message in messages_list %}
+                        <div class="flex {% if message.sender == request.user %}justify-end{% endif %}">
+                            <div class="max-w-3/4 {% if message.sender == request.user %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-800{% endif %} rounded-lg px-4 py-2 shadow">
+                                <p>{{ message.content }}</p>
+                                <p class="text-xs {% if message.sender == request.user %}text-blue-200{% else %}text-gray-500{% endif %} mt-1">
+                                    {{ message.created_at|date:"M d, Y, g:i a" }}
+                                </p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-8 text-gray-500">
+                            <p>No messages yet. Start the conversation!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Message Form -->
+                <form id="message-form" method="post" class="mt-4">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        {{ form.content }}
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                            <i class="fas fa-paper-plane mr-2"></i> Send
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scroll to bottom of messages container
+        const messagesContainer = document.getElementById('messages-container');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Handle form submission with AJAX
+        const messageForm = document.getElementById('message-form');
+
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(messageForm);
+
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Add the new message to the container
+                    const messageHTML = `
+                        <div class="flex justify-end">
+                            <div class="max-w-3/4 bg-blue-600 text-white rounded-lg px-4 py-2 shadow">
+                                <p>${data.message.content}</p>
+                                <p class="text-xs text-blue-200 mt-1">
+                                    ${data.message.created_at}
+                                </p>
+                            </div>
+                        </div>
+                    `;
+
+                    messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+
+                    // Clear the form
+                    messageForm.reset();
+
+                    // Scroll to bottom
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

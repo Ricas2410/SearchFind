@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - SearchFind{% endblock %}
+
+{% block content %}
+<div class="flex flex-col lg:flex-row">
+    <!-- Mobile Sidebar Toggle -->
+    <div class="lg:hidden p-3 bg-gradient-to-r from-blue-900 to-blue-800 shadow-md mb-4 rounded-lg">
+        <button id="sidebar-toggle" class="flex items-center justify-between w-full text-white">
+            <div class="flex items-center space-x-2">
+                {% if request.user.profile_picture %}
+                    <img src="{{ request.user.profile_picture.url }}" alt="{{ request.user.get_full_name }}" class="w-8 h-8 rounded-full object-cover border-2 border-blue-400">
+                {% else %}
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold border-2 border-blue-400">
+                        {{ request.user.first_name|first|upper }}
+                    </div>
+                {% endif %}
+                <span class="font-semibold">Dashboard Menu</span>
+            </div>
+            <i class="fas fa-bars text-blue-300"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <div id="sidebar" class="hidden lg:block lg:w-72 bg-gradient-to-b from-blue-900 to-blue-800 text-white rounded-lg shadow-lg lg:mr-5 lg:sticky lg:top-4 lg:h-screen lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto transition-all duration-300 mb-4 lg:mb-0" aria-label="Sidebar Navigation">
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-between p-4 border-b border-blue-700">
+            <div class="flex items-center space-x-3">
+                {% if request.user.profile_picture %}
+                    <img src="{{ request.user.profile_picture.url }}" alt="{{ request.user.get_full_name }}" class="w-10 h-10 rounded-full object-cover border-2 border-blue-400">
+                {% else %}
+                    <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold border-2 border-blue-400">
+                        {{ request.user.first_name|first|upper }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h2 class="text-lg font-bold text-white">
+                        {% if request.user.user_type == 'employer' %}
+                            Employer Portal
+                        {% else %}
+                            Job Seeker Portal
+                        {% endif %}
+                    </h2>
+                    <p class="text-xs text-blue-300">{{ request.user.email }}</p>
+                </div>
+            </div>
+            <button id="sidebar-close" class="lg:hidden text-blue-300 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Main Navigation -->
+        <div class="px-3 py-4">
+            <div class="mb-2 px-4 py-2 flex items-center space-x-2">
+                <i class="fas fa-bars text-blue-300"></i>
+                <h3 class="text-xs font-semibold text-blue-300 uppercase tracking-wider">Main Navigation</h3>
+            </div>
+
+            <div class="space-y-1">
+                {% if request.user.user_type == 'employer' %}
+                    <!-- Employer Navigation -->
+                    <a href="{% url 'jobs:employer_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'employer_dashboard' and not 'tab' in request.GET %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="truncate">Dashboard</span>
+                    </a>
+                    <a href="{% url 'jobs:employer_dashboard' %}?tab=jobs" class="sidebar-link {% if request.resolver_match.url_name == 'employer_dashboard' and 'jobs' in request.GET %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-briefcase"></i></div>
+                        <span class="truncate">My Jobs</span>
+                    </a>
+                    <a href="{% url 'jobs:my_companies' %}?dashboard=true" class="sidebar-link {% if request.resolver_match.url_name == 'my_companies' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-building"></i></div>
+                        <span class="truncate">My Companies</span>
+                    </a>
+                    <a href="{% url 'jobs:employer_dashboard' %}?tab=applications" class="sidebar-link {% if request.resolver_match.url_name == 'employer_dashboard' and 'applications' in request.GET %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-file-alt"></i></div>
+                        <span class="truncate">Applications</span>
+                    </a>
+                    <a href="{% url 'jobs:create_job' %}" class="sidebar-link {% if request.resolver_match.url_name == 'create_job' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-plus-circle"></i></div>
+                        <span class="truncate">Post New Job</span>
+                    </a>
+                    <a href="{% url 'jobs:manage_connections' %}" class="sidebar-link {% if request.resolver_match.url_name == 'manage_connections' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-handshake"></i></div>
+                        <span class="truncate">Connections</span>
+                    </a>
+                    <a href="{% url 'jobs:manage_followers' %}" class="sidebar-link {% if request.resolver_match.url_name == 'manage_followers' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-users"></i></div>
+                        <span class="truncate">Followers</span>
+                    </a>
+                {% else %}
+                    <!-- Job Seeker Navigation -->
+                    <a href="{% url 'jobs:job_seeker_dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'job_seeker_dashboard' and not 'tab' in request.GET %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-tachometer-alt"></i></div>
+                        <span class="truncate">Dashboard</span>
+                    </a>
+                    <a href="{% url 'jobs:job_list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'job_list' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-search"></i></div>
+                        <span class="truncate">Find Jobs</span>
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-user"></i></div>
+                        <span class="truncate">My Profile</span>
+                    </a>
+                    <a href="{% url 'jobs:job_seeker_dashboard' %}?tab=applications" class="sidebar-link {% if request.resolver_match.url_name == 'job_seeker_dashboard' and 'applications' in request.GET %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-file-alt"></i></div>
+                        <span class="truncate">My Applications</span>
+                    </a>
+                    <a href="{% url 'jobs:job_seeker_dashboard' %}?tab=saved" class="sidebar-link {% if request.resolver_match.url_name == 'job_seeker_dashboard' and 'saved' in request.GET %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-heart"></i></div>
+                        <span class="truncate">Saved Jobs</span>
+                    </a>
+                    <a href="{% url 'jobs:my_connections' %}?dashboard=true" class="sidebar-link {% if request.resolver_match.url_name == 'my_connections' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-handshake"></i></div>
+                        <span class="truncate">My Connections</span>
+                    </a>
+                    <a href="{% url 'jobs:my_followed_companies' %}?dashboard=true" class="sidebar-link {% if request.resolver_match.url_name == 'my_followed_companies' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-bell"></i></div>
+                        <span class="truncate">Following</span>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <hr class="mx-4 my-2 border-blue-700">
+
+        <!-- Pro Features Section -->
+        <div class="px-3 py-4">
+            <div class="mb-2 px-4 py-2 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-star text-yellow-500"></i>
+                    <h3 class="text-xs font-semibold text-blue-300 uppercase tracking-wider">Pro Features</h3>
+                </div>
+                <span class="bg-yellow-500 text-xs text-blue-900 px-2 py-0.5 rounded-full font-semibold">Premium</span>
+            </div>
+
+            <div class="space-y-1">
+                {% if request.user.user_type == 'employer' %}
+                    <a href="{% url 'subscriptions:employer_analytics' %}" class="sidebar-link {% if request.resolver_match.url_name == 'employer_analytics' %}active{% endif %}">
+                        <div class="icon-container bg-indigo-700"><i class="fas fa-chart-line"></i></div>
+                        <span class="truncate">Analytics</span>
+                    </a>
+                    <a href="{% url 'subscriptions:improve_job_posting' %}" class="sidebar-link {% if request.resolver_match.url_name == 'improve_job_posting' %}active{% endif %}">
+                        <div class="icon-container bg-indigo-700"><i class="fas fa-edit"></i></div>
+                        <span class="truncate">Improve Job Postings</span>
+                    </a>
+                    <a href="{% url 'subscriptions:optimize_requirements' %}" class="sidebar-link {% if request.resolver_match.url_name == 'optimize_requirements' %}active{% endif %}">
+                        <div class="icon-container bg-indigo-700"><i class="fas fa-check-circle"></i></div>
+                        <span class="truncate">Optimize Requirements</span>
+                    </a>
+                {% else %}
+                    <a href="{% url 'subscriptions:resume_builder' %}" class="sidebar-link {% if request.resolver_match.url_name == 'resume_builder' %}active{% endif %}">
+                        <div class="icon-container bg-indigo-700"><i class="fas fa-file-alt"></i></div>
+                        <span class="truncate">Resume Builder</span>
+                    </a>
+                    <a href="{% url 'subscriptions:resume_analysis' %}" class="sidebar-link {% if request.resolver_match.url_name == 'resume_analysis' %}active{% endif %}">
+                        <div class="icon-container bg-indigo-700"><i class="fas fa-chart-bar"></i></div>
+                        <span class="truncate">Resume Analysis</span>
+                    </a>
+                    <a href="{% url 'subscriptions:interview_preparation' %}" class="sidebar-link {% if request.resolver_match.url_name == 'interview_preparation' %}active{% endif %}">
+                        <div class="icon-container bg-indigo-700"><i class="fas fa-user-tie"></i></div>
+                        <span class="truncate">Interview Prep</span>
+                    </a>
+                    <a href="{% url 'subscriptions:salary_insights' %}" class="sidebar-link {% if request.resolver_match.url_name == 'salary_insights' %}active{% endif %}">
+                        <div class="icon-container bg-indigo-700"><i class="fas fa-money-bill-wave"></i></div>
+                        <span class="truncate">Salary Insights</span>
+                    </a>
+                {% endif %}
+                <a href="{% url 'subscriptions:plans' %}" class="sidebar-link {% if request.resolver_match.url_name == 'plans' %}active{% endif %}">
+                    <div class="icon-container bg-indigo-700"><i class="fas fa-cog"></i></div>
+                    <span class="truncate">Manage Subscription</span>
+                </a>
+            </div>
+        </div>
+
+        <hr class="mx-4 my-2 border-blue-700">
+
+        <!-- Account Section -->
+        <div class="px-3 py-4">
+            <div class="mb-2 px-4 py-2">
+                <h3 class="text-xs font-semibold text-blue-300 uppercase tracking-wider">Account Settings</h3>
+            </div>
+
+            <div class="space-y-1">
+                <a href="{% url 'accounts:profile' %}?dashboard=true" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <div class="icon-container"><i class="fas fa-user-circle"></i></div>
+                    <span class="truncate">Profile</span>
+                </a>
+                {% if request.user.user_type == 'job_seeker' %}
+                <a href="{% url 'accounts:privacy_settings' %}?dashboard=true" class="sidebar-link {% if request.resolver_match.url_name == 'privacy_settings' %}active{% endif %}">
+                    <div class="icon-container"><i class="fas fa-shield-alt"></i></div>
+                    <span class="truncate">Privacy</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'jobs:notifications' %}?dashboard=true" class="sidebar-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+                    <div class="icon-container"><i class="fas fa-bell"></i></div>
+                    <span class="truncate">Notifications</span>
+                </a>
+                <a href="{% url 'accounts:logout' %}" class="sidebar-link text-red-400 hover:text-red-300">
+                    <div class="icon-container bg-red-700"><i class="fas fa-sign-out-alt"></i></div>
+                    <span class="truncate">Logout</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-auto px-4 py-3 text-center text-xs text-blue-400 border-t border-blue-700">
+            <p>© {% now "Y" %} SearchFind</p>
+            <p class="mt-1">All rights reserved</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1">
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Sidebar Links */
+    .sidebar-link {
+        @apply flex flex-row items-center text-blue-100 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 mb-1;
+    }
+    .sidebar-link:hover {
+        @apply bg-blue-700 text-white;
+    }
+    .sidebar-link.active {
+        @apply bg-blue-700 text-white font-semibold;
+    }
+
+    /* Icon Containers */
+    .icon-container {
+        @apply inline-flex items-center justify-center w-8 h-8 rounded-md bg-blue-800 mr-3 transition-all duration-200 flex-shrink-0;
+    }
+    .sidebar-link:hover .icon-container {
+        @apply bg-blue-600;
+    }
+    .sidebar-link.active .icon-container {
+        @apply bg-blue-600;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+        from { transform: translateX(-100%); }
+        to { transform: translateX(0); }
+    }
+
+    .animate-slide-in {
+        animation: slideIn 0.3s ease-out forwards;
+    }
+
+    /* Mobile Sidebar Overlay */
+    @media (max-width: 1023px) {
+        #sidebar.fixed {
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+        }
+    }
+</style>
+{% block dashboard_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.querySelector('.flex-1');
+        const body = document.body;
+
+        // Toggle sidebar on mobile
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('animate-slide-in');
+
+            // Add overlay when sidebar is open
+            if (!sidebar.classList.contains('hidden')) {
+                const overlay = document.createElement('div');
+                overlay.id = 'sidebar-overlay';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-50 z-10 lg:hidden';
+                body.appendChild(overlay);
+
+                // Prevent body scrolling when sidebar is open
+                body.classList.add('overflow-hidden', 'lg:overflow-auto');
+
+                // Position the sidebar properly
+                sidebar.classList.add('fixed', 'inset-y-0', 'left-0', 'z-20', 'w-72');
+
+                // Add click event to overlay
+                overlay.addEventListener('click', closeSidebar);
+            } else {
+                closeSidebar();
+            }
+        });
+
+        // Function to close sidebar
+        function closeSidebar() {
+            sidebar.classList.add('hidden');
+            sidebar.classList.remove('animate-slide-in');
+
+            // Remove overlay
+            const overlay = document.getElementById('sidebar-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+
+            // Allow body scrolling again
+            body.classList.remove('overflow-hidden');
+
+            // Reset sidebar positioning on close for large screens
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('fixed', 'inset-y-0', 'left-0', 'z-20');
+            }
+        }
+
+        // Close sidebar on mobile
+        sidebarClose.addEventListener('click', closeSidebar);
+
+        // Ensure sidebar is visible and properly positioned on desktop
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('hidden', 'fixed', 'inset-y-0', 'left-0', 'z-20');
+
+                // Remove overlay if it exists
+                const overlay = document.getElementById('sidebar-overlay');
+                if (overlay) {
+                    overlay.remove();
+                }
+
+                // Allow body scrolling
+                body.classList.remove('overflow-hidden');
+            } else {
+                // Make sure sidebar is hidden on mobile when resizing from desktop
+                if (!document.getElementById('sidebar-overlay')) {
+                    sidebar.classList.add('hidden');
+                }
+            }
+        });
+
+        // Check for URL parameters to auto-open specific tabs
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+
+        if (tabParam) {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                if (button.getAttribute('data-tab') === tabParam) {
+                    button.click();
+                }
+            });
+        }
+    });
+</script>
+{% block dashboard_extra_js %}{% endblock %}
+{% endblock %}

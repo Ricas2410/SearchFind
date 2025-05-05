@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}About Us - SearchFind{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative bg-blue-700 text-white mb-8 rounded-lg overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-800 opacity-90"></div>
+    <div class="absolute inset-0 bg-pattern opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+
+    <div class="relative container mx-auto px-6 py-16 flex flex-col items-center text-center z-10">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">About SearchFind</h1>
+        <p class="text-xl max-w-3xl">Connecting talented professionals with top employers since 2023</p>
+    </div>
+</div>
+
+<div class="max-w-5xl mx-auto">
+    <!-- Mission Section -->
+    <div class="bg-white rounded-lg shadow-md p-8 mb-8 flex flex-col md:flex-row items-center gap-8">
+        <div class="md:w-1/2">
+            <h2 class="text-2xl font-bold mb-4 text-blue-700">Our Mission</h2>
+            <p class="text-gray-700 mb-4">
+                At SearchFind, we believe that finding the right job or the right candidate should be straightforward and efficient.
+                We're dedicated to creating a platform that serves both job seekers and employers with powerful tools and a user-friendly interface.
+            </p>
+            <p class="text-gray-700">
+                Our goal is to simplify the job search process and help companies find the perfect candidates for their open positions, creating meaningful connections that benefit everyone involved.
+            </p>
+        </div>
+        <div class="md:w-1/2">
+            <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
+                 alt="Team working together" class="rounded-lg shadow-md w-full h-64 object-cover">
+        </div>
+    </div>
+
+    <!-- For Job Seekers Section -->
+    <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-700">For Job Seekers</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-blue-50 p-6 rounded-lg transition-transform duration-300 hover:transform hover:scale-105">
+                <div class="text-blue-600 text-3xl mb-4 flex justify-center">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2 text-center">Easy Search</h3>
+                <p class="text-gray-700 text-center">Find relevant job opportunities with our powerful search and filter options.</p>
+            </div>
+
+            <div class="bg-green-50 p-6 rounded-lg transition-transform duration-300 hover:transform hover:scale-105">
+                <div class="text-green-600 text-3xl mb-4 flex justify-center">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2 text-center">Quick Apply</h3>
+                <p class="text-gray-700 text-center">Apply to multiple jobs easily with your saved profile and resume.</p>
+            </div>
+
+            <div class="bg-purple-50 p-6 rounded-lg transition-transform duration-300 hover:transform hover:scale-105">
+                <div class="text-purple-600 text-3xl mb-4 flex justify-center">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2 text-center">Job Alerts</h3>
+                <p class="text-gray-700 text-center">Receive notifications about new job postings that match your preferences.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- For Employers Section -->
+    <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+        <h2 class="text-2xl font-bold mb-6 text-center text-blue-700">For Employers</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-red-50 p-6 rounded-lg transition-transform duration-300 hover:transform hover:scale-105">
+                <div class="text-red-600 text-3xl mb-4 flex justify-center">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2 text-center">Reach Candidates</h3>
+                <p class="text-gray-700 text-center">Post job listings that reach thousands of qualified candidates.</p>
+            </div>
+
+            <div class="bg-yellow-50 p-6 rounded-lg transition-transform duration-300 hover:transform hover:scale-105">
+                <div class="text-yellow-600 text-3xl mb-4 flex justify-center">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2 text-center">Manage Applications</h3>
+                <p class="text-gray-700 text-center">Review, sort, and respond to applications efficiently from your dashboard.</p>
+            </div>
+
+            <div class="bg-indigo-50 p-6 rounded-lg transition-transform duration-300 hover:transform hover:scale-105">
+                <div class="text-indigo-600 text-3xl mb-4 flex justify-center">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-2 text-center">Analytics</h3>
+                <p class="text-gray-700 text-center">Get insights into your job postings' performance and applicant demographics.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-md p-8 mb-8 text-white text-center">
+        <h2 class="text-2xl font-bold mb-4">Join Our Community Today</h2>
+        <p class="mb-6 max-w-2xl mx-auto">
+            Whether you're looking for your next career opportunity or searching for the perfect candidate,
+            SearchFind is here to help. Join our community today and experience a better way to navigate the job market.
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-4">
+            {% if user.is_authenticated %}
+                {% if user.user_type == 'job_seeker' %}
+                    <a href="{% url 'jobs:job_list' %}" class="bg-white text-blue-700 hover:bg-gray-100 px-6 py-3 rounded-md font-semibold">
+                        Browse Jobs
+                    </a>
+                {% elif user.user_type == 'employer' %}
+                    <a href="{% url 'jobs:create_job' %}" class="bg-white text-blue-700 hover:bg-gray-100 px-6 py-3 rounded-md font-semibold">
+                        Post a Job
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="{% url 'accounts:signup' %}" class="bg-white text-blue-700 hover:bg-gray-100 px-6 py-3 rounded-md font-semibold">
+                    Create an Account
+                </a>
+                <a href="{% url 'accounts:login' %}" class="bg-blue-800 hover:bg-blue-900 text-white px-6 py-3 rounded-md font-semibold">
+                    Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

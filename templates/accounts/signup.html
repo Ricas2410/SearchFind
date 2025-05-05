@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block title %}Sign Up - SearchFind{% endblock %}
+
+{% block content %}
+{% with social_auth_status=view.get_social_auth_status %}
+<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8">
+    <h2 class="text-2xl font-bold mb-6 text-center">Create Your Account</h2>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="id_first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <input type="text" name="first_name" id="id_first_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                {% if form.first_name.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.first_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <input type="text" name="last_name" id="id_last_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                {% if form.last_name.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.last_name.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <label for="id_email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <input type="email" name="email" id="id_email" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            {% if form.email.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ form.email.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="id_username" class="block text-sm font-medium text-gray-700 mb-1">Username (Optional)</label>
+            <input type="text" name="username" id="id_username" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            {% if form.username.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ form.username.errors.0 }}</p>
+            {% endif %}
+            <p class="text-gray-500 text-xs mt-1">{{ form.username.help_text }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="id_password1" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" name="password1" id="id_password1" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                {% if form.password1.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.password1.errors.0 }}</p>
+                {% endif %}
+                <p class="text-gray-500 text-xs mt-1">Your password must be at least 8 characters long and contain letters and numbers.</p>
+            </div>
+
+            <div>
+                <label for="id_password2" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <input type="password" name="password2" id="id_password2" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                {% if form.password2.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.password2.errors.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <p class="block text-sm font-medium text-gray-700 mb-2">I am a:</p>
+            <div class="flex space-x-6">
+                <div class="flex items-center">
+                    <input type="radio" name="user_type" id="id_user_type_job_seeker" value="job_seeker" checked class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                    <label for="id_user_type_job_seeker" class="ml-2 block text-sm text-gray-700">Job Seeker</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="radio" name="user_type" id="id_user_type_employer" value="employer" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                    <label for="id_user_type_employer" class="ml-2 block text-sm text-gray-700">Employer</label>
+                </div>
+            </div>
+            {% if form.user_type.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ form.user_type.errors.0 }}</p>
+            {% endif %}
+        </div>
+
+        <div class="flex items-center">
+            <input type="checkbox" name="terms" id="terms" required class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <label for="terms" class="ml-2 block text-sm text-gray-700">
+                I agree to the <a href="#" class="text-blue-600 hover:text-blue-800">Terms of Service</a> and <a href="#" class="text-blue-600 hover:text-blue-800">Privacy Policy</a>
+            </label>
+        </div>
+
+        <div>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md">
+                Create Account
+            </button>
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </form>
+
+    <div class="mt-6 text-center">
+        <p class="text-gray-600">Already have an account? <a href="{% url 'accounts:login' %}" class="text-blue-600 hover:text-blue-800">Login</a></p>
+    </div>
+
+    <div class="mt-6">
+        <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+                <span class="px-2 bg-white text-gray-500">Or sign up with</span>
+            </div>
+        </div>
+
+        <div class="mt-6 grid grid-cols-2 gap-3">
+            {% if social_auth_status.google.configured %}
+            <a href="{% provider_login_url 'google' process='signup' %}" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fab fa-google text-red-600 mr-2"></i>
+                Google
+            </a>
+            {% else %}
+            <div class="relative group">
+                <button disabled class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed">
+                    <i class="fab fa-google text-gray-400 mr-2"></i>
+                    Google
+                </button>
+                <div class="absolute bottom-full left-0 mb-2 w-48 bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    {{ social_auth_status.google.message }}
+                    {% if request.user.is_superuser %}
+                    <a href="{{ social_auth_status.google.admin_url }}" class="block mt-1 text-blue-300 hover:text-blue-200">Configure in admin</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if social_auth_status.linkedin.configured %}
+            <a href="{% provider_login_url 'linkedin_oauth2' process='signup' %}" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fab fa-linkedin text-blue-600 mr-2"></i>
+                LinkedIn
+            </a>
+            {% else %}
+            <div class="relative group">
+                <button disabled class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed">
+                    <i class="fab fa-linkedin text-gray-400 mr-2"></i>
+                    LinkedIn
+                </button>
+                <div class="absolute bottom-full left-0 mb-2 w-48 bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    {{ social_auth_status.linkedin.message }}
+                    {% if request.user.is_superuser %}
+                    <a href="{{ social_auth_status.linkedin.admin_url }}" class="block mt-1 text-blue-300 hover:text-blue-200">Configure in admin</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endwith %}
+{% endblock %}

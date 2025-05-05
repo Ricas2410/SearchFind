@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paystack Test Payment</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold text-center mb-6">Paystack Test Payment</h1>
+
+        <div class="mb-6">
+            <div class="bg-blue-50 p-4 rounded-md border border-blue-200 mb-4">
+                <p class="text-blue-800 text-sm">This is a simple test page for Paystack payments. It uses hardcoded test keys.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Amount:</span>
+                    <span class="font-medium">GHS 10.00</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Email:</span>
+                    <span class="font-medium">{{ email }}</span>
+                </div>
+            </div>
+        </div>
+
+        <button id="payButton" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-300">
+            Pay Now
+        </button>
+
+        <div class="mt-4 text-center">
+            <a href="{% url 'custom_admin:paystack_config_management' %}" class="text-blue-600 hover:text-blue-800">
+                Back to Paystack Configuration
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('payButton').addEventListener('click', function() {
+                // Initialize Paystack payment
+                var handler = PaystackPop.setup({
+                    key: 'pk_test_3e58947994e1d69561d4f58adae8960f49fbdcae', // Hardcoded test public key
+                    email: '{{ email }}',
+                    amount: 1000, // 10 GHS in pesewas
+                    currency: 'GHS',
+                    ref: 'simple_test_' + Math.floor(Math.random() * 1000000000 + 1),
+                    callback: function(response) {
+                        // Redirect to success page
+                        window.location.href = "{% url 'custom_admin:paystack_test_success' %}?reference=" + response.reference;
+                    },
+                    onClose: function() {
+                        alert('Payment window closed');
+                    }
+                });
+                handler.openIframe();
+            });
+        });
+    </script>
+</body>
+</html>

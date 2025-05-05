@@ -1,0 +1,343 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}User Management - Admin Dashboard{% endblock %}
+
+{% block header %}User Management{% endblock %}
+
+{% block content %}
+    <!-- Filters and Search -->
+    <div class="mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+            <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                <div>
+                    <label for="user-type-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Type</label>
+                    <select id="user-type-filter" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="">All Types</option>
+                        <option value="job_seeker" {% if user_type == 'job_seeker' %}selected{% endif %}>Job Seeker</option>
+                        <option value="employer" {% if user_type == 'employer' %}selected{% endif %}>Employer</option>
+                        <option value="admin" {% if user_type == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="w-full md:w-1/3">
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Users</label>
+                <div class="relative rounded-md shadow-sm">
+                    <input type="text" id="search" name="search" class="block w-full rounded-md border-gray-300 pr-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Search by name or email" value="{{ search_query|default:'' }}">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="overflow-x-auto bg-white rounded-lg shadow">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for user in users %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                {% if user.profile_picture %}
+                                    <img class="h-10 w-10 rounded-full object-cover" src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}">
+                                {% else %}
+                                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                        {{ user.first_name|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ user.get_full_name }}</div>
+                                    <div class="text-sm text-gray-500">{{ user.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if user.user_type == 'job_seeker' %}bg-blue-100 text-blue-800
+                                {% elif user.user_type == 'employer' %}bg-green-100 text-green-800
+                                {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                {{ user.get_user_type_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if user.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ user.date_joined|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button type="button" class="text-blue-600 hover:text-blue-900 mr-3" data-toggle="modal" data-target="#viewUserModal{{ user.id }}">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                            <button type="button" class="text-indigo-600 hover:text-indigo-900 mr-3" data-toggle="modal" data-target="#editUserModal{{ user.id }}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            {% if user.is_active %}
+                                <form action="{% url 'custom_admin:user_management' %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="deactivate">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <button type="submit" class="text-red-600 hover:text-red-900 border-0 bg-transparent">
+                                        <i class="fas fa-ban"></i> Deactivate
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form action="{% url 'custom_admin:user_management' %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="activate">
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <button type="submit" class="text-green-600 hover:text-green-900 border-0 bg-transparent">
+                                        <i class="fas fa-check"></i> Activate
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">No users found</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+        <div class="flex flex-1 justify-between sm:hidden">
+            <a href="#" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+            <a href="#" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+        </div>
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">{{ users.count }}</span> results
+                </p>
+            </div>
+            <div>
+                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <a href="#" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-chevron-left h-5 w-5"></i>
+                    </a>
+                    <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">1</a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</a>
+                    <a href="#" class="relative hidden items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 md:inline-flex">3</a>
+                    <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">...</span>
+                    <a href="#" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-chevron-right h-5 w-5"></i>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+<!-- User Modals -->
+{% for user in users %}
+    <!-- View User Modal -->
+    <div class="modal fade" id="viewUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="viewUserModalLabel{{ user.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewUserModalLabel{{ user.id }}">User Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="flex items-center mb-6">
+                        {% if user.profile_image %}
+                            <img src="{{ user.profile_image.url }}" alt="{{ user.get_full_name }}" class="h-24 w-24 rounded-full object-cover">
+                        {% else %}
+                            <div class="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-4xl">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% endif %}
+                        <div class="ml-6">
+                            <h3 class="text-xl font-semibold">{{ user.get_full_name }}</h3>
+                            <p class="text-gray-600">{{ user.get_user_type_display }}</p>
+                            <p class="text-gray-500 mt-1">
+                                <i class="fas fa-envelope mr-2"></i>{{ user.email }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Username</h4>
+                            <p>{{ user.username }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Status</h4>
+                            <p>{% if user.is_active %}Active{% else %}Inactive{% endif %}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Joined</h4>
+                            <p>{{ user.date_joined|date:"M d, Y" }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Last Login</h4>
+                            <p>{{ user.last_login|date:"M d, Y H:i" }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Admin</h4>
+                            <p>{% if user.is_staff %}Yes{% else %}No{% endif %}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Superuser</h4>
+                            <p>{% if user.is_superuser %}Yes{% else %}No{% endif %}</p>
+                        </div>
+                    </div>
+
+                    {% if user.user_type == 'employer' %}
+                        <div class="mb-6">
+                            <h4 class="text-lg font-medium mb-2">Companies</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                {% for company in user.companies.all %}
+                                    <div class="mb-2">
+                                        <strong>{{ company.name }}</strong>
+                                        <p class="text-sm text-gray-500">{{ company.industry }}</p>
+                                    </div>
+                                {% empty %}
+                                    <p class="text-gray-500">No companies associated with this user.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel{{ user.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel{{ user.id }}">Edit User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'custom_admin:user_management' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    <div class="modal-body">
+                        <div class="form-group mb-4">
+                            <label for="edit-first-name-{{ user.id }}" class="block text-gray-700 text-sm font-bold mb-2">First Name:</label>
+                            <input type="text" id="edit-first-name-{{ user.id }}" name="first_name" value="{{ user.first_name }}" class="form-control">
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="edit-last-name-{{ user.id }}" class="block text-gray-700 text-sm font-bold mb-2">Last Name:</label>
+                            <input type="text" id="edit-last-name-{{ user.id }}" name="last_name" value="{{ user.last_name }}" class="form-control">
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="edit-email-{{ user.id }}" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
+                            <input type="email" id="edit-email-{{ user.id }}" name="email" value="{{ user.email }}" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="edit-user-type-{{ user.id }}" class="block text-gray-700 text-sm font-bold mb-2">User Type:</label>
+                            <select id="edit-user-type-{{ user.id }}" name="user_type" class="form-select">
+                                <option value="jobseeker" {% if user.user_type == 'jobseeker' %}selected{% endif %}>Job Seeker</option>
+                                <option value="employer" {% if user.user_type == 'employer' %}selected{% endif %}>Employer</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="edit-is-active-{{ user.id }}" class="block text-gray-700 text-sm font-bold mb-2">Status:</label>
+                            <select id="edit-is-active-{{ user.id }}" name="is_active" class="form-select">
+                                <option value="true" {% if user.is_active %}selected{% endif %}>Active</option>
+                                <option value="false" {% if not user.is_active %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="edit-is-staff-{{ user.id }}" class="block text-gray-700 text-sm font-bold mb-2">Admin Status:</label>
+                            <select id="edit-is-staff-{{ user.id }}" name="is_staff" class="form-select">
+                                <option value="true" {% if user.is_staff %}selected{% endif %}>Admin</option>
+                                <option value="false" {% if not user.is_staff %}selected{% endif %}>Regular User</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{% block extra_js %}
+<script>
+    // Handle user type filter
+    document.getElementById('user-type-filter').addEventListener('change', function() {
+        const userType = this.value;
+        const searchParams = new URLSearchParams(window.location.search);
+
+        if (userType) {
+            searchParams.set('user_type', userType);
+        } else {
+            searchParams.delete('user_type');
+        }
+
+        // Preserve search query if exists
+        const searchQuery = document.getElementById('search').value;
+        if (searchQuery) {
+            searchParams.set('search', searchQuery);
+        }
+
+        window.location.href = `?${searchParams.toString()}`;
+    });
+
+    // Handle search
+    document.getElementById('search').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const searchQuery = this.value;
+            const searchParams = new URLSearchParams(window.location.search);
+
+            if (searchQuery) {
+                searchParams.set('search', searchQuery);
+            } else {
+                searchParams.delete('search');
+            }
+
+            // Preserve user type filter if exists
+            const userType = document.getElementById('user-type-filter').value;
+            if (userType) {
+                searchParams.set('user_type', userType);
+            }
+
+            window.location.href = `?${searchParams.toString()}`;
+        }
+    });
+</script>
+{% endblock %}

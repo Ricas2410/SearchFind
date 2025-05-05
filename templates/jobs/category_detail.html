@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category.name }} Jobs - SearchFind{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative bg-gradient-to-r from-blue-600 to-indigo-700 text-white mb-8 rounded-lg overflow-hidden">
+    <div class="absolute inset-0 bg-pattern opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+
+    <div class="container mx-auto px-6 py-12 relative z-10">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="mb-6 md:mb-0 text-center md:text-left">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white text-blue-600 rounded-full mb-4 shadow-lg">
+                    <i class="fas fa-{{ category.icon|default:'briefcase' }} text-2xl"></i>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold mb-2">{{ category.name }} Jobs</h1>
+                <p class="text-xl text-blue-100">{{ total_jobs }} opportunities available</p>
+            </div>
+
+            <div class="flex flex-col items-center md:items-end">
+                <a href="{% url 'jobs:job_list' %}" class="bg-white text-blue-600 hover:bg-blue-50 px-6 py-3 rounded-md shadow-md transition duration-300 flex items-center font-medium">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to All Jobs
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mx-auto px-4">
+    {% if category.description %}
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-blue-600">
+            <h2 class="text-xl font-bold mb-3 text-gray-800">About {{ category.name }}</h2>
+            <p class="text-gray-700 leading-relaxed">{{ category.description }}</p>
+        </div>
+    {% endif %}
+
+    <!-- Job Listings -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+        <div class="border-b border-gray-200 px-6 py-4 bg-gray-50">
+            <h2 class="text-xl font-bold text-gray-800">Available Positions</h2>
+        </div>
+
+        <div class="divide-y divide-gray-200">
+            {% for job in jobs %}
+                <div class="p-6 hover:bg-blue-50 transition-colors duration-200 relative {% if job.is_featured %}featured-job{% endif %}">
+                    {% if job.is_featured %}
+                        <div class="absolute top-0 right-0 bg-yellow-500 text-white px-3 py-1 text-xs font-bold rounded-bl-lg">
+                            Featured
+                        </div>
+                    {% endif %}
+
+                    <div class="flex flex-col md:flex-row md:items-start">
+                        <!-- Company Logo -->
+                        <div class="hidden md:block flex-shrink-0 mr-6">
+                            {% if job.company.logo %}
+                                <img src="{{ job.company.logo.url }}" alt="{{ job.company.name }}" class="w-16 h-16 object-contain rounded-lg border border-gray-200">
+                            {% else %}
+                                <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-lg border border-gray-200 flex items-center justify-center">
+                                    <i class="fas fa-building text-2xl"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Job Details -->
+                        <div class="flex-1">
+                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                <h3 class="text-xl font-bold text-gray-900">
+                                    <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="hover:text-blue-600 transition-colors duration-200">{{ job.title }}</a>
+                                </h3>
+
+                                {% if job.is_remote %}
+                                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">Remote</span>
+                                {% endif %}
+
+                                {% if job.is_featured %}
+                                    <span class="hidden md:inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">Featured</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <a href="{% url 'jobs:company_detail' slug=job.company.slug %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                                    {{ job.company.name }}
+                                </a>
+                            </div>
+
+                            <div class="flex flex-wrap gap-3 mb-4 text-sm">
+                                <div class="flex items-center text-gray-600">
+                                    <i class="fas fa-map-marker-alt text-gray-400 mr-1.5"></i>
+                                    <span>{{ job.location }}</span>
+                                </div>
+
+                                <div class="flex items-center text-gray-600">
+                                    <i class="fas fa-briefcase text-gray-400 mr-1.5"></i>
+                                    <span>{{ job.get_job_type_display }}</span>
+                                </div>
+
+                                <div class="flex items-center text-gray-600">
+                                    <i class="fas fa-user-graduate text-gray-400 mr-1.5"></i>
+                                    <span>{{ job.get_experience_level_display }}</span>
+                                </div>
+
+                                <div class="flex items-center text-gray-600">
+                                    <i class="fas fa-clock text-gray-400 mr-1.5"></i>
+                                    <span>{{ job.created_at|timesince }} ago</span>
+                                </div>
+
+                                {% if job.application_deadline %}
+                                    <div class="flex items-center {% if job.is_expired %}text-red-500{% else %}text-blue-600{% endif %}">
+                                        <i class="fas fa-calendar-alt mr-1.5"></i>
+                                        <span>
+                                            {% if job.is_expired %}
+                                                Expired
+                                            {% else %}
+                                                Deadline: {{ job.application_deadline|date:"M j, Y" }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-4">
+                                <p class="text-gray-700 line-clamp-2">{{ job.description|striptags|truncatewords:25 }}</p>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                {% for skill in job.get_skills_as_list|slice:":5" %}
+                                    <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium hover:bg-gray-200 transition-colors duration-200">{{ skill }}</span>
+                                {% endfor %}
+                                {% if job.get_skills_as_list|length > 5 %}
+                                    <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs font-medium">+{{ job.get_skills_as_list|length|add:"-5" }} more</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-between mt-4">
+                                <div class="mb-2 md:mb-0">
+                                    {% if job.salary_min and job.salary_max %}
+                                        <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                            ${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}
+                                        </span>
+                                    {% elif job.salary_min %}
+                                        <span class="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                            ${{ job.salary_min|floatformat:0 }}+
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-block bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm">
+                                            Salary not specified
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="flex gap-3">
+                                    {% if user.is_authenticated and user.user_type == 'job_seeker' %}
+                                        <button type="button" class="save-job-btn flex items-center justify-center px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 transition-colors duration-200"
+                                                data-job-id="{{ job.id }}" data-saved="{% if job in user.saved_jobs.all %}true{% else %}false{% endif %}">
+                                            <i class="{% if job in user.saved_jobs.all %}fas{% else %}far{% endif %} fa-bookmark mr-2"></i>
+                                            <span>{% if job in user.saved_jobs.all %}Saved{% else %}Save{% endif %}</span>
+                                        </button>
+                                    {% endif %}
+
+                                    <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
+                                        <span>View Details</span>
+                                        <i class="fas fa-arrow-right ml-2"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-16">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-100 text-gray-400 rounded-full mb-6">
+                        <i class="fas fa-search text-4xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">No Jobs Found</h3>
+                    <p class="text-gray-600 max-w-md mx-auto mb-6">There are currently no jobs available in this category. Check back later or explore other categories.</p>
+                    <a href="{% url 'jobs:job_list' %}" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
+                        <i class="fas fa-search mr-2"></i>
+                        Browse All Jobs
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if jobs.has_other_pages %}
+        <div class="bg-white rounded-lg shadow-md p-6 flex justify-center">
+            <nav class="flex items-center space-x-1" aria-label="Pagination">
+                {% if jobs.has_previous %}
+                    <a href="?page={{ jobs.previous_page_number }}" class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-gray-300 rounded-md hover:bg-blue-50 transition-colors duration-200">
+                        <i class="fas fa-chevron-left mr-1"></i> Previous
+                    </a>
+                {% else %}
+                    <span class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
+                        <i class="fas fa-chevron-left mr-1"></i> Previous
+                    </span>
+                {% endif %}
+
+                <div class="hidden md:flex">
+                    {% for i in jobs.paginator.page_range %}
+                        {% if jobs.number == i %}
+                            <span class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md">
+                                {{ i }}
+                            </span>
+                        {% elif i > jobs.number|add:'-3' and i < jobs.number|add:'3' %}
+                            <a href="?page={{ i }}" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-blue-50 transition-colors duration-200">
+                                {{ i }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <span class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md">
+                    Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}
+                </span>
+
+                {% if jobs.has_next %}
+                    <a href="?page={{ jobs.next_page_number }}" class="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-gray-300 rounded-md hover:bg-blue-50 transition-colors duration-200">
+                        Next <i class="fas fa-chevron-right ml-1"></i>
+                    </a>
+                {% else %}
+                    <span class="px-4 py-2 text-sm font-medium text-gray-400 bg-gray-100 border border-gray-300 rounded-md cursor-not-allowed">
+                        Next <i class="fas fa-chevron-right ml-1"></i>
+                    </span>
+                {% endif %}
+            </nav>
+        </div>
+    {% endif %}
+</div>
+
+<!-- JavaScript for Save Job Functionality -->
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Save job functionality
+        const saveButtons = document.querySelectorAll('.save-job-btn');
+
+        saveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const jobId = this.dataset.jobId;
+                const isSaved = this.dataset.saved === 'true';
+                const icon = this.querySelector('i');
+                const text = this.querySelector('span');
+
+                fetch('/jobs/save-job/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        job_id: jobId,
+                        action: isSaved ? 'unsave' : 'save'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update button state
+                        if (isSaved) {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            text.textContent = 'Save';
+                            this.dataset.saved = 'false';
+                        } else {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            text.textContent = 'Saved';
+                            this.dataset.saved = 'true';
+                        }
+
+                        // Show toast notification
+                        showToast(isSaved ? 'Job removed from saved jobs' : 'Job saved successfully',
+                                 isSaved ? 'info' : 'success');
+                    } else {
+                        showToast(data.error || 'An error occurred', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('An error occurred. Please try again.', 'error');
+                });
+            });
+        });
+
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-md shadow-lg text-white ${
+                type === 'success' ? 'bg-green-600' :
+                type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+            } transition-opacity duration-300 flex items-center z-50`;
+
+            const icon = document.createElement('i');
+            icon.className = `mr-2 ${
+                type === 'success' ? 'fas fa-check-circle' :
+                type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle'
+            }`;
+
+            const text = document.createElement('span');
+            text.textContent = message;
+
+            toast.appendChild(icon);
+            toast.appendChild(text);
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

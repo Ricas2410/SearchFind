@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Companies - SearchFind{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-12 rounded-lg shadow-xl mb-12 relative overflow-hidden">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="absolute bottom-0">
+            <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,224C672,213,768,171,864,149.3C960,128,1056,128,1152,149.3C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+    </div>
+
+    <div class="container mx-auto px-4 text-center relative z-10">
+        <h1 class="text-3xl md:text-4xl font-bold mb-4">My Companies</h1>
+        <p class="text-xl text-blue-100 max-w-3xl mx-auto">Manage your registered companies and post jobs</p>
+    </div>
+</section>
+
+<!-- Companies Section -->
+<section class="mb-20">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-gray-900">Your Companies</h2>
+            <a href="{% url 'jobs:create_company' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-300">
+                <i class="fas fa-plus mr-2"></i> Register New Company
+            </a>
+        </div>
+        
+        {% if companies %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for company in companies %}
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 border border-gray-100">
+                        <!-- Company Cover Image -->
+                        <div class="h-32 bg-gradient-to-r from-blue-100 to-indigo-100 relative">
+                            {% if company.cover_image %}
+                                <img src="{{ company.cover_image.url }}" alt="{{ company.name }} cover" class="w-full h-full object-cover">
+                            {% endif %}
+                            
+                            <!-- Company Logo -->
+                            <div class="absolute -bottom-10 left-4 w-20 h-20 rounded-lg bg-white shadow-md p-1">
+                                {% if company.logo %}
+                                    <img src="{{ company.logo.url }}" alt="{{ company.name }} logo" class="w-full h-full object-contain">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-xl">
+                                        {{ company.name|slice:":1" }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Status Badge -->
+                            <div class="absolute top-2 right-2 text-xs font-bold px-2 py-1 rounded-full
+                                {% if company.status == 'approved' %}bg-green-400 text-green-900
+                                {% elif company.status == 'pending' %}bg-yellow-400 text-yellow-900
+                                {% else %}bg-red-400 text-red-900{% endif %}">
+                                {{ company.get_status_display }}
+                            </div>
+                        </div>
+                        
+                        <!-- Company Info -->
+                        <div class="pt-12 px-4 pb-4">
+                            <h3 class="text-xl font-bold text-gray-900 mb-1 truncate">{{ company.name }}</h3>
+                            <p class="text-blue-600 text-sm mb-2">{{ company.industry }}</p>
+                            
+                            {% if company.short_description %}
+                                <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ company.short_description }}</p>
+                            {% else %}
+                                <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ company.description|truncatechars:100 }}</p>
+                            {% endif %}
+                            
+                            <div class="flex items-center text-gray-500 text-sm mb-4">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                <span>{{ company.headquarters }}</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-500">
+                                    <i class="fas fa-briefcase mr-1"></i> {{ company.active_job_count }} active jobs
+                                </span>
+                                
+                                <div class="flex space-x-2">
+                                    <a href="{% url 'jobs:edit_company' slug=company.slug %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'jobs:company_detail' slug=company.slug %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="bg-gray-50 px-4 py-3 border-t border-gray-100">
+                            {% if company.status == 'approved' %}
+                                <a href="{% url 'jobs:create_job' %}?company={{ company.id }}" class="w-full block text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-md transition duration-300">
+                                    <i class="fas fa-plus-circle mr-2"></i> Post a Job
+                                </a>
+                            {% elif company.status == 'pending' %}
+                                <div class="text-center text-yellow-600 text-sm">
+                                    <i class="fas fa-clock mr-2"></i> Waiting for approval
+                                </div>
+                            {% else %}
+                                <div class="text-center text-red-600 text-sm">
+                                    <i class="fas fa-exclamation-circle mr-2"></i> Rejected - Please update your information
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white rounded-xl shadow-md p-8 text-center">
+                <i class="fas fa-building text-gray-300 text-6xl mb-4"></i>
+                <h3 class="text-2xl font-bold text-gray-700 mb-2">No Companies Registered</h3>
+                <p class="text-gray-500 max-w-md mx-auto mb-8">You haven't registered any companies yet. Register your company to start posting jobs and attract top talent.</p>
+                <a href="{% url 'jobs:create_company' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-md">
+                    Register Your First Company
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Information Section -->
+<section class="mb-20">
+    <div class="container mx-auto px-4">
+        <div class="bg-blue-50 rounded-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">Company Registration Process</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-clipboard-list text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">1. Register</h3>
+                    <p class="text-gray-600">Fill out the company registration form with accurate information about your business.</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">2. Approval</h3>
+                    <p class="text-gray-600">Our team will review your company information to ensure it meets our standards.</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-briefcase text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">3. Post Jobs</h3>
+                    <p class="text-gray-600">Once approved, you can start posting jobs and connecting with qualified candidates.</p>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <p class="text-gray-600 mb-4">Need help with your company registration? Contact our support team.</p>
+                <a href="{% url 'jobs:contact' %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                    <i class="fas fa-headset mr-2"></i> Contact Support
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

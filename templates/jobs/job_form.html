@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+    <h1 class="text-2xl font-bold mb-6 text-center">{{ title }}</h1>
+
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Form Section -->
+        <div class="w-full lg:w-1/2">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <form method="post" class="space-y-6" id="job-form">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="id_title" class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                    <input type="text" name="title" id="id_title" value="{{ form.title.value|default:'' }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.title.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select name="category" id="id_category" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select a category</option>
+                        {% for category in form.fields.category.queryset %}
+                            <option value="{{ category.id }}" {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.category.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label for="id_description" class="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+                <textarea name="description" id="id_description" rows="6" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_requirements" class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+                <textarea name="requirements" id="id_requirements" rows="6" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.requirements.value|default:'' }}</textarea>
+                {% if form.requirements.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.requirements.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_responsibilities" class="block text-sm font-medium text-gray-700 mb-1">Responsibilities (Optional)</label>
+                <textarea name="responsibilities" id="id_responsibilities" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.responsibilities.value|default:'' }}</textarea>
+                {% if form.responsibilities.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.responsibilities.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="id_location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input type="text" name="location" id="id_location" value="{{ form.location.value|default:'' }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.location.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.location.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_job_type" class="block text-sm font-medium text-gray-700 mb-1">Job Type</label>
+                    <select name="job_type" id="id_job_type" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        {% for value, text in form.fields.job_type.choices %}
+                            <option value="{{ value }}" {% if form.job_type.value == value %}selected{% endif %}>{{ text }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.job_type.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.job_type.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="id_experience_level" class="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                    <select name="experience_level" id="id_experience_level" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        {% for value, text in form.fields.experience_level.choices %}
+                            <option value="{{ value }}" {% if form.experience_level.value == value %}selected{% endif %}>{{ text }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.experience_level.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.experience_level.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_application_deadline" class="block text-sm font-medium text-gray-700 mb-1">Application Deadline</label>
+                    <input type="date" name="application_deadline" id="id_application_deadline" value="{{ form.application_deadline.value|date:'Y-m-d'|default:'' }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.application_deadline.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.application_deadline.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="id_salary_min" class="block text-sm font-medium text-gray-700 mb-1">Minimum Salary (Optional)</label>
+                    <input type="number" name="salary_min" id="id_salary_min" value="{{ form.salary_min.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.salary_min.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.salary_min.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="id_salary_max" class="block text-sm font-medium text-gray-700 mb-1">Maximum Salary (Optional)</label>
+                    <input type="number" name="salary_max" id="id_salary_max" value="{{ form.salary_max.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.salary_max.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.salary_max.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div>
+                <label for="id_skills_required" class="block text-sm font-medium text-gray-700 mb-1">Skills Required (comma separated)</label>
+                <textarea name="skills_required" id="id_skills_required" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.skills_required.value|default:'' }}</textarea>
+                {% if form.skills_required.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.skills_required.errors.0 }}</p>
+                {% endif %}
+                <p class="text-gray-500 text-xs mt-1">{{ form.skills_required.help_text }}</p>
+            </div>
+
+            <!-- Application Options Section -->
+            <div class="border-t border-gray-200 pt-6 mt-6">
+                <h2 class="text-lg font-semibold mb-4">Application Options</h2>
+
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="is_remote" id="id_is_remote" {% if form.is_remote.value %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="id_is_remote" class="ml-2 block text-sm text-gray-700">This is a remote job</label>
+                        {% if form.is_remote.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.is_remote.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">How should candidates apply for this job?</label>
+
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input type="radio" name="application_type" id="application_type_internal" value="internal"
+                                           {% if not form.application_url.value %}checked{% endif %}
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                           onchange="toggleApplicationOptions()">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="application_type_internal" class="font-medium text-gray-700">Receive applications through SearchFind</label>
+                                    <p class="text-gray-500">Candidates will apply directly on our platform and you'll be notified of new applications</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="flex items-center h-5">
+                                    <input type="radio" name="application_type" id="application_type_external" value="external"
+                                           {% if form.application_url.value %}checked{% endif %}
+                                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                           onchange="toggleApplicationOptions()">
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="application_type_external" class="font-medium text-gray-700">Direct candidates to an external website</label>
+                                    <p class="text-gray-500">Candidates will be redirected to your company website or job application system</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="external_url_section" class="{% if not form.application_url.value %}hidden{% endif %}">
+                        <label for="id_application_url" class="block text-sm font-medium text-gray-700 mb-1">External Application URL</label>
+                        <input type="url" name="application_url" id="id_application_url" value="{{ form.application_url.value|default:'' }}"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="https://your-company-website.com/careers/job-application">
+                        {% if form.application_url.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.application_url.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-gray-500 text-xs mt-1">External URLs require admin verification before being shown to applicants</p>
+                    </div>
+
+                    <div id="internal_options_section" class="{% if form.application_url.value %}hidden{% endif %}">
+                        <div class="flex items-center">
+                            <input type="checkbox" name="cover_letter_required" id="id_cover_letter_required"
+                                   {% if form.cover_letter_required.value %}checked{% endif %}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="id_cover_letter_required" class="ml-2 block text-sm text-gray-700">Require a cover letter</label>
+                            {% if form.cover_letter_required.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.cover_letter_required.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center mt-6">
+                <input type="checkbox" name="is_featured" id="id_is_featured" {% if form.is_featured.value %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="id_is_featured" class="ml-2 block text-sm text-gray-700">Feature this job (will appear on homepage)</label>
+                {% if form.is_featured.errors %}
+                    <p class="text-red-600 text-sm mt-1">{{ form.is_featured.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex justify-between">
+                {% if job %}
+                    <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md">
+                        Cancel
+                    </a>
+                {% else %}
+                    <a href="{% url 'jobs:employer_dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md">
+                        Cancel
+                    </a>
+                {% endif %}
+
+                <div>
+                    {% if job %}
+                        <button type="submit" name="status" value="draft" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md mr-2">
+                            Save as Draft
+                        </button>
+                        <button type="submit" name="status" value="published" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                            Publish
+                        </button>
+                    {% else %}
+                        <button type="submit" name="status" value="draft" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md mr-2">
+                            Save as Draft
+                        </button>
+                        <button type="submit" name="status" value="published" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                            Publish
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+        <!-- Preview Section -->
+        <div class="w-full lg:w-1/2">
+            <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                <h2 class="text-xl font-bold mb-4">Live Preview</h2>
+                <div id="job-preview" class="border border-gray-200 rounded-lg p-4 overflow-auto max-h-[800px]">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                        <h1 id="preview-title" class="text-2xl font-bold text-gray-900">Job Title</h1>
+                        <div class="mt-2 md:mt-0">
+                            <span id="preview-job-type" class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-2">Full Time</span>
+                            <span id="preview-experience-level" class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Entry Level</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <div class="flex items-center text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span id="preview-location">Location</span>
+                            <span id="preview-remote" class="ml-1 text-blue-600 font-medium hidden">(Remote)</span>
+                        </div>
+
+                        <div class="flex items-center text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span id="preview-deadline">Deadline: Not set</span>
+                        </div>
+
+                        <div id="preview-salary-container" class="flex items-center text-gray-600 hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span id="preview-salary">Salary: Not specified</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold mb-2">Description</h2>
+                        <div id="preview-description" class="text-gray-700">
+                            No description provided.
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold mb-2">Requirements</h2>
+                        <div id="preview-requirements" class="text-gray-700">
+                            No requirements provided.
+                        </div>
+                    </div>
+
+                    <div id="preview-responsibilities-container" class="mb-6 hidden">
+                        <h2 class="text-lg font-semibold mb-2">Responsibilities</h2>
+                        <div id="preview-responsibilities" class="text-gray-700">
+                            No responsibilities provided.
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h2 class="text-lg font-semibold mb-2">Skills</h2>
+                        <div id="preview-skills" class="flex flex-wrap gap-2">
+                            <span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">No skills specified</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+                            Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleApplicationOptions() {
+        const externalRadio = document.getElementById('application_type_external');
+        const externalUrlSection = document.getElementById('external_url_section');
+        const internalOptionsSection = document.getElementById('internal_options_section');
+        const applicationUrlInput = document.getElementById('id_application_url');
+
+        if (externalRadio.checked) {
+            externalUrlSection.classList.remove('hidden');
+            internalOptionsSection.classList.add('hidden');
+            applicationUrlInput.setAttribute('required', 'required');
+        } else {
+            externalUrlSection.classList.add('hidden');
+            internalOptionsSection.classList.remove('hidden');
+            applicationUrlInput.removeAttribute('required');
+            applicationUrlInput.value = '';
+        }
+    }
+
+    function updatePreview() {
+        // Get form values
+        const title = document.getElementById('id_title').value || 'Job Title';
+        const jobType = document.getElementById('id_job_type');
+        const jobTypeText = jobType.options[jobType.selectedIndex]?.text || 'Full Time';
+        const experienceLevel = document.getElementById('id_experience_level');
+        const experienceLevelText = experienceLevel.options[experienceLevel.selectedIndex]?.text || 'Entry Level';
+        const location = document.getElementById('id_location').value || 'Location';
+        const isRemote = document.getElementById('id_is_remote').checked;
+        const deadline = document.getElementById('id_application_deadline').value;
+        const salaryMin = document.getElementById('id_salary_min').value;
+        const salaryMax = document.getElementById('id_salary_max').value;
+        const description = document.getElementById('id_description').value;
+        const requirements = document.getElementById('id_requirements').value;
+        const responsibilities = document.getElementById('id_responsibilities').value;
+        const skills = document.getElementById('id_skills_required').value;
+
+        // Update preview elements
+        document.getElementById('preview-title').textContent = title;
+        document.getElementById('preview-job-type').textContent = jobTypeText;
+        document.getElementById('preview-experience-level').textContent = experienceLevelText;
+        document.getElementById('preview-location').textContent = location;
+
+        // Handle remote status
+        if (isRemote) {
+            document.getElementById('preview-remote').classList.remove('hidden');
+        } else {
+            document.getElementById('preview-remote').classList.add('hidden');
+        }
+
+        // Handle deadline
+        if (deadline) {
+            const deadlineDate = new Date(deadline);
+            const formattedDate = deadlineDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('preview-deadline').textContent = `Deadline: ${formattedDate}`;
+        } else {
+            document.getElementById('preview-deadline').textContent = 'Deadline: Not set';
+        }
+
+        // Handle salary
+        if (salaryMin || salaryMax) {
+            let salaryText = 'Salary: ';
+            if (salaryMin && salaryMax) {
+                salaryText += `$${salaryMin} - $${salaryMax}`;
+            } else if (salaryMin) {
+                salaryText += `From $${salaryMin}`;
+            } else if (salaryMax) {
+                salaryText += `Up to $${salaryMax}`;
+            }
+            document.getElementById('preview-salary').textContent = salaryText;
+            document.getElementById('preview-salary-container').classList.remove('hidden');
+        } else {
+            document.getElementById('preview-salary-container').classList.add('hidden');
+        }
+
+        // Handle description
+        if (description) {
+            document.getElementById('preview-description').innerHTML = formatTextWithParagraphs(description);
+        } else {
+            document.getElementById('preview-description').textContent = 'No description provided.';
+        }
+
+        // Handle requirements
+        if (requirements) {
+            document.getElementById('preview-requirements').innerHTML = formatTextWithParagraphs(requirements);
+        } else {
+            document.getElementById('preview-requirements').textContent = 'No requirements provided.';
+        }
+
+        // Handle responsibilities
+        if (responsibilities) {
+            document.getElementById('preview-responsibilities').innerHTML = formatTextWithParagraphs(responsibilities);
+            document.getElementById('preview-responsibilities-container').classList.remove('hidden');
+        } else {
+            document.getElementById('preview-responsibilities-container').classList.add('hidden');
+        }
+
+        // Handle skills
+        if (skills) {
+            const skillsArray = skills.split(',').map(skill => skill.trim()).filter(skill => skill);
+            const skillsContainer = document.getElementById('preview-skills');
+            skillsContainer.innerHTML = '';
+
+            skillsArray.forEach(skill => {
+                const skillElement = document.createElement('span');
+                skillElement.className = 'bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded';
+                skillElement.textContent = skill;
+                skillsContainer.appendChild(skillElement);
+            });
+        } else {
+            document.getElementById('preview-skills').innerHTML = '<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">No skills specified</span>';
+        }
+    }
+
+    function formatTextWithParagraphs(text) {
+        // Convert line breaks to paragraphs
+        return text.split('\n')
+            .filter(para => para.trim())
+            .map(para => `<p>${para}</p>`)
+            .join('');
+    }
+
+    function setupFormListeners() {
+        // Get all form input elements
+        const formInputs = document.querySelectorAll('#job-form input, #job-form textarea, #job-form select');
+
+        // Add input event listeners to all form elements
+        formInputs.forEach(input => {
+            input.addEventListener('input', updatePreview);
+            input.addEventListener('change', updatePreview);
+        });
+
+        // Special case for radio buttons
+        document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
+            input.addEventListener('change', updatePreview);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the form state
+        toggleApplicationOptions();
+
+        // Initialize the preview
+        updatePreview();
+
+        // Set up form listeners
+        setupFormListeners();
+
+        // Add event listeners to the radio buttons
+        document.getElementById('application_type_internal').addEventListener('change', toggleApplicationOptions);
+        document.getElementById('application_type_external').addEventListener('change', toggleApplicationOptions);
+
+        // Add responsive behavior for mobile
+        function handleResponsiveLayout() {
+            const previewSection = document.querySelector('#job-preview');
+            if (window.innerWidth < 1024) { // lg breakpoint in Tailwind
+                previewSection.style.maxHeight = '500px';
+            } else {
+                previewSection.style.maxHeight = '800px';
+            }
+        }
+
+        // Initial call and add resize listener
+        handleResponsiveLayout();
+        window.addEventListener('resize', handleResponsiveLayout);
+    });
+</script>
+{% endblock %}

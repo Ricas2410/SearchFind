@@ -1,0 +1,493 @@
+{% extends 'custom_admin/management_base.html' %}
+
+{% block title %}Subscription Plan Management - Admin Dashboard{% endblock %}
+{% block header %}Subscription Plan Management{% endblock %}
+{% block breadcrumb %}Subscription Plans{% endblock %}
+
+{% block filters %}
+<div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+    <!-- Plan Type Filter -->
+    <div>
+        <label for="plan-type-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Type</label>
+        <select id="plan-type-filter" class="form-control">
+            <option value="">All Plan Types</option>
+            <option value="job_seeker" {% if plan_type == 'job_seeker' %}selected{% endif %}>Job Seeker</option>
+            <option value="employer" {% if plan_type == 'employer' %}selected{% endif %}>Employer</option>
+        </select>
+    </div>
+    
+    <!-- Status Filter -->
+    <div>
+        <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+        <select id="status-filter" class="form-control">
+            <option value="">All Statuses</option>
+            <option value="true" {% if is_active == True %}selected{% endif %}>Active</option>
+            <option value="false" {% if is_active == False %}selected{% endif %}>Inactive</option>
+        </select>
+    </div>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for plan in plans %}
+    <tr>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">{{ plan.name }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                {% if plan.plan_type == 'job_seeker' %}bg-blue-100 text-blue-800{% else %}bg-green-100 text-green-800{% endif %}">
+                {{ plan.get_plan_type_display }}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">${{ plan.price }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">{{ plan.duration_days }} days</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                {% if plan.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                {% if plan.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-3">
+                <button type="button" class="btn-action btn-view" data-toggle="modal" data-target="#viewPlanModal{{ plan.id }}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button type="button" class="btn-action btn-edit" data-toggle="modal" data-target="#editPlanModal{{ plan.id }}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deletePlanModal{{ plan.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    
+    <!-- View Plan Modal -->
+    <div class="modal fade" id="viewPlanModal{{ plan.id }}" tabindex="-1" role="dialog" aria-labelledby="viewPlanModalLabel{{ plan.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewPlanModalLabel{{ plan.id }}">View Subscription Plan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h6 class="text-lg font-semibold mb-4">Plan Details</h6>
+                            <div class="mb-4">
+                                <div class="font-medium">Name:</div>
+                                <div>{{ plan.name }}</div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="font-medium">Type:</div>
+                                <div>{{ plan.get_plan_type_display }}</div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="font-medium">Price:</div>
+                                <div>${{ plan.price }}</div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="font-medium">Duration:</div>
+                                <div>{{ plan.duration_days }} days</div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="font-medium">Status:</div>
+                                <div>{% if plan.is_active %}Active{% else %}Inactive{% endif %}</div>
+                            </div>
+                            <div class="mb-4">
+                                <div class="font-medium">Description:</div>
+                                <div>{{ plan.description }}</div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h6 class="text-lg font-semibold mb-4">Features</h6>
+                            
+                            {% if plan.plan_type == 'job_seeker' %}
+                            <div class="mb-4">
+                                <div class="font-medium">Job Seeker Features:</div>
+                                <ul class="list-disc pl-5 mt-2">
+                                    {% if plan.resume_builder %}<li class="text-green-600">Resume Builder</li>{% else %}<li class="text-gray-400">Resume Builder</li>{% endif %}
+                                    {% if plan.resume_review %}<li class="text-green-600">Resume Review</li>{% else %}<li class="text-gray-400">Resume Review</li>{% endif %}
+                                    {% if plan.job_match_recommendations %}<li class="text-green-600">Job Match Recommendations</li>{% else %}<li class="text-gray-400">Job Match Recommendations</li>{% endif %}
+                                    {% if plan.company_recommendations %}<li class="text-green-600">Company Recommendations</li>{% else %}<li class="text-gray-400">Company Recommendations</li>{% endif %}
+                                </ul>
+                            </div>
+                            {% else %}
+                            <div class="mb-4">
+                                <div class="font-medium">Employer Features:</div>
+                                <ul class="list-disc pl-5 mt-2">
+                                    {% if plan.featured_jobs %}<li class="text-green-600">Featured Jobs</li>{% else %}<li class="text-gray-400">Featured Jobs</li>{% endif %}
+                                    {% if plan.priority_listing %}<li class="text-green-600">Priority Listing</li>{% else %}<li class="text-gray-400">Priority Listing</li>{% endif %}
+                                    {% if plan.candidate_matching %}<li class="text-green-600">Candidate Matching</li>{% else %}<li class="text-gray-400">Candidate Matching</li>{% endif %}
+                                    {% if plan.advanced_analytics %}<li class="text-green-600">Advanced Analytics</li>{% else %}<li class="text-gray-400">Advanced Analytics</li>{% endif %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-4">
+                                <div class="font-medium">Subscription Count:</div>
+                                <div>{{ plan.subscriptions.count }} active subscriptions</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" data-toggle="modal" data-target="#editPlanModal{{ plan.id }}">
+                        Edit Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Plan Modal -->
+    <div class="modal fade" id="editPlanModal{{ plan.id }}" tabindex="-1" role="dialog" aria-labelledby="editPlanModalLabel{{ plan.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPlanModalLabel{{ plan.id }}">Edit Subscription Plan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'custom_admin:subscription_plan_management' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                    <div class="modal-body">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <div class="form-group mb-4">
+                                    <label for="edit-name-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                                    <input type="text" id="edit-name-{{ plan.id }}" name="name" value="{{ plan.name }}" class="form-control" required>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="edit-plan-type-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Plan Type:</label>
+                                    <select id="edit-plan-type-{{ plan.id }}" name="plan_type" class="form-control" required>
+                                        <option value="job_seeker" {% if plan.plan_type == 'job_seeker' %}selected{% endif %}>Job Seeker</option>
+                                        <option value="employer" {% if plan.plan_type == 'employer' %}selected{% endif %}>Employer</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="edit-price-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Price ($):</label>
+                                    <input type="number" id="edit-price-{{ plan.id }}" name="price" value="{{ plan.price }}" step="0.01" min="0" class="form-control" required>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="edit-duration-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Duration (days):</label>
+                                    <input type="number" id="edit-duration-{{ plan.id }}" name="duration_days" value="{{ plan.duration_days }}" min="1" class="form-control" required>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="edit-description-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Description:</label>
+                                    <textarea id="edit-description-{{ plan.id }}" name="description" class="form-control" rows="3">{{ plan.description }}</textarea>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="edit-is-active-{{ plan.id }}" name="is_active" {% if plan.is_active %}checked{% endif %}>
+                                        <label class="custom-control-label" for="edit-is-active-{{ plan.id }}">Active</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="job-seeker-features" id="job-seeker-features-{{ plan.id }}" {% if plan.plan_type != 'job_seeker' %}style="display: none;"{% endif %}>
+                                    <h6 class="text-lg font-semibold mb-4">Job Seeker Features</h6>
+                                    <div class="form-group mb-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="edit-resume-builder-{{ plan.id }}" name="resume_builder" {% if plan.resume_builder %}checked{% endif %}>
+                                            <label class="custom-control-label" for="edit-resume-builder-{{ plan.id }}">Resume Builder</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="edit-resume-review-{{ plan.id }}" name="resume_review" {% if plan.resume_review %}checked{% endif %}>
+                                            <label class="custom-control-label" for="edit-resume-review-{{ plan.id }}">Resume Review</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="edit-job-match-{{ plan.id }}" name="job_match_recommendations" {% if plan.job_match_recommendations %}checked{% endif %}>
+                                            <label class="custom-control-label" for="edit-job-match-{{ plan.id }}">Job Match Recommendations</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="edit-company-recommendations-{{ plan.id }}" name="company_recommendations" {% if plan.company_recommendations %}checked{% endif %}>
+                                            <label class="custom-control-label" for="edit-company-recommendations-{{ plan.id }}">Company Recommendations</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="employer-features" id="employer-features-{{ plan.id }}" {% if plan.plan_type != 'employer' %}style="display: none;"{% endif %}>
+                                    <h6 class="text-lg font-semibold mb-4">Employer Features</h6>
+                                    <div class="form-group mb-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="edit-featured-jobs-{{ plan.id }}" name="featured_jobs" {% if plan.featured_jobs %}checked{% endif %}>
+                                            <label class="custom-control-label" for="edit-featured-jobs-{{ plan.id }}">Featured Jobs</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="edit-priority-listing-{{ plan.id }}" name="priority_listing" {% if plan.priority_listing %}checked{% endif %}>
+                                            <label class="custom-control-label" for="edit-priority-listing-{{ plan.id }}">Priority Listing</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="edit-candidate-matching-{{ plan.id }}" name="candidate_matching" {% if plan.candidate_matching %}checked{% endif %}>
+                                            <label class="custom-control-label" for="edit-candidate-matching-{{ plan.id }}">Candidate Matching</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <div class="custom-control custom-switch">
+                                            <input type="checkbox" class="custom-control-input" id="edit-advanced-analytics-{{ plan.id }}" name="advanced_analytics" {% if plan.advanced_analytics %}checked{% endif %}>
+                                            <label class="custom-control-label" for="edit-advanced-analytics-{{ plan.id }}">Advanced Analytics</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Plan Modal -->
+    <div class="modal fade" id="deletePlanModal{{ plan.id }}" tabindex="-1" role="dialog" aria-labelledby="deletePlanModalLabel{{ plan.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deletePlanModalLabel{{ plan.id }}">Delete Subscription Plan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the subscription plan <strong>{{ plan.name }}</strong>?</p>
+                    {% if plan.subscriptions.count > 0 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Warning: This plan has {{ plan.subscriptions.count }} active subscriptions. Deleting it may affect users with this subscription.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'custom_admin:subscription_plan_management' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <tr>
+        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+            <div class="flex flex-col items-center justify-center py-8">
+                <i class="fas fa-credit-card text-gray-400 text-5xl mb-4"></i>
+                <p class="text-lg font-medium">No subscription plans found</p>
+                <p class="text-sm text-gray-500 mt-1">Create your first subscription plan to get started</p>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+{% endblock %}
+
+{% block modals %}
+<!-- Add Plan Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Add New Subscription Plan</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{% url 'custom_admin:subscription_plan_management' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="form-group mb-4">
+                                <label for="add-name" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                                <input type="text" id="add-name" name="name" class="form-control" required>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="add-plan-type" class="block text-gray-700 text-sm font-bold mb-2">Plan Type:</label>
+                                <select id="add-plan-type" name="plan_type" class="form-control" required>
+                                    <option value="job_seeker">Job Seeker</option>
+                                    <option value="employer">Employer</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="add-price" class="block text-gray-700 text-sm font-bold mb-2">Price ($):</label>
+                                <input type="number" id="add-price" name="price" step="0.01" min="0" class="form-control" required>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="add-duration" class="block text-gray-700 text-sm font-bold mb-2">Duration (days):</label>
+                                <input type="number" id="add-duration" name="duration_days" min="1" value="30" class="form-control" required>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label for="add-description" class="block text-gray-700 text-sm font-bold mb-2">Description:</label>
+                                <textarea id="add-description" name="description" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="form-group mb-4">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" class="custom-control-input" id="add-is-active" name="is_active" checked>
+                                    <label class="custom-control-label" for="add-is-active">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="job-seeker-features" id="add-job-seeker-features">
+                                <h6 class="text-lg font-semibold mb-4">Job Seeker Features</h6>
+                                <div class="form-group mb-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-resume-builder" name="resume_builder">
+                                        <label class="custom-control-label" for="add-resume-builder">Resume Builder</label>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-resume-review" name="resume_review">
+                                        <label class="custom-control-label" for="add-resume-review">Resume Review</label>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-job-match" name="job_match_recommendations">
+                                        <label class="custom-control-label" for="add-job-match">Job Match Recommendations</label>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-company-recommendations" name="company_recommendations">
+                                        <label class="custom-control-label" for="add-company-recommendations">Company Recommendations</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="employer-features" id="add-employer-features" style="display: none;">
+                                <h6 class="text-lg font-semibold mb-4">Employer Features</h6>
+                                <div class="form-group mb-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-featured-jobs" name="featured_jobs">
+                                        <label class="custom-control-label" for="add-featured-jobs">Featured Jobs</label>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-priority-listing" name="priority_listing">
+                                        <label class="custom-control-label" for="add-priority-listing">Priority Listing</label>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-candidate-matching" name="candidate_matching">
+                                        <label class="custom-control-label" for="add-candidate-matching">Candidate Matching</label>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-advanced-analytics" name="advanced_analytics">
+                                        <label class="custom-control-label" for="add-advanced-analytics">Advanced Analytics</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Plan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block common_js %}
+// Filter functionality
+document.getElementById('plan-type-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('status-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+function applyFilters() {
+    const planType = document.getElementById('plan-type-filter').value;
+    const status = document.getElementById('status-filter').value;
+    
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+    
+    if (planType) {
+        params.set('plan_type', planType);
+    } else {
+        params.delete('plan_type');
+    }
+    
+    if (status) {
+        params.set('is_active', status);
+    } else {
+        params.delete('is_active');
+    }
+    
+    window.location.href = `?${params.toString()}`;
+}
+
+// Toggle features based on plan type
+document.getElementById('add-plan-type').addEventListener('change', function() {
+    if (this.value === 'job_seeker') {
+        document.getElementById('add-job-seeker-features').style.display = 'block';
+        document.getElementById('add-employer-features').style.display = 'none';
+    } else {
+        document.getElementById('add-job-seeker-features').style.display = 'none';
+        document.getElementById('add-employer-features').style.display = 'block';
+    }
+});
+
+// Toggle features for edit modals
+{% for plan in plans %}
+document.getElementById('edit-plan-type-{{ plan.id }}').addEventListener('change', function() {
+    if (this.value === 'job_seeker') {
+        document.getElementById('job-seeker-features-{{ plan.id }}').style.display = 'block';
+        document.getElementById('employer-features-{{ plan.id }}').style.display = 'none';
+    } else {
+        document.getElementById('job-seeker-features-{{ plan.id }}').style.display = 'none';
+        document.getElementById('employer-features-{{ plan.id }}').style.display = 'block';
+    }
+});
+{% endfor %}
+{% endblock %}

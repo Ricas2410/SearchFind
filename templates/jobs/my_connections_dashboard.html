@@ -1,0 +1,299 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}My Company Connections - SearchFind{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">My Company Connections</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="md:col-span-2">
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <!-- Tabs -->
+                <div class="border-b border-gray-200">
+                    <nav class="flex -mb-px">
+                        <a href="#approved" class="tab-link active-tab text-blue-600 border-blue-500 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm" data-tab="approved">
+                            Active Connections <span class="ml-2 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">{{ approved_connections.count }}</span>
+                        </a>
+                        <a href="#pending" class="tab-link text-gray-500 hover:text-gray-700 whitespace-nowrap py-4 px-6 border-b-2 border-transparent font-medium text-sm" data-tab="pending">
+                            Pending <span class="ml-2 bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs">{{ pending_connections.count }}</span>
+                        </a>
+                        <a href="#rejected" class="tab-link text-gray-500 hover:text-gray-700 whitespace-nowrap py-4 px-6 border-b-2 border-transparent font-medium text-sm" data-tab="rejected">
+                            Rejected <span class="ml-2 bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs">{{ rejected_connections.count }}</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-6">
+                    <!-- Approved Connections -->
+                    <div id="approved-tab" class="tab-content">
+                        {% if approved_connections %}
+                            <div class="grid grid-cols-1 gap-4">
+                                {% for connection in approved_connections %}
+                                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 mr-4">
+                                                {% if connection.company.logo %}
+                                                    <img src="{{ connection.company.logo.url }}" alt="{{ connection.company.name }}" class="h-16 w-16 object-contain">
+                                                {% else %}
+                                                    <div class="h-16 w-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-building text-gray-400 text-2xl"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow">
+                                                <h3 class="font-semibold text-lg">{{ connection.company.name }}</h3>
+                                                <p class="text-gray-600 text-sm mb-2">
+                                                    <i class="fas fa-map-marker-alt mr-1"></i> {{ connection.company.location|default:"Location not specified" }}
+                                                </p>
+                                                <div class="flex flex-wrap gap-2 mt-2">
+                                                    <a href="{% url 'jobs:company_detail' slug=connection.company.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm">
+                                                        <i class="fas fa-building mr-1"></i> View Company
+                                                    </a>
+                                                    <a href="{% url 'jobs:company_detail' slug=connection.company.slug %}" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm">
+                                                        <i class="fas fa-briefcase mr-1"></i> View Jobs
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="flex-shrink-0 ml-4">
+                                                <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
+                                                    Connected
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-500 rounded-full mb-4">
+                                    <i class="fas fa-handshake text-2xl"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold mb-2">No Active Connections</h3>
+                                <p class="text-gray-600 mb-6">You don't have any active connections with companies yet.</p>
+                                <a href="{% url 'jobs:company_list' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                                    <i class="fas fa-building mr-2"></i> Explore Companies
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Pending Connections -->
+                    <div id="pending-tab" class="tab-content hidden">
+                        {% if pending_connections %}
+                            <div class="grid grid-cols-1 gap-4">
+                                {% for connection in pending_connections %}
+                                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 mr-4">
+                                                {% if connection.company.logo %}
+                                                    <img src="{{ connection.company.logo.url }}" alt="{{ connection.company.name }}" class="h-16 w-16 object-contain">
+                                                {% else %}
+                                                    <div class="h-16 w-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-building text-gray-400 text-2xl"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow">
+                                                <h3 class="font-semibold text-lg">{{ connection.company.name }}</h3>
+                                                <p class="text-gray-600 text-sm mb-1">
+                                                    <i class="fas fa-map-marker-alt mr-1"></i> {{ connection.company.location|default:"Location not specified" }}
+                                                </p>
+                                                <p class="text-gray-500 text-sm mb-2">
+                                                    <i class="fas fa-clock mr-1"></i> Requested {{ connection.created_at|timesince }} ago
+                                                </p>
+                                                <div class="flex flex-wrap gap-2 mt-2">
+                                                    <a href="{% url 'jobs:company_detail' slug=connection.company.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm">
+                                                        <i class="fas fa-building mr-1"></i> View Company
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="flex-shrink-0 ml-4">
+                                                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">
+                                                    Pending
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 text-yellow-500 rounded-full mb-4">
+                                    <i class="fas fa-clock text-2xl"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold mb-2">No Pending Requests</h3>
+                                <p class="text-gray-600">You don't have any pending connection requests.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Rejected Connections -->
+                    <div id="rejected-tab" class="tab-content hidden">
+                        {% if rejected_connections %}
+                            <div class="grid grid-cols-1 gap-4">
+                                {% for connection in rejected_connections %}
+                                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 mr-4">
+                                                {% if connection.company.logo %}
+                                                    <img src="{{ connection.company.logo.url }}" alt="{{ connection.company.name }}" class="h-16 w-16 object-contain">
+                                                {% else %}
+                                                    <div class="h-16 w-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                                                        <i class="fas fa-building text-gray-400 text-2xl"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow">
+                                                <h3 class="font-semibold text-lg">{{ connection.company.name }}</h3>
+                                                <p class="text-gray-600 text-sm mb-1">
+                                                    <i class="fas fa-map-marker-alt mr-1"></i> {{ connection.company.location|default:"Location not specified" }}
+                                                </p>
+                                                <p class="text-gray-500 text-sm mb-2">
+                                                    <i class="fas fa-clock mr-1"></i> Rejected {{ connection.updated_at|timesince }} ago
+                                                </p>
+                                                <div class="flex flex-wrap gap-2 mt-2">
+                                                    <a href="{% url 'jobs:company_detail' slug=connection.company.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm">
+                                                        <i class="fas fa-building mr-1"></i> View Company
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="flex-shrink-0 ml-4">
+                                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-medium">
+                                                    Rejected
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-8">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 text-red-500 rounded-full mb-4">
+                                    <i class="fas fa-times text-2xl"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold mb-2">No Rejected Requests</h3>
+                                <p class="text-gray-600">You don't have any rejected connection requests.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Connection Stats -->
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4">Connection Stats</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Active Connections</span>
+                        <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-sm font-medium">{{ approved_connections.count }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Pending Requests</span>
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-sm font-medium">{{ pending_connections.count }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Rejected Requests</span>
+                        <span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-sm font-medium">{{ rejected_connections.count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+                <div class="space-y-3">
+                    <a href="{% url 'jobs:company_list' %}" class="flex items-center text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-building mr-3 w-5 text-blue-600"></i>
+                        <span>Explore Companies</span>
+                    </a>
+                    <a href="{% url 'jobs:my_followed_companies' %}?dashboard=true" class="flex items-center text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-bell mr-3 w-5 text-blue-600"></i>
+                        <span>My Followed Companies</span>
+                    </a>
+                    <a href="{% url 'jobs:job_list' %}" class="flex items-center text-gray-700 hover:text-blue-600">
+                        <i class="fas fa-search mr-3 w-5 text-blue-600"></i>
+                        <span>Find Jobs</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Connection Benefits -->
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4">Benefits of Connecting</h3>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                        <span>Get priority consideration for job applications</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                        <span>Receive direct messages from company recruiters</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                        <span>Access to exclusive job opportunities</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                        <span>Build your professional network</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab functionality
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Remove active class from all tabs
+                tabLinks.forEach(tab => {
+                    tab.classList.remove('active-tab', 'text-blue-600', 'border-blue-500');
+                    tab.classList.add('text-gray-500', 'border-transparent');
+                });
+
+                // Add active class to clicked tab
+                this.classList.add('active-tab', 'text-blue-600', 'border-blue-500');
+                this.classList.remove('text-gray-500', 'border-transparent');
+
+                // Hide all tab contents
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                // Show the selected tab content
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+
+                // Update URL hash
+                window.location.hash = tabId;
+            });
+        });
+
+        // Check for hash in URL
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            const activeTab = document.querySelector(`.tab-link[data-tab="${hash}"]`);
+            if (activeTab) {
+                activeTab.click();
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Cancel Subscription" %} | SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-6 bg-red-50 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-800">{% trans "Cancel Your Subscription" %}</h1>
+                <p class="text-gray-600 mt-2">{% trans "We're sorry to see you go" %}</p>
+            </div>
+            
+            <div class="p-6">
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                {% blocktrans with plan_name=subscription.plan.name expiry_date=subscription.end_date|date:"F j, Y" %}
+                                    You are about to cancel your {{ plan_name }} subscription. Your subscription will remain active until {{ expiry_date }}, after which you will lose access to pro features.
+                                {% endblocktrans %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">{% trans "Subscription Details" %}</h2>
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500">{% trans "Plan" %}</p>
+                                <p class="font-medium">{{ subscription.plan.name }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">{% trans "Status" %}</p>
+                                <p class="font-medium">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        {% trans "Active" %}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">{% trans "Start Date" %}</p>
+                                <p class="font-medium">{{ subscription.start_date|date:"F j, Y" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">{% trans "Expiry Date" %}</p>
+                                <p class="font-medium">{{ subscription.end_date|date:"F j, Y" }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">{% trans "Amount" %}</p>
+                                <p class="font-medium">${{ subscription.amount_paid }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-3">{% trans "Why are you leaving?" %}</h2>
+                    <div class="space-y-2">
+                        <div class="flex items-center">
+                            <input type="radio" id="reason-price" name="cancel_reason" value="price" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <label for="reason-price" class="ml-2 block text-sm text-gray-700">
+                                {% trans "Too expensive" %}
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="reason-features" name="cancel_reason" value="features" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <label for="reason-features" class="ml-2 block text-sm text-gray-700">
+                                {% trans "Missing features" %}
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="reason-usage" name="cancel_reason" value="usage" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <label for="reason-usage" class="ml-2 block text-sm text-gray-700">
+                                {% trans "Not using it enough" %}
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="reason-other" name="cancel_reason" value="other" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <label for="reason-other" class="ml-2 block text-sm text-gray-700">
+                                {% trans "Other reason" %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post" action="{% url 'subscriptions:cancel_subscription' subscription_id=subscription.id %}">
+                    {% csrf_token %}
+                    <div class="flex justify-between">
+                        <a href="{% if user.user_type == 'job_seeker' %}{% url 'jobs:job_seeker_dashboard' %}{% else %}{% url 'jobs:employer_dashboard' %}{% endif %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-300">
+                            {% trans "Keep My Subscription" %}
+                        </a>
+                        <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                            {% trans "Cancel Subscription" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

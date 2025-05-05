@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SearchFind - Find Your Dream Job{% endblock %}</title>
+
+    {% include 'partials/_meta_tags.html' %}
+
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+    <!-- Custom CSS -->
+    <style>
+        /* Dropdown styling */
+        .dropdown-container {
+            position: relative;
+        }
+        
+        body{
+            background-color: #f9fafb !important;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            z-index: 9999;
+            display: none;
+            right: 0;
+            margin-top: 0.5rem;
+            background-color: white;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* Categories dropdown specific styling */
+        .dropdown-container:nth-child(3) .dropdown-menu {
+            left: -200px;  /* Adjust this value to center the dropdown */
+            right: auto;
+        }
+
+        /* Show dropdown on hover */
+        .dropdown-container:hover .dropdown-menu {
+            display: block;
+        }
+
+        /* Keep dropdown open when clicked */
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        /* Fix for header positioning */
+        header {
+            position: relative;
+            z-index: 100;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <!-- Logo -->
+            <a href="{% url 'jobs:home' %}" class="text-2xl font-bold text-blue-600">
+                <span class="text-blue-800">Search</span>Find
+            </a>
+
+            <!-- Navigation Links -->
+            <div class="hidden md:flex space-x-6 items-center">
+                <!-- Jobs Link -->
+                <a href="{% url 'jobs:job_list' %}" class="flex items-center text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-briefcase mr-1"></i> Jobs
+                </a>
+
+                <!-- Companies Link -->
+                <a href="{% url 'jobs:company_list' %}" class="flex items-center text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-building mr-1"></i> Companies
+                </a>
+
+                <!-- Categories Dropdown -->
+                <div class="dropdown-container">
+                    <button type="button" class="dropdown-toggle flex items-center text-gray-700 hover:text-blue-600 focus:outline-none">
+                        <i class="fas fa-th-list mr-1"></i> Categories
+                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                    </button>
+
+                    <!-- Categories Dropdown -->
+                    <div class="dropdown-menu left-0 w-[700px] py-3 px-4">
+                        <div class="grid grid-cols-2 gap-x-8 gap-y-1">
+                            {% for category in categories %}
+                                <a href="{% url 'jobs:category_detail' slug=category.slug %}" class="flex items-center px-3 py-2 text-gray-700 hover:bg-blue-600 hover:text-white rounded">
+                                    <span class="text-sm whitespace-normal">{{ category.name }}</span>
+                                </a>
+                            {% empty %}
+                                <span class="px-3 py-2 text-gray-500">No categories available</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if user.is_authenticated and user.user_type == 'employer' %}
+                    <div class="dropdown-container">
+                        <button type="button" class="dropdown-toggle flex items-center text-gray-700 hover:text-blue-600 focus:outline-none">
+                            <i class="fas fa-user-tie mr-1"></i> For Employers
+                            <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                        </button>
+
+                        <!-- Employer Dropdown -->
+                        <div class="dropdown-menu left-0 w-48 py-1">
+                            <a href="{% url 'jobs:create_job' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fas fa-plus-circle mr-2"></i> Post a Job
+                            </a>
+                            <a href="{% url 'jobs:my_companies' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fas fa-building mr-2"></i> My Companies
+                            </a>
+                            <a href="{% url 'jobs:create_company' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fas fa-plus-square mr-2"></i> Register Company
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <a href="{% url 'jobs:about' %}" class="text-gray-700 hover:text-blue-600">About Us</a>
+                <a href="{% url 'jobs:contact' %}" class="text-gray-700 hover:text-blue-600">Contact</a>
+            </div>
+
+            <!-- User Menu -->
+            <div class="flex items-center space-x-4">
+                {% if user.is_authenticated %}
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <a href="{% url 'jobs:notifications' %}" class="text-gray-700 hover:text-blue-600">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notifications_count > 0 %}
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs w-4 h-4 flex items-center justify-center">
+                                    {{ unread_notifications_count }}
+                                </span>
+                            {% endif %}
+                        </a>
+                    </div>
+
+                    <!-- User Dropdown -->
+                    <div class="dropdown-container">
+                        <button type="button" class="dropdown-toggle flex items-center text-gray-700 hover:text-blue-600 focus:outline-none bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-md">
+                            {% if user.profile_picture %}
+                                <img src="{{ user.profile_picture.url }}" alt="{{ user.first_name }}" class="w-8 h-8 rounded-full mr-2">
+                            {% else %}
+                                <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center mr-2">
+                                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <span>{{ user.first_name|default:user.email }}</span>
+                            <i class="fas fa-chevron-down ml-2"></i>
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div class="dropdown-menu w-56 py-1">
+                            <div class="px-4 py-3 border-b border-gray-200">
+                                <p class="text-sm text-gray-500">Signed in as</p>
+                                <p class="text-sm font-medium text-gray-900 truncate">{{ user.email }}</p>
+                            </div>
+
+                            {% if user.user_type == 'job_seeker' %}
+                                <a href="{% url 'jobs:job_seeker_dashboard' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                                </a>
+                            {% elif user.user_type == 'employer' %}
+                                <a href="{% url 'jobs:employer_dashboard' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                                </a>
+                            {% endif %}
+
+                            <a href="{% url 'accounts:profile_detail' user_id=user.id %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fas fa-user mr-2"></i> Profile
+                            </a>
+
+                            <a href="{% url 'jobs:notifications' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fas fa-bell mr-2"></i> Notifications
+                            </a>
+
+                            {% if has_pro %}
+                                <a href="{% url 'subscriptions:manage_subscription' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                    <i class="fas fa-crown mr-2"></i> Manage Pro Subscription
+                                </a>
+                            {% else %}
+                                <a href="{% url 'subscriptions:plans' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                    <i class="fas fa-crown mr-2"></i> Upgrade to Pro
+                                </a>
+                            {% endif %}
+
+                            {% if user.user_type == 'job_seeker' %}
+                                <a href="{% url 'accounts:privacy_settings' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                    <i class="fas fa-shield-alt mr-2"></i> Privacy Settings
+                                </a>
+                                <a href="{% url 'jobs:my_connections' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                    <i class="fas fa-handshake mr-2"></i> My Connections
+                                </a>
+                                <a href="{% url 'jobs:my_followed_companies' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                    <i class="fas fa-bell mr-2"></i> Followed Companies
+                                </a>
+                            {% endif %}
+
+                            <div class="border-t border-gray-200"></div>
+
+                            <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="text-gray-700 hover:text-blue-600">Login</a>
+                    <a href="{% url 'accounts:signup' %}" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Sign Up</a>
+                {% endif %}
+
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-gray-700 focus:outline-none" id="mobile-menu-button">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-2 space-y-2">
+                <!-- Jobs Link -->
+                <a href="{% url 'jobs:job_list' %}" class="flex items-center py-2 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-briefcase mr-2"></i> Jobs
+                </a>
+
+                <!-- Companies Link -->
+                <a href="{% url 'jobs:company_list' %}" class="flex items-center py-2 text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-building mr-2"></i> Companies
+                </a>
+
+                <!-- Categories Section -->
+                <div class="py-2">
+                    <button id="mobile-categories-toggle" class="flex items-center justify-between w-full text-gray-700 hover:text-blue-600 focus:outline-none">
+                        <span><i class="fas fa-th-list mr-2"></i> Categories</span>
+                        <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                    </button>
+
+                    <!-- Categories Submenu (hidden by default) -->
+                    <div id="mobile-categories-menu" class="hidden mt-2 ml-4 grid grid-cols-1 gap-1 border-l-2 border-gray-200 pl-4">
+                        {% for category in categories %}
+                            <a href="{% url 'jobs:category_detail' slug=category.slug %}" class="flex items-center py-2 text-gray-700 hover:text-blue-600">
+                                <span class="whitespace-normal break-words">{{ category.name }}</span>
+                            </a>
+                        {% empty %}
+                            <span class="block py-2 text-gray-500">No categories available</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                {% if user.is_authenticated %}
+                    {% if user.user_type == 'employer' %}
+                        <!-- Employer Section -->
+                        <div class="py-2">
+                            <button id="mobile-employer-toggle" class="flex items-center justify-between w-full text-gray-700 hover:text-blue-600 focus:outline-none">
+                                <span><i class="fas fa-user-tie mr-2"></i> For Employers</span>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+
+                            <!-- Employer Submenu (hidden by default) -->
+                            <div id="mobile-employer-menu" class="hidden mt-2 ml-4 border-l-2 border-gray-200 pl-4">
+                                <a href="{% url 'jobs:create_job' %}" class="block py-2 text-gray-700 hover:text-blue-600">
+                                    <i class="fas fa-plus-circle mr-2"></i> Post a Job
+                                </a>
+                                <a href="{% url 'jobs:my_companies' %}" class="block py-2 text-gray-700 hover:text-blue-600">
+                                    <i class="fas fa-building mr-2"></i> My Companies
+                                </a>
+                                <a href="{% url 'jobs:create_company' %}" class="block py-2 text-gray-700 hover:text-blue-600">
+                                    <i class="fas fa-plus-square mr-2"></i> Register Company
+                                </a>
+                                <a href="{% url 'jobs:manage_connections' %}" class="block py-2 text-gray-700 hover:text-blue-600">
+                                    <i class="fas fa-handshake mr-2"></i> Manage Connections
+                                </a>
+                                <a href="{% url 'jobs:manage_followers' %}" class="block py-2 text-gray-700 hover:text-blue-600">
+                                    <i class="fas fa-bell mr-2"></i> Manage Followers
+                                </a>
+                            </div>
+                        </div>
+                    {% elif user.user_type == 'job_seeker' %}
+                        <!-- Job Seeker Section -->
+                        <div class="py-2">
+                            <button id="mobile-jobseeker-toggle" class="flex items-center justify-between w-full text-gray-700 hover:text-blue-600 focus:outline-none">
+                                <span><i class="fas fa-user mr-2"></i> For Job Seekers</span>
+                                <i class="fas fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+
+                            <!-- Job Seeker Submenu (hidden by default) -->
+                            <div id="mobile-jobseeker-menu" class="hidden mt-2 ml-4 border-l-2 border-gray-200 pl-4">
+                                <a href="{% url 'jobs:job_seeker_dashboard' %}" class="block py-2 text-gray-700 hover:text-blue-600">
+                                    <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                                </a>
+                                <a href="{% url 'jobs:my_connections' %}" class="block py-2 text-gray-700 hover:text-blue-600">
+                                    <i class="fas fa-handshake mr-2"></i> My Connections
+                                </a>
+                                <a href="{% url 'jobs:my_followed_companies' %}" class="block py-2 text-gray-700 hover:text-blue-600">
+                                    <i class="fas fa-bell mr-2"></i> Followed Companies
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endif %}
+
+                <a href="{% url 'jobs:about' %}" class="block py-2 text-gray-700 hover:text-blue-600">About Us</a>
+                <a href="{% url 'jobs:contact' %}" class="block py-2 text-gray-700 hover:text-blue-600">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mx-auto px-4 mt-4">
+            {% for message in messages %}
+                <div class="p-4 mb-4 rounded-md {% if message.tags == 'success' %}bg-green-100 text-green-700{% elif message.tags == 'error' %}bg-red-100 text-red-700{% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-700{% else %}bg-blue-100 text-blue-700{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- About -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4">About SearchFind</h3>
+                    <p class="text-gray-300">
+                        SearchFind is a job board platform connecting employers with job seekers.
+                        Find your dream job or post job openings to attract top talent.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'jobs:home' %}" class="text-gray-300 hover:text-white">Home</a></li>
+                        <li><a href="{% url 'jobs:job_list' %}" class="text-gray-300 hover:text-white">Browse Jobs</a></li>
+                        <li><a href="{% url 'jobs:about' %}" class="text-gray-300 hover:text-white">About Us</a></li>
+                        <li><a href="{% url 'jobs:contact' %}" class="text-gray-300 hover:text-white">Contact</a></li>
+                        <li><a href="{% url 'jobs:faq' %}" class="text-gray-300 hover:text-white">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <!-- For Employers -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4">For Employers</h3>
+                    <ul class="space-y-2">
+                        {% if user.is_authenticated %}
+                            {% if user.user_type == 'employer' %}
+                                <li><a href="{% url 'jobs:employer_dashboard' %}" class="text-gray-300 hover:text-white">Dashboard</a></li>
+                                <li><a href="{% url 'jobs:create_job' %}" class="text-gray-300 hover:text-white">Post a Job</a></li>
+                                <li><a href="{% url 'jobs:my_companies' %}" class="text-gray-300 hover:text-white">My Companies</a></li>
+                            {% else %}
+                                <li><a href="{% url 'accounts:switch_user_type' %}" class="text-gray-300 hover:text-white">Switch to Employer</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li><a href="{% url 'accounts:signup' %}" class="text-gray-300 hover:text-white">Register</a></li>
+                            <li><a href="{% url 'accounts:login' %}" class="text-gray-300 hover:text-white">Login</a></li>
+                        {% endif %}
+                        <li><a href="{% url 'jobs:about' %}" class="text-gray-300 hover:text-white">How it Works</a></li>
+                        <li><a href="{% url 'jobs:contact' %}" class="text-gray-300 hover:text-white">Contact Support</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact -->
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Contact Us</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope mr-2"></i>
+                            <a href="mailto:{{ site_settings.contact_email }}" class="text-gray-300 hover:text-white">{{ site_settings.contact_email }}</a>
+                        </li>
+                        {% if site_settings.phone_number %}
+                        <li class="flex items-center">
+                            <i class="fas fa-phone mr-2"></i>
+                            <span class="text-gray-300">{{ site_settings.phone_number }}</span>
+                        </li>
+                        {% endif %}
+                        {% if site_settings.address_line1 %}
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt mr-2 mt-1"></i>
+                            <span class="text-gray-300">
+                                {{ site_settings.address_line1 }}{% if site_settings.city %},<br>
+                                {{ site_settings.city }}{% if site_settings.state %}, {{ site_settings.state }}{% endif %}
+                                {% endif %}
+                            </span>
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    <!-- Social Media -->
+                    <div class="mt-4 flex space-x-4">
+                        {% if site_settings.facebook_url %}
+                        <a href="{{ site_settings.facebook_url }}" class="text-gray-300 hover:text-white" target="_blank" rel="noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
+                        {% endif %}
+                        {% if site_settings.twitter_url %}
+                        <a href="{{ site_settings.twitter_url }}" class="text-gray-300 hover:text-white" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+                        {% endif %}
+                        {% if site_settings.linkedin_url %}
+                        <a href="{{ site_settings.linkedin_url }}" class="text-gray-300 hover:text-white" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin-in"></i></a>
+                        {% endif %}
+                        {% if site_settings.instagram_url %}
+                        <a href="{{ site_settings.instagram_url }}" class="text-gray-300 hover:text-white" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legal Links -->
+            <div class="mt-8 pt-4 border-t border-gray-700 flex flex-wrap justify-center gap-4 text-gray-400 text-sm">
+                <a href="{% url 'jobs:terms' %}" class="hover:text-white">Terms & Conditions</a>
+                <a href="{% url 'jobs:privacy' %}" class="hover:text-white">Privacy Policy</a>
+                <a href="{% url 'jobs:cookies' %}" class="hover:text-white">Cookie Policy</a>
+            </div>
+
+            <!-- Copyright -->
+            <div class="mt-4 text-center text-gray-300">
+                <p>&copy; {% now "Y" %} SearchFind. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle
+            document.getElementById('mobile-menu-button').addEventListener('click', function() {
+                const mobileMenu = document.getElementById('mobile-menu');
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Mobile categories toggle
+            const mobileCategoriesToggle = document.getElementById('mobile-categories-toggle');
+            if (mobileCategoriesToggle) {
+                mobileCategoriesToggle.addEventListener('click', function() {
+                    const categoriesMenu = document.getElementById('mobile-categories-menu');
+                    const icon = this.querySelector('i');
+
+                    categoriesMenu.classList.toggle('hidden');
+
+                    // Rotate icon when menu is open
+                    if (categoriesMenu.classList.contains('hidden')) {
+                        icon.classList.remove('transform', 'rotate-180');
+                    } else {
+                        icon.classList.add('transform', 'rotate-180');
+                    }
+                });
+            }
+
+            // Mobile employer toggle
+            const mobileEmployerToggle = document.getElementById('mobile-employer-toggle');
+            if (mobileEmployerToggle) {
+                mobileEmployerToggle.addEventListener('click', function() {
+                    const employerMenu = document.getElementById('mobile-employer-menu');
+                    const icon = this.querySelector('i');
+
+                    employerMenu.classList.toggle('hidden');
+
+                    // Rotate icon when menu is open
+                    if (employerMenu.classList.contains('hidden')) {
+                        icon.classList.remove('transform', 'rotate-180');
+                    } else {
+                        icon.classList.add('transform', 'rotate-180');
+                    }
+                });
+            }
+
+            // Mobile job seeker toggle
+            const mobileJobseekerToggle = document.getElementById('mobile-jobseeker-toggle');
+            if (mobileJobseekerToggle) {
+                mobileJobseekerToggle.addEventListener('click', function() {
+                    const jobseekerMenu = document.getElementById('mobile-jobseeker-menu');
+                    const icon = this.querySelector('i');
+
+                    jobseekerMenu.classList.toggle('hidden');
+
+                    // Rotate icon when menu is open
+                    if (jobseekerMenu.classList.contains('hidden')) {
+                        icon.classList.remove('transform', 'rotate-180');
+                    } else {
+                        icon.classList.add('transform', 'rotate-180');
+                    }
+                });
+            }
+
+            // Dropdown toggle functionality
+            const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+
+            // Handle click on dropdown toggles
+            dropdownToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    // Get the dropdown menu
+                    const dropdownMenu = this.nextElementSibling;
+
+                    // Close all other dropdowns first
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        if (menu !== dropdownMenu && menu.classList.contains('show')) {
+                            menu.classList.remove('show');
+                        }
+                    });
+
+                    // Toggle the current dropdown
+                    dropdownMenu.classList.toggle('show');
+                });
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                // Don't close dropdowns if clicking inside a dropdown
+                if (e.target.closest('.dropdown-container')) {
+                    return;
+                }
+
+                // Close all dropdowns
+                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

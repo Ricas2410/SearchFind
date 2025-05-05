@@ -1,0 +1,297 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Admin Dashboard - SearchFind{% endblock %}
+
+{% block header %}Dashboard Overview{% endblock %}
+
+{% block content %}
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="bg-blue-100 rounded-full p-3 mr-4">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Total Users</p>
+                    <p class="text-2xl font-bold">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="bg-green-100 rounded-full p-3 mr-4">
+                    <i class="fas fa-briefcase text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Total Jobs</p>
+                    <p class="text-2xl font-bold">{{ total_jobs }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="bg-purple-100 rounded-full p-3 mr-4">
+                    <i class="fas fa-file-alt text-purple-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Applications</p>
+                    <p class="text-2xl font-bold">{{ total_applications }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="bg-yellow-100 rounded-full p-3 mr-4">
+                    <i class="fas fa-building text-yellow-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Companies</p>
+                    <p class="text-2xl font-bold">{{ total_companies }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Dashboard Stats -->
+    {% if dashboard_stats %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {% for stat in dashboard_stats %}
+                <div class="bg-{{ stat.color }}-50 border border-{{ stat.color }}-200 rounded-lg p-6">
+                    <div class="flex items-center">
+                        <div class="bg-{{ stat.color }}-100 rounded-full p-3 mr-4">
+                            <i class="{{ stat.icon }} text-{{ stat.color }}-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 text-sm">{{ stat.name }}</p>
+                            <p class="text-2xl font-bold">{{ stat.value }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- User Types Chart -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 class="text-lg font-semibold mb-4">User Distribution</h2>
+            <div class="h-64">
+                <canvas id="userTypesChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Job Status Chart -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h2 class="text-lg font-semibold mb-4">Job Status Distribution</h2>
+            <div class="h-64">
+                <canvas id="jobStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Items Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Users -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Recent Users</h2>
+                <a href="{% url 'custom_admin:user_management' %}" class="text-blue-600 hover:text-blue-800 text-sm">View All</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for user in recent_users %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        {% if user.profile_picture %}
+                                            <img class="h-8 w-8 rounded-full object-cover" src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}">
+                                        {% else %}
+                                            <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                                {{ user.first_name|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ user.get_full_name }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ user.email }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if user.user_type == 'job_seeker' %}bg-blue-100 text-blue-800
+                                        {% elif user.user_type == 'employer' %}bg-green-100 text-green-800
+                                        {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                        {{ user.get_user_type_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ user.date_joined|date:"M d, Y" }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No users found</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Recent Jobs -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Recent Jobs</h2>
+                <a href="{% url 'custom_admin:job_management' %}" class="text-blue-600 hover:text-blue-800 text-sm">View All</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posted</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for job in recent_jobs %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ job.title }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ job.company.name }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if job.status == 'published' %}bg-green-100 text-green-800
+                                        {% elif job.status == 'draft' %}bg-yellow-100 text-yellow-800
+                                        {% elif job.status == 'expired' %}bg-red-100 text-red-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ job.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ job.created_at|date:"M d, Y" }}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">No jobs found</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // User Types Chart
+    const userTypesCtx = document.getElementById('userTypesChart').getContext('2d');
+    const userTypesData = {
+        labels: [
+            {% for user_type in user_types %}
+                '{{ user_type.user_type|capfirst }}',
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'User Types',
+            data: [
+                {% for user_type in user_types %}
+                    {{ user_type.count }},
+                {% endfor %}
+            ],
+            backgroundColor: [
+                'rgba(59, 130, 246, 0.6)',  // Blue
+                'rgba(16, 185, 129, 0.6)',  // Green
+                'rgba(139, 92, 246, 0.6)',  // Purple
+            ],
+            borderColor: [
+                'rgba(59, 130, 246, 1)',
+                'rgba(16, 185, 129, 1)',
+                'rgba(139, 92, 246, 1)',
+            ],
+            borderWidth: 1
+        }]
+    };
+    
+    new Chart(userTypesCtx, {
+        type: 'doughnut',
+        data: userTypesData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+    
+    // Job Status Chart
+    const jobStatusCtx = document.getElementById('jobStatusChart').getContext('2d');
+    const jobStatusData = {
+        labels: [
+            {% for status in job_statuses %}
+                '{{ status.status|capfirst }}',
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Job Statuses',
+            data: [
+                {% for status in job_statuses %}
+                    {{ status.count }},
+                {% endfor %}
+            ],
+            backgroundColor: [
+                'rgba(16, 185, 129, 0.6)',  // Green (published)
+                'rgba(245, 158, 11, 0.6)',  // Yellow (draft)
+                'rgba(239, 68, 68, 0.6)',   // Red (expired)
+                'rgba(107, 114, 128, 0.6)', // Gray (other)
+            ],
+            borderColor: [
+                'rgba(16, 185, 129, 1)',
+                'rgba(245, 158, 11, 1)',
+                'rgba(239, 68, 68, 1)',
+                'rgba(107, 114, 128, 1)',
+            ],
+            borderWidth: 1
+        }]
+    };
+    
+    new Chart(jobStatusCtx, {
+        type: 'pie',
+        data: jobStatusData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+/* CSS for Legal Page Admin */
+
+.legal-content-preview {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    margin-top: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.legal-content-preview h1,
+.legal-content-preview h2,
+.legal-content-preview h3 {
+    color: #333;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.legal-content-preview h1 {
+    font-size: 24px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.legal-content-preview h2 {
+    font-size: 20px;
+}
+
+.legal-content-preview h3 {
+    font-size: 16px;
+}
+
+.legal-content-preview p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.legal-content-preview ul,
+.legal-content-preview ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.legal-content-preview li {
+    margin-bottom: 5px;
+}
+
+/* Style for the content field */
+#id_content {
+    width: 100%;
+    min-height: 400px;
+    font-family: monospace;
+}

@@ -1,0 +1,296 @@
+{% extends 'custom_admin/management_base.html' %}
+
+{% block title %}Social Account Management - Admin Dashboard{% endblock %}
+{% block header %}Social Account Management{% endblock %}
+{% block breadcrumb %}Social Accounts{% endblock %}
+
+{% block filters %}
+<div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+    <!-- User Filter -->
+    <div>
+        <label for="user-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by User</label>
+        <select id="user-filter" class="form-control">
+            <option value="">All Users</option>
+            {% for user in all_users %}
+                <option value="{{ user.id }}" {% if user_id == user.id|stringformat:"i" %}selected{% endif %}>{{ user.get_full_name }} ({{ user.email }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Provider Filter -->
+    <div>
+        <label for="provider-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Provider</label>
+        <select id="provider-filter" class="form-control">
+            <option value="">All Providers</option>
+            {% for provider in all_providers %}
+                <option value="{{ provider }}" {% if provider_name == provider %}selected{% endif %}>{{ provider|title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Search Form -->
+    <div>
+        <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div class="flex">
+            <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}" placeholder="Search accounts..." 
+                   class="form-control rounded-r-none focus:z-10">
+            <button type="button" id="search-button" class="btn btn-primary rounded-l-none">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UID</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Added</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for account in accounts %}
+    <tr>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                {% if account.user.profile_picture %}
+                    <img class="h-10 w-10 rounded-full object-cover" src="{{ account.user.profile_picture.url }}" alt="{{ account.user.get_full_name }}">
+                {% else %}
+                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                        {{ account.user.first_name|first|upper }}
+                    </div>
+                {% endif %}
+                <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ account.user.get_full_name }}</div>
+                    <div class="text-xs text-gray-500">{{ account.user.email }}</div>
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                <div class="h-8 w-8 rounded-full flex items-center justify-center 
+                    {% if account.provider == 'google' %}bg-red-100 text-red-600
+                    {% elif account.provider == 'facebook' %}bg-blue-100 text-blue-600
+                    {% elif account.provider == 'linkedin' %}bg-blue-800 text-white
+                    {% elif account.provider == 'github' %}bg-gray-800 text-white
+                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                    <i class="fab fa-{{ account.provider }}"></i>
+                </div>
+                <div class="ml-3 text-sm font-medium text-gray-900">{{ account.provider|title }}</div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">{{ account.uid|truncatechars:15 }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ account.date_joined|date:"M d, Y" }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ account.last_login|date:"M d, Y" }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-3">
+                <button type="button" class="btn-action btn-view" data-toggle="modal" data-target="#viewAccountModal{{ account.id }}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deleteAccountModal{{ account.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    
+    <!-- View Account Modal -->
+    <div class="modal fade" id="viewAccountModal{{ account.id }}" tabindex="-1" role="dialog" aria-labelledby="viewAccountModalLabel{{ account.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewAccountModalLabel{{ account.id }}">Social Account Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">User Information</h3>
+                            <span class="text-sm text-gray-500">Account added: {{ account.date_joined|date:"F d, Y" }}</span>
+                        </div>
+                        
+                        <div class="flex items-center mb-4">
+                            {% if account.user.profile_picture %}
+                                <img class="h-12 w-12 rounded-full object-cover" src="{{ account.user.profile_picture.url }}" alt="{{ account.user.get_full_name }}">
+                            {% else %}
+                                <div class="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                    {{ account.user.first_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="ml-4">
+                                <div class="text-md font-medium">{{ account.user.get_full_name }}</div>
+                                <div class="text-sm text-gray-500">{{ account.user.email }}</div>
+                                <div class="text-sm text-gray-500">User ID: {{ account.user.id }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Social Account Information</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex items-center mb-4">
+                                <div class="h-10 w-10 rounded-full flex items-center justify-center 
+                                    {% if account.provider == 'google' %}bg-red-100 text-red-600
+                                    {% elif account.provider == 'facebook' %}bg-blue-100 text-blue-600
+                                    {% elif account.provider == 'linkedin' %}bg-blue-800 text-white
+                                    {% elif account.provider == 'github' %}bg-gray-800 text-white
+                                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                    <i class="fab fa-{{ account.provider }} text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-md font-medium">{{ account.provider|title }}</div>
+                                    <div class="text-sm text-gray-500">Account ID: {{ account.uid }}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Date Added</div>
+                                    <div class="text-sm">{{ account.date_joined|date:"F d, Y H:i" }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Last Login</div>
+                                    <div class="text-sm">{{ account.last_login|date:"F d, Y H:i" }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Primary Account</div>
+                                    <div class="text-sm">{{ account.primary|yesno:"Yes,No" }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Email Verified</div>
+                                    <div class="text-sm">{{ account.verified|yesno:"Yes,No" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if account.extra_data %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Extra Data</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <pre class="text-sm text-gray-700 whitespace-pre-wrap">{{ account.extra_data|pprint }}</pre>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Account Modal -->
+    <div class="modal fade" id="deleteAccountModal{{ account.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteAccountModalLabel{{ account.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAccountModalLabel{{ account.id }}">Delete Social Account</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the {{ account.provider|title }} account for <strong>{{ account.user.get_full_name }}</strong>?</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Warning: This action cannot be undone. The user will no longer be able to log in using this social account.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'custom_admin:social_account_management' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="account_id" value="{{ account.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <tr>
+        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+            <div class="flex flex-col items-center justify-center py-8">
+                <i class="fas fa-user-circle text-gray-400 text-5xl mb-4"></i>
+                <p class="text-lg font-medium">No social accounts found</p>
+                <p class="text-sm text-gray-500 mt-1">Social accounts will appear here when users connect their social media accounts</p>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+{% endblock %}
+
+{% block common_js %}
+// Filter functionality
+document.getElementById('user-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('provider-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('search-button').addEventListener('click', function() {
+    applyFilters();
+});
+
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        applyFilters();
+    }
+});
+
+function applyFilters() {
+    const userId = document.getElementById('user-filter').value;
+    const provider = document.getElementById('provider-filter').value;
+    const searchQuery = document.getElementById('search-input').value;
+    
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+    
+    if (userId) {
+        params.set('user', userId);
+    } else {
+        params.delete('user');
+    }
+    
+    if (provider) {
+        params.set('provider', provider);
+    } else {
+        params.delete('provider');
+    }
+    
+    if (searchQuery) {
+        params.set('search', searchQuery);
+    } else {
+        params.delete('search');
+    }
+    
+    window.location.href = `?${params.toString()}`;
+}
+
+// Add button styling for action buttons
+document.querySelectorAll('.btn-action').forEach(function(button) {
+    button.classList.add('inline-flex', 'items-center', 'justify-center', 'p-2', 'rounded-full', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2');
+    
+    if (button.classList.contains('btn-view')) {
+        button.classList.add('text-blue-600', 'hover:text-blue-800', 'focus:ring-blue-500');
+    } else if (button.classList.contains('btn-delete')) {
+        button.classList.add('text-red-600', 'hover:text-red-800', 'focus:ring-red-500');
+    }
+});
+{% endblock %}

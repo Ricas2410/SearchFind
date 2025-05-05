@@ -1,0 +1,250 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Job Category Management - Admin Dashboard{% endblock %}
+
+{% block header %}Job Category Management{% endblock %}
+{% block breadcrumb %}Job Categories{% endblock %}
+
+{% block content %}
+    <!-- Actions -->
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <!-- Search Form -->
+            <form method="get" class="flex">
+                <input type="text" name="search" value="{{ search_query|default:'' }}" placeholder="Search categories..." 
+                       class="form-control rounded-r-none focus:z-10">
+                <button type="submit" class="btn btn-primary rounded-l-none">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+        
+        <div>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addCategoryModal">
+                <i class="fas fa-plus mr-2"></i> Add New Category
+            </button>
+        </div>
+    </div>
+    
+    <!-- Categories Table -->
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Count</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for category in categories %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ category.name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ category.slug }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ category.joblisting_set.count }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-3">
+                                    <button type="button" class="btn-action btn-view" data-toggle="modal" data-target="#viewCategoryModal{{ category.id }}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn-action btn-edit" data-toggle="modal" data-target="#editCategoryModal{{ category.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deleteCategoryModal{{ category.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- View Modal -->
+                        <div class="modal fade" id="viewCategoryModal{{ category.id }}" tabindex="-1" role="dialog" aria-labelledby="viewCategoryModalLabel{{ category.id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="viewCategoryModalLabel{{ category.id }}">View Category</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-4">
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                                            <p>{{ category.name }}</p>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">Slug:</label>
+                                            <p>{{ category.slug }}</p>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">Description:</label>
+                                            <p>{{ category.description|default:"No description provided." }}</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 text-sm font-bold mb-2">Job Count:</label>
+                                            <p>{{ category.joblisting_set.count }} jobs</p>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Edit Modal -->
+                        <div class="modal fade" id="editCategoryModal{{ category.id }}" tabindex="-1" role="dialog" aria-labelledby="editCategoryModalLabel{{ category.id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editCategoryModalLabel{{ category.id }}">Edit Category</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <form action="{% url 'custom_admin:job_category_management' %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="edit">
+                                        <input type="hidden" name="category_id" value="{{ category.id }}">
+                                        <div class="modal-body">
+                                            <div class="form-group mb-4">
+                                                <label for="edit-name-{{ category.id }}" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                                                <input type="text" id="edit-name-{{ category.id }}" name="name" value="{{ category.name }}" class="form-control" required>
+                                            </div>
+                                            <div class="form-group mb-4">
+                                                <label for="edit-slug-{{ category.id }}" class="block text-gray-700 text-sm font-bold mb-2">Slug:</label>
+                                                <input type="text" id="edit-slug-{{ category.id }}" name="slug" value="{{ category.slug }}" class="form-control" required>
+                                                <small class="text-muted">URL-friendly name (lowercase, no spaces)</small>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="edit-description-{{ category.id }}" class="block text-gray-700 text-sm font-bold mb-2">Description:</label>
+                                                <textarea id="edit-description-{{ category.id }}" name="description" class="form-control" rows="3">{{ category.description|default:'' }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteCategoryModal{{ category.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteCategoryModalLabel{{ category.id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteCategoryModalLabel{{ category.id }}">Delete Category</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete the category <strong>{{ category.name }}</strong>?</p>
+                                        {% if category.joblisting_set.count > 0 %}
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                                Warning: This category has {{ category.joblisting_set.count }} job listings. Deleting it will remove the category from these jobs.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                        <form action="{% url 'custom_admin:job_category_management' %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="category_id" value="{{ category.id }}">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center py-8">
+                                    <i class="fas fa-folder-open text-gray-400 text-5xl mb-4"></i>
+                                    <p class="text-lg font-medium">No job categories found</p>
+                                    <p class="text-sm text-gray-500 mt-1">Create your first job category to get started</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'custom_admin:job_category_management' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <div class="modal-body">
+                        <div class="form-group mb-4">
+                            <label for="add-name" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                            <input type="text" id="add-name" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="add-slug" class="block text-gray-700 text-sm font-bold mb-2">Slug:</label>
+                            <input type="text" id="add-slug" name="slug" class="form-control" required>
+                            <small class="text-muted">URL-friendly name (lowercase, no spaces)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="add-description" class="block text-gray-700 text-sm font-bold mb-2">Description:</label>
+                            <textarea id="add-description" name="description" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-generate slug from name
+    function slugify(text) {
+        return text.toString().toLowerCase()
+            .replace(/\s+/g, '-')           // Replace spaces with -
+            .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+            .replace(/^-+/, '')             // Trim - from start of text
+            .replace(/-+$/, '');            // Trim - from end of text
+    }
+    
+    // For add form
+    document.getElementById('add-name').addEventListener('input', function() {
+        document.getElementById('add-slug').value = slugify(this.value);
+    });
+    
+    // For edit forms
+    {% for category in categories %}
+    document.getElementById('edit-name-{{ category.id }}').addEventListener('input', function() {
+        document.getElementById('edit-slug-{{ category.id }}').value = slugify(this.value);
+    });
+    {% endfor %}
+</script>
+{% endblock %}

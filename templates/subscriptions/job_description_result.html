@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Generated Job Description" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .job-description {
+        font-family: 'Inter', sans-serif;
+        line-height: 1.6;
+    }
+    .tip-card {
+        transition: all 0.3s ease;
+    }
+    .tip-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "Your AI-Generated Job Description" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "For" %} {{ job_title }} {% trans "at" %} {{ company.name }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Job Description -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                    <div class="p-6 bg-blue-50 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-xl font-semibold text-gray-800">{% trans "Job Description" %}</h2>
+                        <div>
+                            <button id="copy-btn" class="text-blue-600 hover:text-blue-800 mr-2">
+                                <i class="fas fa-copy"></i> {% trans "Copy" %}
+                            </button>
+                            <button id="download-btn" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-download"></i> {% trans "Download" %}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <textarea id="job-description-text" class="job-description w-full h-96 p-4 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">{{ job_description }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips and SEO -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8 tip-card">
+                    <div class="p-4 bg-blue-50 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "Improvement Tips" %}</h2>
+                    </div>
+                    <div class="p-4">
+                        <ul class="space-y-2">
+                            {% for tip in improvement_suggestions %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                    <span>{{ tip }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8 tip-card">
+                    <div class="p-4 bg-green-50 border-b border-green-200">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "SEO Tips" %}</h2>
+                    </div>
+                    <div class="p-4">
+                        <ul class="space-y-2">
+                            {% for tip in seo_tips %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-search mt-1 mr-2 text-green-500"></i>
+                                    <span>{{ tip }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <a href="{% url 'jobs:create_job' %}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-lg font-medium transition duration-300">
+                        {% trans "Create Job Listing" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{% url 'subscriptions:improve_job_posting' %}" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-arrow-left mr-1"></i> {% trans "Back to Job Posting Improvement" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy button functionality
+        const copyBtn = document.getElementById('copy-btn');
+        const jobDescriptionText = document.getElementById('job-description-text');
+        
+        copyBtn.addEventListener('click', function() {
+            jobDescriptionText.select();
+            document.execCommand('copy');
+            
+            // Show copied message
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(function() {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        });
+        
+        // Download button functionality
+        const downloadBtn = document.getElementById('download-btn');
+        
+        downloadBtn.addEventListener('click', function() {
+            const text = jobDescriptionText.value;
+            const filename = "job_description_{{ job_title|slugify }}.txt";
+            
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            
+            element.click();
+            
+            document.body.removeChild(element);
+        });
+    });
+</script>
+{% endblock %}

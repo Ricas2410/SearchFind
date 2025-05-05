@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "AI Resume Builder" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .resume-card {
+        transition: all 0.3s ease;
+    }
+    .resume-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .job-option {
+        transition: all 0.2s ease;
+    }
+    .job-option:hover {
+        background-color: #F3F4F6;
+    }
+    .job-option.selected {
+        background-color: #EFF6FF;
+        border-color: #3B82F6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "AI Resume Builder" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Create a tailored resume that stands out to employers" %}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8 resume-card">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "How It Works" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-upload text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">{% trans "1. Input Your Content" %}</h3>
+                        <p class="text-gray-600 text-sm">{% trans "Paste your existing resume content or start from scratch" %}</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-magic text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">{% trans "2. AI Enhancement" %}</h3>
+                        <p class="text-gray-600 text-sm">{% trans "Our AI analyzes and enhances your resume for maximum impact" %}</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-file-download text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-800 mb-2">{% trans "3. Download & Apply" %}</h3>
+                        <p class="text-gray-600 text-sm">{% trans "Get your polished resume ready for job applications" %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 resume-card">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Create Your Resume" %}</h2>
+            </div>
+            <div class="p-6">
+                <form method="post" action="{% url 'subscriptions:resume_builder' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-6">
+                        <label for="job_listing" class="block text-gray-700 font-medium mb-2">{% trans "Target Job (Optional)" %}</label>
+                        <p class="text-sm text-gray-500 mb-3">{% trans "Select a job to tailor your resume specifically for that position" %}</p>
+                        
+                        <select name="job_listing" id="job_listing" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">{% trans "-- Select a job (optional) --" %}</option>
+                            {% for job in job_listings %}
+                                <option value="{{ job.id }}">{{ job.title }} - {{ job.company.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="original_content" class="block text-gray-700 font-medium mb-2">{% trans "Your Current Resume Content" %}</label>
+                        <p class="text-sm text-gray-500 mb-3">{% trans "Paste your existing resume content or start from scratch" %}</p>
+                        
+                        <textarea name="original_content" id="original_content" rows="12" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="{% trans 'Paste your resume content here...' %}"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <a href="{% url 'jobs:job_seeker_dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-300">
+                            {% trans "Cancel" %}
+                        </a>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                            {% trans "Generate Resume" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Details - {{ application.job.title }} - SearchFind{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Breadcrumbs -->
+    <div class="text-sm text-gray-500 mb-6">
+        <a href="{% url 'jobs:job_seeker_dashboard' %}" class="hover:text-blue-600">Dashboard</a>
+        <span class="mx-2">/</span>
+        <span>Application Details</span>
+    </div>
+
+    <!-- Application Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">{{ application.job.title }}</h1>
+                <div class="flex items-center mt-2">
+                    <a href="{% url 'jobs:company_detail' slug=application.job.company.slug %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                        {{ application.job.company.name }}
+                    </a>
+                    <span class="mx-2 text-gray-400">•</span>
+                    <span class="text-gray-600">{{ application.job.location }}</span>
+                </div>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <div class="flex items-center">
+                    <span class="px-3 py-1 inline-flex text-sm font-semibold rounded-full
+                        {% if application.status == 'pending' %}bg-yellow-100 text-yellow-800
+                        {% elif application.status == 'reviewed' %}bg-blue-100 text-blue-800
+                        {% elif application.status == 'shortlisted' %}bg-green-100 text-green-800
+                        {% elif application.status == 'interview' %}bg-indigo-100 text-indigo-800
+                        {% elif application.status == 'rejected' %}bg-red-100 text-red-800
+                        {% elif application.status == 'hired' %}bg-purple-100 text-purple-800
+                        {% elif application.status == 'withdrawn' %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ application.get_status_display }}
+                    </span>
+                </div>
+                <div class="text-sm text-gray-500 mt-2">
+                    Applied on {{ application.applied_at|date:"F j, Y" }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3 mt-6">
+            <a href="{% url 'jobs:job_detail' slug=application.job.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
+                <i class="fas fa-eye mr-2"></i> View Job Posting
+            </a>
+            {% if application.status != 'withdrawn' and application.status != 'hired' %}
+                <a href="{% url 'jobs:withdraw_application' application_id=application.id %}" 
+                   class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm"
+                   onclick="return confirm('Are you sure you want to withdraw your application? This action cannot be undone.')">
+                    <i class="fas fa-times-circle mr-2"></i> Withdraw Application
+                </a>
+            {% endif %}
+            <a href="{% url 'jobs:job_seeker_dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Application Details -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Left Column - Application Status -->
+        <div class="md:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-lg font-semibold mb-4">Application Status</h2>
+                
+                <!-- Status Timeline -->
+                <div class="relative">
+                    <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                    
+                    <!-- Applied -->
+                    <div class="relative flex items-start mb-6">
+                        <div class="flex items-center h-6">
+                            <div class="z-10 flex items-center justify-center w-6 h-6 bg-blue-600 rounded-full">
+                                <i class="fas fa-paper-plane text-white text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium">Applied</h3>
+                            <p class="text-xs text-gray-500">{{ application.applied_at|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Reviewed -->
+                    <div class="relative flex items-start mb-6">
+                        <div class="flex items-center h-6">
+                            <div class="z-10 flex items-center justify-center w-6 h-6 {% if application.status == 'pending' %}bg-gray-300{% else %}bg-blue-600{% endif %} rounded-full">
+                                <i class="fas fa-eye text-white text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium">Reviewed</h3>
+                            {% if application.status != 'pending' %}
+                                <p class="text-xs text-gray-500">Your application has been reviewed</p>
+                            {% else %}
+                                <p class="text-xs text-gray-500">Waiting for review</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Shortlisted/Rejected -->
+                    <div class="relative flex items-start mb-6">
+                        <div class="flex items-center h-6">
+                            <div class="z-10 flex items-center justify-center w-6 h-6 
+                                {% if application.status == 'pending' or application.status == 'reviewed' %}
+                                    bg-gray-300
+                                {% elif application.status == 'shortlisted' or application.status == 'interview' or application.status == 'hired' %}
+                                    bg-green-600
+                                {% elif application.status == 'rejected' %}
+                                    bg-red-600
+                                {% else %}
+                                    bg-gray-300
+                                {% endif %} rounded-full">
+                                {% if application.status == 'rejected' %}
+                                    <i class="fas fa-times text-white text-xs"></i>
+                                {% else %}
+                                    <i class="fas fa-check text-white text-xs"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium">
+                                {% if application.status == 'rejected' %}
+                                    Not Selected
+                                {% else %}
+                                    Shortlisted
+                                {% endif %}
+                            </h3>
+                            {% if application.status == 'shortlisted' or application.status == 'interview' or application.status == 'hired' %}
+                                <p class="text-xs text-green-600">You've been shortlisted!</p>
+                            {% elif application.status == 'rejected' %}
+                                <p class="text-xs text-red-600">Your application was not selected</p>
+                            {% else %}
+                                <p class="text-xs text-gray-500">Waiting for decision</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Interview -->
+                    <div class="relative flex items-start mb-6">
+                        <div class="flex items-center h-6">
+                            <div class="z-10 flex items-center justify-center w-6 h-6 
+                                {% if application.status == 'interview' or application.status == 'hired' %}
+                                    bg-indigo-600
+                                {% else %}
+                                    bg-gray-300
+                                {% endif %} rounded-full">
+                                <i class="fas fa-user-tie text-white text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium">Interview</h3>
+                            {% if application.status == 'interview' %}
+                                <p class="text-xs text-indigo-600">You've been invited for an interview!</p>
+                                {% if application.interview_date %}
+                                    <p class="text-xs text-gray-700 mt-1">
+                                        <i class="far fa-calendar-alt mr-1"></i> {{ application.interview_date|date:"F j, Y H:i" }}
+                                    </p>
+                                {% endif %}
+                                {% if application.interview_location %}
+                                    <p class="text-xs text-gray-700 mt-1">
+                                        <i class="fas fa-map-marker-alt mr-1"></i> {{ application.interview_location }}
+                                    </p>
+                                {% endif %}
+                                {% if application.interview_type %}
+                                    <p class="text-xs text-gray-700 mt-1">
+                                        <i class="fas fa-video mr-1"></i> {{ application.get_interview_type_display }}
+                                    </p>
+                                {% endif %}
+                            {% elif application.status == 'hired' %}
+                                <p class="text-xs text-indigo-600">Interview completed</p>
+                            {% else %}
+                                <p class="text-xs text-gray-500">Not scheduled</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Hired -->
+                    <div class="relative flex items-start">
+                        <div class="flex items-center h-6">
+                            <div class="z-10 flex items-center justify-center w-6 h-6 
+                                {% if application.status == 'hired' %}
+                                    bg-purple-600
+                                {% else %}
+                                    bg-gray-300
+                                {% endif %} rounded-full">
+                                <i class="fas fa-trophy text-white text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-sm font-medium">Hired</h3>
+                            {% if application.status == 'hired' %}
+                                <p class="text-xs text-purple-600">Congratulations! You've been hired!</p>
+                            {% else %}
+                                <p class="text-xs text-gray-500">Waiting for decision</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Information -->
+            {% if application.status == 'interview' or application.status == 'hired' %}
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h2 class="text-lg font-semibold mb-4">Contact Information</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-500">Employer Email</h3>
+                            <p class="text-sm">{{ application.job.posted_by.email }}</p>
+                        </div>
+                        {% if application.job.company.phone %}
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-500">Company Phone</h3>
+                                <p class="text-sm">{{ application.job.company.phone }}</p>
+                            </div>
+                        {% endif %}
+                        {% if application.job.company.website %}
+                            <div>
+                                <h3 class="text-sm font-medium text-gray-500">Company Website</h3>
+                                <a href="{{ application.job.company.website }}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800">{{ application.job.company.website }}</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Right Column - Application Details -->
+        <div class="md:col-span-2">
+            <!-- Application Details -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-lg font-semibold mb-4">Application Details</h2>
+                
+                <!-- Resume -->
+                <div class="mb-6">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Resume</h3>
+                    <div class="flex items-center">
+                        <i class="fas fa-file-pdf text-red-600 mr-2"></i>
+                        <a href="{{ application.resume.url }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                            View Resume
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Cover Letter -->
+                {% if application.cover_letter %}
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-gray-500 mb-2">Cover Letter</h3>
+                        <div class="bg-gray-50 p-4 rounded-md border border-gray-200">
+                            <p class="text-sm whitespace-pre-line">{{ application.cover_letter }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Employer Feedback -->
+                {% if application.feedback_to_applicant %}
+                    <div class="mb-6">
+                        <h3 class="text-sm font-medium text-gray-500 mb-2">Employer Feedback</h3>
+                        <div class="bg-blue-50 p-4 rounded-md border border-blue-200">
+                            <p class="text-sm whitespace-pre-line">{{ application.feedback_to_applicant }}</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Messages -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-lg font-semibold mb-4">Messages</h2>
+                
+                {% if application.messages.all %}
+                    <div class="space-y-4 mb-6">
+                        {% for message in application.messages.all %}
+                            <div class="flex {% if message.sender == request.user %}justify-end{% endif %}">
+                                <div class="max-w-3/4 {% if message.sender == request.user %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %} p-3 rounded-lg">
+                                    <div class="text-sm">{{ message.content }}</div>
+                                    <div class="text-xs text-gray-500 mt-1">{{ message.created_at|date:"M d, Y H:i" }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Message Form -->
+                    <form method="post" action="{% url 'jobs:send_application_message' application_id=application.id %}">
+                        {% csrf_token %}
+                        <div class="flex">
+                            <input type="text" name="content" placeholder="Type a message..." required
+                                   class="flex-grow px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="far fa-comment-alt text-gray-400 text-5xl mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">No messages yet</h3>
+                        <p class="text-gray-600 mb-4">Start a conversation with the employer about your application.</p>
+                        
+                        <!-- Message Form -->
+                        <form method="post" action="{% url 'jobs:send_application_message' application_id=application.id %}">
+                            {% csrf_token %}
+                            <div class="flex max-w-md mx-auto">
+                                <input type="text" name="content" placeholder="Type a message..." required
+                                       class="flex-grow px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scroll to bottom of messages
+        const messagesContainer = document.querySelector('.space-y-4');
+        if (messagesContainer) {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    });
+</script>
+{% endblock %}

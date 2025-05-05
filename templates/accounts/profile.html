@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - SearchFind{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Profile Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex flex-col md:flex-row items-center md:items-start">
+            <!-- Profile Picture -->
+            <div class="mb-4 md:mb-0 md:mr-6">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="{{ user.first_name }}" class="w-32 h-32 rounded-full object-cover">
+                {% else %}
+                    <div class="w-32 h-32 rounded-full bg-blue-600 text-white flex items-center justify-center text-4xl">
+                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Profile Info -->
+            <div class="flex-1 text-center md:text-left">
+                <h1 class="text-2xl font-bold mb-2">{{ user.first_name }}</h1>
+                <p class="text-gray-600 mb-2">{{ user.email }}</p>
+
+                <div class="mb-4">
+                    <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold
+                        {% if user.user_type == 'job_seeker' %}bg-blue-100 text-blue-800
+                        {% elif user.user_type == 'employer' %}bg-green-100 text-green-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ user.get_user_type_display }}
+                    </span>
+                </div>
+
+                <div class="flex flex-wrap justify-center md:justify-start gap-2">
+                    <a href="{% url 'accounts:edit_profile' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        <i class="fas fa-edit mr-1"></i> Edit Profile
+                    </a>
+
+                    <a href="{% url 'accounts:profile_detail' user_id=user.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                        <i class="fas fa-eye mr-1"></i> View Public Profile
+                    </a>
+
+                    {% if user.user_type == 'job_seeker' %}
+                        <a href="{% url 'jobs:job_seeker_dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                            <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
+                        </a>
+                    {% elif user.user_type == 'employer' %}
+                        <a href="{% url 'jobs:employer_dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                            <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
+                        </a>
+                    {% endif %}
+
+                    <!-- Switch User Type Form -->
+                    <form method="post" action="{% url 'accounts:switch_user_type' %}" class="inline">
+                        {% csrf_token %}
+                        {% if user.user_type == 'job_seeker' %}
+                            <input type="hidden" name="user_type" value="employer">
+                            <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                                <i class="fas fa-exchange-alt mr-1"></i> Switch to Employer
+                            </button>
+                        {% elif user.user_type == 'employer' %}
+                            <input type="hidden" name="user_type" value="job_seeker">
+                            <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                                <i class="fas fa-exchange-alt mr-1"></i> Switch to Job Seeker
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Details -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold mb-4">Profile Details</h2>
+
+        <!-- Common Information -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-3 border-b pb-2">Personal Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-600 text-sm">Name</p>
+                    <p class="font-medium">{{ user.first_name }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Email</p>
+                    <p class="font-medium">{{ user.email }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Phone Number</p>
+                    <p class="font-medium">{{ user.phone_number|default:"Not provided" }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 text-sm">Account Type</p>
+                    <p class="font-medium">{{ user.get_user_type_display }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Seeker Specific Information -->
+        {% if user.user_type == 'job_seeker' %}
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-3 border-b pb-2">Job Seeker Information</h3>
+
+                <div class="mb-4">
+                    <p class="text-gray-600 text-sm mb-1">Bio</p>
+                    <p>{{ user.bio|default:"No bio provided" }}</p>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-gray-600 text-sm mb-1">Skills</p>
+                    {% if user.skills %}
+                        <div class="flex flex-wrap gap-2">
+                            {% for skill in user.skills.split %}
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p>No skills listed</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <p class="text-gray-600 text-sm mb-1">Resume</p>
+                    {% if user.resume %}
+                        <a href="{{ user.resume.url }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                            <i class="fas fa-file-pdf mr-1"></i> View Resume
+                        </a>
+                    {% else %}
+                        <p>No resume uploaded</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Employer Specific Information -->
+        {% if user.user_type == 'employer' %}
+            <div>
+                <h3 class="text-lg font-semibold mb-3 border-b pb-2">Company Information</h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-gray-600 text-sm">Company Name</p>
+                        <p class="font-medium">{{ user.company_name|default:"Not provided" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600 text-sm">Company Website</p>
+                        {% if user.company_website %}
+                            <a href="{{ user.company_website }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                {{ user.company_website }}
+                            </a>
+                        {% else %}
+                            <p>Not provided</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <p class="text-gray-600 text-sm mb-1">Company Description</p>
+                    <p>{{ user.company_description|default:"No description provided" }}</p>
+                </div>
+
+                <div>
+                    <p class="text-gray-600 text-sm mb-1">Company Logo</p>
+                    {% if user.company_logo %}
+                        <img src="{{ user.company_logo.url }}" alt="{{ user.company_name }}" class="h-16 object-contain">
+                    {% else %}
+                        <p>No logo uploaded</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,738 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}Browse Jobs - SearchFind{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative mb-8 rounded-lg overflow-hidden">
+    <!-- Background Image -->
+    {% if hero_section.background_image %}
+        <div class="absolute inset-0 z-0 hidden md:block">
+            <img src="{{ hero_section.background_image.url }}" alt="Jobs background" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-indigo-900/80"></div>
+        </div>
+        <!-- Mobile Background Image -->
+        <div class="absolute inset-0 z-0 block md:hidden">
+            {% if hero_section.mobile_background_image %}
+                <img src="{{ hero_section.mobile_background_image.url }}" alt="Jobs background" class="w-full h-full object-cover">
+            {% else %}
+                <img src="{{ hero_section.background_image.url }}" alt="Jobs background" class="w-full h-full object-cover">
+            {% endif %}
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-indigo-900/80"></div>
+        </div>
+    {% else %}
+        <div class="absolute inset-0 z-0 bg-gradient-to-r from-blue-600 to-indigo-700"></div>
+    {% endif %}
+
+    <div class="container relative z-10 mx-auto px-4 py-8 md:py-10">
+        <div class="max-w-3xl mx-auto">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4 text-center text-white">{{ hero_section.title }}</h1>
+            <p class="text-xl mb-8 text-center text-blue-100">{{ hero_section.subtitle|default:total_jobs|add:" jobs available on SearchFind" }}</p>
+
+            <div class="bg-white/20 backdrop-blur-md rounded-lg shadow-lg p-6 border border-white/30">
+                <form method="get" action="{% url 'jobs:job_list' %}" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-600"></i>
+                            </span>
+                            <input type="text" id="hero_keyword" name="keyword" value="{{ form.keyword.value|default:'' }}"
+                                   class="block w-full pl-10 pr-3 py-3 bg-white/70 backdrop-blur-sm border border-white/50 rounded-md
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 z-10
+                                   text-gray-900 placeholder-gray-700"
+                                   placeholder="Job title, keywords, or company"
+                                   autocomplete="off">
+                        </div>
+
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-map-marker-alt text-gray-600"></i>
+                            </span>
+                            <input type="text" id="hero_location" name="location" value="{{ form.location.value|default:'' }}"
+                                   class="block w-full pl-10 pr-3 py-3 bg-white/70 backdrop-blur-sm border border-white/50 rounded-md
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 z-10
+                                   text-gray-900 placeholder-gray-700"
+                                   placeholder="City, state, or zip code"
+                                   autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-md font-semibold shadow-md">
+                            Search Jobs
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Filter Buttons -->
+<div class="container mx-auto px-4 mb-8">
+    <div class="flex flex-wrap gap-2 justify-center">
+        <a href="{% url 'jobs:job_list' %}" class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">
+            All Jobs
+        </a>
+        {% for job_type_value, job_type_text in form.fields.job_type.choices %}
+            <a href="{% url 'jobs:job_list' %}?job_type={{ job_type_value }}"
+               class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-100">
+                {{ job_type_text }}
+            </a>
+        {% endfor %}
+        <a href="{% url 'jobs:job_list' %}?remote=true"
+           class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-100">
+            <i class="fas fa-home mr-1"></i> Remote
+        </a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Mobile Filter Toggle Button -->
+    <div class="lg:hidden mb-4 w-full">
+        <button id="mobile-filter-toggle" class="w-full bg-white rounded-lg shadow-md p-4 flex justify-between items-center">
+            <span class="font-semibold">Search Filters</span>
+            <i class="fas fa-filter text-blue-600"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar - Search Filters -->
+    <div class="lg:col-span-1 hidden lg:block" id="filter-sidebar">
+        <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Search Filters</h2>
+                <button id="close-filters" class="lg:hidden text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form method="get" action="{% url 'jobs:job_list' %}" class="space-y-6">
+                <div>
+                    <label for="id_keyword" class="block text-sm font-medium text-gray-700 mb-1">Keywords</label>
+                    <input type="text" id="id_keyword" name="keyword" value="{{ form.keyword.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" placeholder="Job title, keywords, or company">
+                </div>
+
+                <div>
+                    <label for="id_location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <input type="text" id="id_location" name="location" value="{{ form.location.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" placeholder="City, state, or zip code">
+                </div>
+
+                <div>
+                    <label for="id_category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select id="id_category" name="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if form.category.value|stringformat:"s" == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Job Type</label>
+                    <div class="space-y-2">
+                        {% for value, text in form.fields.job_type.choices %}
+                            <div class="flex items-center">
+                                <input type="checkbox" id="id_job_type_{{ value }}" name="job_type" value="{{ value }}"
+                                       {% if value in form.job_type.value %}checked{% endif %}
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="id_job_type_{{ value }}" class="ml-2 block text-sm text-gray-700">{{ text }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Experience Level</label>
+                    <div class="space-y-2">
+                        {% for value, text in form.fields.experience_level.choices %}
+                            <div class="flex items-center">
+                                <input type="checkbox" id="id_experience_level_{{ value }}" name="experience_level" value="{{ value }}"
+                                       {% if value in form.experience_level.value %}checked{% endif %}
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <label for="id_experience_level_{{ value }}" class="ml-2 block text-sm text-gray-700">{{ text }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_min_salary" class="block text-sm font-medium text-gray-700 mb-1">Minimum Salary</label>
+                    <input type="number" id="id_min_salary" name="min_salary" value="{{ form.min_salary.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" placeholder="Minimum salary">
+                </div>
+
+                <div>
+                    <label for="id_max_salary" class="block text-sm font-medium text-gray-700 mb-1">Maximum Salary</label>
+                    <input type="number" id="id_max_salary" name="max_salary" value="{{ form.max_salary.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" placeholder="Maximum salary">
+                </div>
+
+                <div>
+                    <label for="id_skills" class="block text-sm font-medium text-gray-700 mb-1">Skills</label>
+                    <input type="text" id="id_skills" name="skills" value="{{ form.skills.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" placeholder="Skills (comma separated)">
+                </div>
+
+                <div>
+                    <label for="id_date_posted" class="block text-sm font-medium text-gray-700 mb-1">Date Posted</label>
+                    <select id="id_date_posted" name="date_posted" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+                        <option value="" {% if not form.date_posted.value %}selected{% endif %}>Any time</option>
+                        <option value="1" {% if form.date_posted.value == '1' %}selected{% endif %}>Past 24 hours</option>
+                        <option value="7" {% if form.date_posted.value == '7' %}selected{% endif %}>Past week</option>
+                        <option value="30" {% if form.date_posted.value == '30' %}selected{% endif %}>Past month</option>
+                    </select>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="id_is_remote" name="is_remote" value="true"
+                               {% if form.is_remote.value %}checked{% endif %}
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="id_is_remote" class="ml-2 block text-sm text-gray-700">Remote jobs only</label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" id="id_has_salary" name="has_salary" value="true"
+                               {% if form.has_salary.value %}checked{% endif %}
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="id_has_salary" class="ml-2 block text-sm text-gray-700">Show only jobs with salary</label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input type="checkbox" id="id_exclude_expired" name="exclude_expired" value="true"
+                               {% if form.exclude_expired.value %}checked{% endif %}
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="id_exclude_expired" class="ml-2 block text-sm text-gray-700">Hide expired jobs</label>
+                    </div>
+                </div>
+
+                <div class="flex justify-between">
+                    <a href="{% url 'jobs:job_list' %}" class="text-blue-600 hover:text-blue-800">Clear Filters</a>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content - Job Listings -->
+    <div class="lg:col-span-3">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Browse Jobs</h1>
+                <p class="text-gray-600">{{ total_jobs }} jobs found</p>
+            </div>
+
+            <!-- Sort Options -->
+            <div class="flex justify-end mb-4">
+                <form method="get" action="{% url 'jobs:job_list' %}" id="sort-form" class="flex items-center">
+                    <!-- Preserve existing filters -->
+                    {% for key, value in request.GET.items %}
+                        {% if key != 'sort' and key != 'page' %}
+                            <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endif %}
+                    {% endfor %}
+
+                    <label for="id_sort" class="mr-2 text-sm text-gray-600">Sort by:</label>
+                    <select id="id_sort" name="sort" onchange="document.getElementById('sort-form').submit()"
+                            class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+                        <option value="newest" {% if request.GET.sort == 'newest' or not request.GET.sort %}selected{% endif %}>Newest First</option>
+                        <option value="oldest" {% if request.GET.sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                        <option value="salary_high" {% if request.GET.sort == 'salary_high' %}selected{% endif %}>Highest Salary</option>
+                        <option value="salary_low" {% if request.GET.sort == 'salary_low' %}selected{% endif %}>Lowest Salary</option>
+                    </select>
+                </form>
+            </div>
+
+            <!-- Job Listings -->
+            <div class="space-y-6">
+                {% for job in jobs %}
+                    <div class="bg-white border rounded-lg p-4 sm:p-6 hover:shadow-lg transition duration-300 relative overflow-hidden">
+                        {% if job.is_featured %}
+                            <div class="absolute top-0 right-0 bg-yellow-500 text-white px-3 py-1 text-xs font-bold">
+                                Featured
+                            </div>
+                        {% endif %}
+
+                                <!-- Mobile Header with Logo and Title -->
+                                <div class="flex items-center justify-between mb-3 md:hidden">
+                                    <div class="flex items-center">
+                                        <!-- Company Logo (Mobile) -->
+                                        <div class="mr-3 flex-shrink-0">
+                                            {% if job.company.company_logo %}
+                                                <img src="{{ job.company.company_logo.url }}" alt="{{ job.company.company_name }}" class="w-12 h-12 object-contain rounded-md border border-gray-200">
+                                            {% else %}
+                                                <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-md border border-gray-200 flex items-center justify-center">
+                                                    <i class="fas fa-building text-xl"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Job Title and Company (Mobile) -->
+                                        <div>
+                                            <h2 class="text-lg font-semibold">
+                                                <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="text-gray-800 hover:text-blue-600">{{ job.title }}</a>
+                                            </h2>
+                                            <p class="text-gray-600 text-sm">
+                                                <a href="{% url 'accounts:profile_detail' user_id=job.company.id %}" class="hover:text-blue-600">
+                                                    {{ job.company.company_name|default:job.company.get_full_name }}
+                                                </a>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Match Percentage Badge (Mobile) -->
+                                    {% if user.is_authenticated and user.user_type == 'job_seeker' and user.is_pro %}
+                                        {% match_percentage_badge job user %}
+                                    {% endif %}
+                        </div>
+
+                        <div class="flex flex-col md:flex-row md:justify-between md:items-start">
+                            <div class="flex flex-1">
+                                <!-- Company Logo (Desktop) -->
+                                <div class="hidden md:block mr-4 flex-shrink-0">
+                                    {% if job.company.company_logo %}
+                                        <img src="{{ job.company.company_logo.url }}" alt="{{ job.company.company_name }}" class="w-16 h-16 object-contain rounded-md border border-gray-200">
+                                    {% else %}
+                                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-md border border-gray-200 flex items-center justify-center">
+                                            <i class="fas fa-building text-2xl"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Job Info -->
+                                <div class="flex-1">
+                                    <!-- Desktop Title and Company -->
+                                    <div class="hidden md:block">
+                                        <div class="flex items-center flex-wrap mb-1">
+                                            <h2 class="text-xl font-semibold">
+                                                <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="text-gray-800 hover:text-blue-600">{{ job.title }}</a>
+                                            </h2>
+                                            {% if job.is_remote %}
+                                                <span class="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Remote</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <p class="text-gray-600 mb-2">
+                                            <a href="{% url 'accounts:profile_detail' user_id=job.company.id %}" class="hover:text-blue-600">
+                                                {{ job.company.company_name|default:job.company.get_full_name }}
+                                            </a>
+                                        </p>
+                                    </div>
+
+                                    <!-- Mobile Remote Badge -->
+                                    {% if job.is_remote %}
+                                        <div class="md:hidden mb-2">
+                                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Remote</span>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Job Details -->
+                                    <div class="flex flex-wrap gap-2 mb-3">
+                                        <div class="flex items-center text-gray-500 text-sm">
+                                            <i class="fas fa-map-marker-alt mr-1"></i>
+                                            <span>{{ job.location }}</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-sm">
+                                            <i class="fas fa-briefcase mr-1"></i>
+                                            <span>{{ job.get_job_type_display }}</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-sm">
+                                            <i class="fas fa-graduation-cap mr-1"></i>
+                                            <span>{{ job.get_experience_level_display }}</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-500 text-sm">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            <span>{{ job.created_at|timesince }} ago</span>
+                                        </div>
+
+                                        {% if job.is_expired %}
+                                            <div class="flex items-center text-red-500 text-sm">
+                                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                                <span>Expired</span>
+                                            </div>
+                                        {% elif job.application_deadline %}
+                                            <div class="flex items-center text-blue-500 text-sm">
+                                                <i class="fas fa-hourglass-half mr-1"></i>
+                                                <span>Deadline: {{ job.application_deadline|date:"M j" }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Mobile Salary -->
+                                    <div class="md:hidden mb-3">
+                                        {% if job.salary_min and job.salary_max %}
+                                            <span class="text-green-600 font-semibold">${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}</span>
+                                        {% elif job.salary_min %}
+                                            <span class="text-green-600 font-semibold">${{ job.salary_min|floatformat:0 }}+</span>
+                                        {% else %}
+                                            <span class="text-gray-500">Salary not specified</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <p class="text-gray-700 text-sm line-clamp-2">{{ job.description|striptags|truncatewords:30 }}</p>
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-2 mb-3 md:mb-0">
+                                        {% for skill in job.get_skills_as_list|slice:":3" %}
+                                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">{{ skill }}</span>
+                                        {% endfor %}
+                                        {% if job.get_skills_as_list|length > 3 %}
+                                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">+{{ job.get_skills_as_list|length|add:"-3" }} more</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Side (Desktop) -->
+                            <div class="hidden md:flex md:mt-0 md:ml-4 md:flex-col md:items-end">
+                                <!-- Match Percentage Badge (Desktop) -->
+                                {% if user.is_authenticated and user.user_type == 'job_seeker' and user.is_pro %}
+                                    <div class="mb-2">
+                                        {% match_percentage_badge job user %}
+                                    </div>
+                                {% endif %}
+
+                                {% if job.salary_min and job.salary_max %}
+                                    <span class="text-green-600 font-semibold mb-2">${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}</span>
+                                {% elif job.salary_min %}
+                                    <span class="text-green-600 font-semibold mb-2">${{ job.salary_min|floatformat:0 }}+</span>
+                                {% else %}
+                                    <span class="text-gray-500 mb-2">Salary not specified</span>
+                                {% endif %}
+
+                                <div class="flex flex-col gap-2">
+                                    <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-center">
+                                        View Job
+                                    </a>
+
+                                    {% if user.is_authenticated and user.user_type == 'job_seeker' %}
+                                        <button type="button"
+                                                class="save-job-button border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-md flex items-center justify-center"
+                                                data-job-id="{{ job.id }}"
+                                                {% if job in saved_jobs %}data-saved="true"{% else %}data-saved="false"{% endif %}>
+                                            <i class="{% if job in saved_jobs %}fas{% else %}far{% endif %} fa-bookmark mr-1"></i>
+                                            <span>{% if job in saved_jobs %}Saved{% else %}Save{% endif %}</span>
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Mobile Action Buttons -->
+                            <div class="md:hidden flex justify-between mt-3 pt-3 border-t border-gray-100">
+                                <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm flex-1 text-center mr-2">
+                                    View Job
+                                </a>
+
+                                {% if user.is_authenticated and user.user_type == 'job_seeker' %}
+                                    <button type="button"
+                                            class="save-job-button border border-blue-600 text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md flex items-center justify-center"
+                                            data-job-id="{{ job.id }}"
+                                            {% if job in saved_jobs %}data-saved="true"{% else %}data-saved="false"{% endif %}>
+                                        <i class="{% if job in saved_jobs %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-search text-gray-400 text-5xl mb-4"></i>
+                        <h3 class="text-xl font-semibold mb-2">No jobs found</h3>
+                        <p class="text-gray-600">Try adjusting your search filters or browse all available jobs.</p>
+                        <a href="{% url 'jobs:job_list' %}" class="inline-block mt-4 text-blue-600 hover:text-blue-800">Clear all filters</a>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if jobs.has_other_pages %}
+                <div class="flex justify-center mt-8">
+                    <nav class="flex flex-wrap justify-center" aria-label="Pagination">
+                        <!-- Previous Button -->
+                        <div class="m-1">
+                            {% if jobs.has_previous %}
+                                <a href="?page={{ jobs.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                                   class="flex items-center px-3 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-chevron-left mr-1"></i>
+                                    <span class="hidden sm:inline">Previous</span>
+                                </a>
+                            {% else %}
+                                <span class="flex items-center px-3 py-2 rounded-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                    <i class="fas fa-chevron-left mr-1"></i>
+                                    <span class="hidden sm:inline">Previous</span>
+                                </span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Page Numbers - Desktop -->
+                        <div class="hidden sm:flex">
+                            {% for i in jobs.paginator.page_range %}
+                                <div class="m-1">
+                                    {% if jobs.number == i %}
+                                        <span class="flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600 rounded-md">
+                                            {{ i }}
+                                        </span>
+                                    {% else %}
+                                        <a href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                                           class="flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-md">
+                                            {{ i }}
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Page Indicator - Mobile -->
+                        <div class="sm:hidden flex items-center mx-2">
+                            <span class="text-sm text-gray-700">
+                                Page {{ jobs.number }} of {{ jobs.paginator.num_pages }}
+                            </span>
+                        </div>
+
+                        <!-- Next Button -->
+                        <div class="m-1">
+                            {% if jobs.has_next %}
+                                <a href="?page={{ jobs.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}"
+                                   class="flex items-center px-3 py-2 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    <span class="hidden sm:inline">Next</span>
+                                    <i class="fas fa-chevron-right ml-1"></i>
+                                </a>
+                            {% else %}
+                                <span class="flex items-center px-3 py-2 rounded-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                    <span class="hidden sm:inline">Next</span>
+                                    <i class="fas fa-chevron-right ml-1"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile filter toggle functionality
+        const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
+        const closeFiltersBtn = document.getElementById('close-filters');
+        const filterSidebar = document.getElementById('filter-sidebar');
+
+        if (mobileFilterToggle && filterSidebar) {
+            mobileFilterToggle.addEventListener('click', function() {
+                filterSidebar.classList.toggle('hidden');
+                // Add fixed positioning for mobile to create overlay effect
+                if (!filterSidebar.classList.contains('hidden')) {
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling
+                    filterSidebar.classList.add('fixed', 'inset-0', 'z-50', 'bg-white', 'overflow-y-auto', 'p-4');
+                    filterSidebar.classList.remove('lg:col-span-1');
+                } else {
+                    resetFilterSidebar();
+                }
+            });
+        }
+
+        if (closeFiltersBtn && filterSidebar) {
+            closeFiltersBtn.addEventListener('click', function() {
+                filterSidebar.classList.add('hidden');
+                resetFilterSidebar();
+            });
+        }
+
+        function resetFilterSidebar() {
+            document.body.style.overflow = ''; // Restore scrolling
+            filterSidebar.classList.remove('fixed', 'inset-0', 'z-50', 'bg-white', 'overflow-y-auto', 'p-4');
+            filterSidebar.classList.add('lg:col-span-1');
+        }
+
+        // Check window size and reset sidebar if needed
+        window.addEventListener('resize', function() {
+            if (window.innerWidth >= 1024 && filterSidebar) { // lg breakpoint
+                filterSidebar.classList.remove('hidden');
+                resetFilterSidebar();
+            } else if (window.innerWidth < 1024 && filterSidebar && !filterSidebar.classList.contains('hidden')) {
+                filterSidebar.classList.add('hidden');
+                resetFilterSidebar();
+            }
+        });
+
+        // Fix for search input fields
+        const searchInputs = document.querySelectorAll('input[type="text"], input[type="number"], textarea, select');
+
+        // Special focus for hero search inputs
+        const heroKeyword = document.getElementById('hero_keyword');
+        const heroLocation = document.getElementById('hero_location');
+
+        if (heroKeyword) {
+            heroKeyword.addEventListener('click', function(e) {
+                e.stopPropagation();
+                setTimeout(() => {
+                    this.focus();
+                    this.select();
+                }, 0);
+            });
+        }
+
+        if (heroLocation) {
+            heroLocation.addEventListener('click', function(e) {
+                e.stopPropagation();
+                setTimeout(() => {
+                    this.focus();
+                    this.select();
+                }, 0);
+            });
+        }
+
+        searchInputs.forEach(input => {
+            // Add explicit focus and click handlers
+            input.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.focus();
+            });
+
+            // Ensure the input is focusable
+            input.setAttribute('tabindex', '0');
+
+            // Remove any pointer-events: none from parent elements
+            let parent = input.parentElement;
+            while (parent && parent.tagName !== 'FORM') {
+                parent.style.pointerEvents = 'auto';
+                parent = parent.parentElement;
+            }
+        });
+
+        // Save job functionality
+        const saveButtons = document.querySelectorAll('.save-job-button');
+
+        saveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const jobId = this.dataset.jobId;
+                const isSaved = this.dataset.saved === 'true';
+                const icon = this.querySelector('i');
+                const text = this.querySelector('span');
+
+                fetch(`/toggle-save-job/${jobId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'saved') {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        text.textContent = 'Saved';
+                        this.dataset.saved = 'true';
+                        // Add visual feedback
+                        this.classList.add('bg-blue-50');
+                        // Show toast notification
+                        showToast('Job saved successfully!', 'success');
+                    } else if (data.status === 'unsaved') {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        text.textContent = 'Save';
+                        this.dataset.saved = 'false';
+                        // Remove background
+                        this.classList.remove('bg-blue-50');
+                        // Show toast notification
+                        showToast('Job removed from saved items', 'info');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+        // Helper function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Toast notification function
+        function showToast(message, type = 'info') {
+            // Create toast container if it doesn't exist
+            let toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toast-container';
+                toastContainer.className = 'fixed top-4 right-4 z-50 flex flex-col space-y-2';
+                document.body.appendChild(toastContainer);
+            }
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'rounded-md p-4 shadow-lg transform transition-all duration-300 translate-x-full';
+
+            // Set background color based on type
+            if (type === 'success') {
+                toast.classList.add('bg-green-100', 'border-l-4', 'border-green-500', 'text-green-700');
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-100', 'border-l-4', 'border-red-500', 'text-red-700');
+            } else if (type === 'warning') {
+                toast.classList.add('bg-yellow-100', 'border-l-4', 'border-yellow-500', 'text-yellow-700');
+            } else {
+                toast.classList.add('bg-blue-100', 'border-l-4', 'border-blue-500', 'text-blue-700');
+            }
+
+            // Add message
+            toast.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <p class="text-sm font-medium">${message}</p>
+                    </div>
+                    <button class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            `;
+
+            // Add to container
+            toastContainer.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+                toast.classList.add('translate-x-0');
+            }, 10);
+
+            // Add close button functionality
+            const closeButton = toast.querySelector('button');
+            closeButton.addEventListener('click', () => {
+                removeToast(toast);
+            });
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                removeToast(toast);
+            }, 3000);
+        }
+
+        function removeToast(toast) {
+            toast.classList.remove('translate-x-0');
+            toast.classList.add('translate-x-full');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    });
+</script>
+{% endblock %}

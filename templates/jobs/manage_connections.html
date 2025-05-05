@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Connections - SearchFind{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-12 rounded-lg shadow-xl mb-12">
+    <div class="container mx-auto px-4">
+        <h1 class="text-3xl font-bold mb-4">Manage Company Connections</h1>
+        <p class="text-xl text-blue-100">Review and manage connection requests for your companies</p>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="mb-20">
+    <div class="container mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <!-- Tabs -->
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <a href="#pending" class="tab-link active-tab text-blue-600 border-blue-500 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm" data-tab="pending">
+                        Pending Requests <span class="ml-2 bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs">{{ pending_connections.count }}</span>
+                    </a>
+                    <a href="#approved" class="tab-link text-gray-500 hover:text-gray-700 whitespace-nowrap py-4 px-6 border-b-2 border-transparent font-medium text-sm" data-tab="approved">
+                        Approved Connections <span class="ml-2 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">{{ approved_connections.count }}</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Pending Requests Tab -->
+                <div id="pending-tab" class="tab-content">
+                    {% if pending_connections %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for connection in pending_connections %}
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                        {% if connection.user.profile_picture %}
+                                                            <img src="{{ connection.user.profile_picture.url }}" alt="{{ connection.user.get_full_name }}" class="h-10 w-10 rounded-full">
+                                                        {% else %}
+                                                            <span class="text-blue-600 font-bold">{{ connection.user.get_full_name|slice:":1" }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">{{ connection.user.get_full_name }}</div>
+                                                        <div class="text-sm text-gray-500">{{ connection.user.email }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ connection.company.name }}</div>
+                                                <div class="text-xs text-gray-500">{{ connection.company.industry }}</div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm text-gray-900 max-w-xs truncate">
+                                                    {% if connection.message %}
+                                                        {{ connection.message }}
+                                                    {% else %}
+                                                        <span class="text-gray-400 italic">No message</span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ connection.created_at|date:"M j, Y" }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div class="flex space-x-2">
+                                                    <form action="{% url 'jobs:approve_connection' connection_id=connection.id %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="bg-green-100 hover:bg-green-200 text-green-800 px-3 py-1 rounded-md transition-colors duration-200">
+                                                            <i class="fas fa-check mr-1"></i> Approve
+                                                        </button>
+                                                    </form>
+                                                    <form action="{% url 'jobs:reject_connection' connection_id=connection.id %}" method="post">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded-md transition-colors duration-200">
+                                                            <i class="fas fa-times mr-1"></i> Reject
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-400 rounded-full mb-4">
+                                <i class="fas fa-handshake text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">No Pending Connection Requests</h3>
+                            <p class="text-gray-600 max-w-md mx-auto">You don't have any pending connection requests at the moment.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Approved Connections Tab -->
+                <div id="approved-tab" class="tab-content hidden">
+                    {% if approved_connections %}
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Connected Since</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% for connection in approved_connections %}
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                                        {% if connection.user.profile_picture %}
+                                                            <img src="{{ connection.user.profile_picture.url }}" alt="{{ connection.user.get_full_name }}" class="h-10 w-10 rounded-full">
+                                                        {% else %}
+                                                            <span class="text-blue-600 font-bold">{{ connection.user.get_full_name|slice:":1" }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="ml-4">
+                                                        <div class="text-sm font-medium text-gray-900">{{ connection.user.get_full_name }}</div>
+                                                        <div class="text-sm text-gray-500">{{ connection.user.email }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="text-sm text-gray-900">{{ connection.company.name }}</div>
+                                                <div class="text-xs text-gray-500">{{ connection.company.industry }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {{ connection.updated_at|date:"M j, Y" }}
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <form action="{% url 'jobs:reject_connection' connection_id=connection.id %}" method="post">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded-md transition-colors duration-200">
+                                                        <i class="fas fa-user-minus mr-1"></i> Remove Connection
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-400 rounded-full mb-4">
+                                <i class="fas fa-users text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">No Approved Connections</h3>
+                            <p class="text-gray-600 max-w-md mx-auto">You don't have any approved connections yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab functionality
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Check if hash exists and activate that tab
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            activateTab(hash);
+        }
+        
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tab = this.getAttribute('data-tab');
+                activateTab(tab);
+                
+                // Update URL hash without scrolling
+                history.pushState(null, null, `#${tab}`);
+            });
+        });
+        
+        function activateTab(tab) {
+            // Deactivate all tabs
+            tabLinks.forEach(link => {
+                link.classList.remove('active-tab', 'text-blue-600', 'border-blue-500');
+                link.classList.add('text-gray-500', 'border-transparent');
+            });
+            
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Activate selected tab
+            const selectedLink = document.querySelector(`.tab-link[data-tab="${tab}"]`);
+            if (selectedLink) {
+                selectedLink.classList.add('active-tab', 'text-blue-600', 'border-blue-500');
+                selectedLink.classList.remove('text-gray-500', 'border-transparent');
+                
+                const selectedContent = document.getElementById(`${tab}-tab`);
+                if (selectedContent) {
+                    selectedContent.classList.remove('hidden');
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

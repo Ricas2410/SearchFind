@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile - SearchFind{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-2xl font-bold mb-6">Edit Your Profile</h2>
+        
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if user_type == 'job_seeker' %}
+                <!-- Job Seeker Profile Form -->
+                <div>
+                    <label for="id_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input type="text" name="phone_number" id="id_phone_number" value="{{ form.phone_number.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.phone_number.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.phone_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_bio" class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                    <textarea name="bio" id="id_bio" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.bio.value|default:'' }}</textarea>
+                    {% if form.bio.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.bio.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_profile_picture" class="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
+                    <input type="file" name="profile_picture" id="id_profile_picture" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.profile_picture.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.profile_picture.errors.0 }}</p>
+                    {% endif %}
+                    {% if user.profile_picture %}
+                        <div class="mt-2 flex items-center">
+                            <img src="{{ user.profile_picture.url }}" alt="Current profile picture" class="h-16 w-16 rounded-full object-cover">
+                            <span class="ml-2 text-sm text-gray-500">Current profile picture</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_resume" class="block text-sm font-medium text-gray-700 mb-1">Resume</label>
+                    <input type="file" name="resume" id="id_resume" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.resume.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.resume.errors.0 }}</p>
+                    {% endif %}
+                    {% if user.resume %}
+                        <div class="mt-2 flex items-center">
+                            <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
+                            <a href="{{ user.resume.url }}" class="ml-2 text-sm text-blue-600 hover:text-blue-800">View current resume</a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_skills" class="block text-sm font-medium text-gray-700 mb-1">Skills (comma separated)</label>
+                    <textarea name="skills" id="id_skills" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.skills.value|default:'' }}</textarea>
+                    {% if form.skills.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.skills.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-gray-500 text-xs mt-1">{{ form.skills.help_text }}</p>
+                </div>
+                
+            {% elif user_type == 'employer' %}
+                <!-- Employer Profile Form -->
+                <div>
+                    <label for="id_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                    <input type="text" name="phone_number" id="id_phone_number" value="{{ form.phone_number.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.phone_number.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.phone_number.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_company_name" class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                    <input type="text" name="company_name" id="id_company_name" value="{{ form.company_name.value|default:'' }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.company_name.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.company_name.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_company_website" class="block text-sm font-medium text-gray-700 mb-1">Company Website</label>
+                    <input type="url" name="company_website" id="id_company_website" value="{{ form.company_website.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.company_website.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.company_website.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_company_description" class="block text-sm font-medium text-gray-700 mb-1">Company Description</label>
+                    <textarea name="company_description" id="id_company_description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.company_description.value|default:'' }}</textarea>
+                    {% if form.company_description.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.company_description.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="id_company_logo" class="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
+                    <input type="file" name="company_logo" id="id_company_logo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    {% if form.company_logo.errors %}
+                        <p class="text-red-600 text-sm mt-1">{{ form.company_logo.errors.0 }}</p>
+                    {% endif %}
+                    {% if user.company_logo %}
+                        <div class="mt-2 flex items-center">
+                            <img src="{{ user.company_logo.url }}" alt="Current company logo" class="h-16 object-contain">
+                            <span class="ml-2 text-sm text-gray-500">Current company logo</span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+            
+            <div class="flex justify-between">
+                <a href="{% url 'accounts:profile' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

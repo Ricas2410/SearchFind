@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Renew Job - {{ job.title }} - SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h1 class="text-2xl font-bold mb-6">Renew Job Listing</h1>
+            
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h2 class="text-xl font-semibold mb-2">{{ job.title }}</h2>
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <div class="flex items-center text-gray-500 text-sm">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        <span>{{ job.location }}</span>
+                    </div>
+                    <div class="flex items-center text-gray-500 text-sm">
+                        <i class="fas fa-briefcase mr-1"></i>
+                        <span>{{ job.get_job_type_display }}</span>
+                    </div>
+                    {% if job.is_remote %}
+                        <div class="flex items-center text-blue-500 text-sm">
+                            <i class="fas fa-home mr-1"></i>
+                            <span>Remote</span>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center mb-3">
+                    <span class="mr-3 px-3 py-1 text-sm font-semibold rounded-full
+                        {% if job.status == 'published' %}bg-green-100 text-green-800
+                        {% elif job.status == 'draft' %}bg-gray-100 text-gray-800
+                        {% elif job.status == 'closed' %}bg-red-100 text-red-800
+                        {% elif job.status == 'expired' %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {{ job.get_status_display }}
+                    </span>
+                    
+                    {% if job.is_expired %}
+                        <span class="text-red-600">
+                            <i class="fas fa-exclamation-circle mr-1"></i> Expired
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="text-gray-600">
+                    <p><strong>Current Deadline:</strong> 
+                        {% if job.application_deadline %}
+                            {{ job.application_deadline|date:"F j, Y" }}
+                            {% if job.is_expired %}
+                                <span class="text-red-600">(Expired)</span>
+                            {% endif %}
+                        {% else %}
+                            No deadline set
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <h2 class="text-xl font-semibold mb-4">Select a Renewal Package</h2>
+            
+            {% if packages %}
+                <form method="post" action="{% url 'jobs:renew_job' job_id=job.id %}">
+                    {% csrf_token %}
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        {% for package in packages %}
+                            <div class="border rounded-lg overflow-hidden {% if forloop.counter == 2 %}border-blue-500 shadow-lg{% else %}border-gray-200{% endif %}">
+                                <div class="{% if forloop.counter == 2 %}bg-blue-500 text-white{% else %}bg-gray-100 text-gray-800{% endif %} px-4 py-3">
+                                    <h3 class="font-bold text-lg">{{ package.name }}</h3>
+                                    {% if forloop.counter == 2 %}
+                                        <span class="inline-block bg-yellow-400 text-blue-900 text-xs font-semibold px-2 py-1 rounded-full">MOST POPULAR</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="p-4">
+                                    <div class="text-center mb-4">
+                                        <span class="text-3xl font-bold">${{ package.price }}</span>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <p class="text-gray-600">{{ package.description }}</p>
+                                    </div>
+                                    
+                                    <ul class="mb-6 space-y-2">
+                                        <li class="flex items-center">
+                                            <i class="fas fa-check text-green-500 mr-2"></i>
+                                            <span>{{ package.duration_days }} days listing</span>
+                                        </li>
+                                        {% if package.featured_job %}
+                                            <li class="flex items-center">
+                                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                                <span>Featured in listings</span>
+                                            </li>
+                                        {% endif %}
+                                        {% if package.priority_placement %}
+                                            <li class="flex items-center">
+                                                <i class="fas fa-check text-green-500 mr-2"></i>
+                                                <span>Priority placement</span>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                    
+                                    <div class="text-center">
+                                        <button type="submit" name="package_id" value="{{ package.id }}" 
+                                                class="w-full {% if forloop.counter == 2 %}bg-blue-600 hover:bg-blue-700{% else %}bg-gray-600 hover:bg-gray-700{% endif %} text-white px-4 py-2 rounded-md">
+                                            Select Package
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </form>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-circle text-yellow-500 text-5xl mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">No packages available</h3>
+                    <p class="text-gray-600">There are currently no renewal packages available. Please contact the administrator.</p>
+                </div>
+            {% endif %}
+            
+            <div class="mt-6 text-center">
+                <a href="{% url 'jobs:employer_dashboard' %}" class="text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

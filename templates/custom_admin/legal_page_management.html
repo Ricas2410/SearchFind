@@ -1,0 +1,318 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Legal Page Management - Admin Dashboard{% endblock %}
+
+{% block header %}Legal Page Management{% endblock %}
+{% block breadcrumb %}Legal Pages{% endblock %}
+
+{% block content %}
+    <!-- Actions -->
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <!-- Filter by Page Type -->
+            <div>
+                <label for="page-type-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Type</label>
+                <select id="page-type-filter" class="form-control">
+                    <option value="">All Page Types</option>
+                    <option value="terms" {% if page_type == 'terms' %}selected{% endif %}>Terms & Conditions</option>
+                    <option value="privacy" {% if page_type == 'privacy' %}selected{% endif %}>Privacy Policy</option>
+                    <option value="cookies" {% if page_type == 'cookies' %}selected{% endif %}>Cookie Policy</option>
+                    <option value="faq" {% if page_type == 'faq' %}selected{% endif %}>FAQ</option>
+                    <option value="other" {% if page_type == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            
+            <!-- Filter by Status -->
+            <div>
+                <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+                <select id="status-filter" class="form-control">
+                    <option value="">All Statuses</option>
+                    <option value="true" {% if is_active == True %}selected{% endif %}>Active</option>
+                    <option value="false" {% if is_active == False %}selected{% endif %}>Inactive</option>
+                </select>
+            </div>
+        </div>
+        
+        <div>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addLegalPageModal">
+                <i class="fas fa-plus mr-2"></i> Add New Legal Page
+            </button>
+        </div>
+    </div>
+    
+    <!-- Legal Pages Table -->
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for page in legal_pages %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ page.title }}</div>
+                                <div class="text-xs text-gray-500">{{ page.slug }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if page.page_type == 'terms' %}bg-blue-100 text-blue-800
+                                    {% elif page.page_type == 'privacy' %}bg-green-100 text-green-800
+                                    {% elif page.page_type == 'cookies' %}bg-yellow-100 text-yellow-800
+                                    {% elif page.page_type == 'faq' %}bg-purple-100 text-purple-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ page.get_page_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {% if page.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if page.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ page.updated_at|date:"M d, Y" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-3">
+                                    <a href="{% url 'jobs:legal_page' page.slug %}" target="_blank" class="btn-action btn-view">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn-action btn-edit" data-toggle="modal" data-target="#editLegalPageModal{{ page.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deleteLegalPageModal{{ page.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Edit Modal -->
+                        <div class="modal fade" id="editLegalPageModal{{ page.id }}" tabindex="-1" role="dialog" aria-labelledby="editLegalPageModalLabel{{ page.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editLegalPageModalLabel{{ page.id }}">Edit Legal Page</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <form action="{% url 'custom_admin:legal_page_management' %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="edit">
+                                        <input type="hidden" name="page_id" value="{{ page.id }}">
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-4">
+                                                        <label for="edit-title-{{ page.id }}" class="block text-gray-700 text-sm font-bold mb-2">Title:</label>
+                                                        <input type="text" id="edit-title-{{ page.id }}" name="title" value="{{ page.title }}" class="form-control" required>
+                                                    </div>
+                                                    <div class="form-group mb-4">
+                                                        <label for="edit-slug-{{ page.id }}" class="block text-gray-700 text-sm font-bold mb-2">Slug:</label>
+                                                        <input type="text" id="edit-slug-{{ page.id }}" name="slug" value="{{ page.slug }}" class="form-control" required>
+                                                        <small class="text-muted">URL-friendly name (lowercase, no spaces)</small>
+                                                    </div>
+                                                    <div class="form-group mb-4">
+                                                        <label for="edit-page-type-{{ page.id }}" class="block text-gray-700 text-sm font-bold mb-2">Page Type:</label>
+                                                        <select id="edit-page-type-{{ page.id }}" name="page_type" class="form-control" required>
+                                                            <option value="terms" {% if page.page_type == 'terms' %}selected{% endif %}>Terms & Conditions</option>
+                                                            <option value="privacy" {% if page.page_type == 'privacy' %}selected{% endif %}>Privacy Policy</option>
+                                                            <option value="cookies" {% if page.page_type == 'cookies' %}selected{% endif %}>Cookie Policy</option>
+                                                            <option value="faq" {% if page.page_type == 'faq' %}selected{% endif %}>FAQ</option>
+                                                            <option value="other" {% if page.page_type == 'other' %}selected{% endif %}>Other</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group mb-4">
+                                                        <div class="custom-control custom-switch">
+                                                            <input type="checkbox" class="custom-control-input" id="edit-is-active-{{ page.id }}" name="is_active" {% if page.is_active %}checked{% endif %}>
+                                                            <label class="custom-control-label" for="edit-is-active-{{ page.id }}">Active</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <label for="edit-content-{{ page.id }}" class="block text-gray-700 text-sm font-bold mb-2">Content:</label>
+                                                        <textarea id="edit-content-{{ page.id }}" name="content" class="form-control" rows="12" required>{{ page.content }}</textarea>
+                                                        <small class="text-muted">HTML content is supported</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete Modal -->
+                        <div class="modal fade" id="deleteLegalPageModal{{ page.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteLegalPageModalLabel{{ page.id }}" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteLegalPageModalLabel{{ page.id }}">Delete Legal Page</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to delete the legal page <strong>{{ page.title }}</strong>?</p>
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                                            Warning: This action cannot be undone. Users will no longer be able to access this page.
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                        <form action="{% url 'custom_admin:legal_page_management' %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="page_id" value="{{ page.id }}">
+                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center py-8">
+                                    <i class="fas fa-file-contract text-gray-400 text-5xl mb-4"></i>
+                                    <p class="text-lg font-medium">No legal pages found</p>
+                                    <p class="text-sm text-gray-500 mt-1">Create your first legal page to get started</p>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Add Legal Page Modal -->
+    <div class="modal fade" id="addLegalPageModal" tabindex="-1" role="dialog" aria-labelledby="addLegalPageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addLegalPageModalLabel">Add New Legal Page</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'custom_admin:legal_page_management' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-4">
+                                    <label for="add-title" class="block text-gray-700 text-sm font-bold mb-2">Title:</label>
+                                    <input type="text" id="add-title" name="title" class="form-control" required>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="add-slug" class="block text-gray-700 text-sm font-bold mb-2">Slug:</label>
+                                    <input type="text" id="add-slug" name="slug" class="form-control" required>
+                                    <small class="text-muted">URL-friendly name (lowercase, no spaces)</small>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="add-page-type" class="block text-gray-700 text-sm font-bold mb-2">Page Type:</label>
+                                    <select id="add-page-type" name="page_type" class="form-control" required>
+                                        <option value="terms">Terms & Conditions</option>
+                                        <option value="privacy">Privacy Policy</option>
+                                        <option value="cookies">Cookie Policy</option>
+                                        <option value="faq">FAQ</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-4">
+                                    <div class="custom-control custom-switch">
+                                        <input type="checkbox" class="custom-control-input" id="add-is-active" name="is_active" checked>
+                                        <label class="custom-control-label" for="add-is-active">Active</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="add-content" class="block text-gray-700 text-sm font-bold mb-2">Content:</label>
+                                    <textarea id="add-content" name="content" class="form-control" rows="12" required></textarea>
+                                    <small class="text-muted">HTML content is supported</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Legal Page</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-generate slug from title
+    function slugify(text) {
+        return text.toString().toLowerCase()
+            .replace(/\s+/g, '-')           // Replace spaces with -
+            .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+            .replace(/^-+/, '')             // Trim - from start of text
+            .replace(/-+$/, '');            // Trim - from end of text
+    }
+    
+    // For add form
+    document.getElementById('add-title').addEventListener('input', function() {
+        document.getElementById('add-slug').value = slugify(this.value);
+    });
+    
+    // For edit forms
+    {% for page in legal_pages %}
+    document.getElementById('edit-title-{{ page.id }}').addEventListener('input', function() {
+        document.getElementById('edit-slug-{{ page.id }}').value = slugify(this.value);
+    });
+    {% endfor %}
+    
+    // Filters
+    document.getElementById('page-type-filter').addEventListener('change', function() {
+        applyFilters();
+    });
+    
+    document.getElementById('status-filter').addEventListener('change', function() {
+        applyFilters();
+    });
+    
+    function applyFilters() {
+        const pageType = document.getElementById('page-type-filter').value;
+        const status = document.getElementById('status-filter').value;
+        
+        let url = new URL(window.location.href);
+        let params = new URLSearchParams(url.search);
+        
+        if (pageType) {
+            params.set('page_type', pageType);
+        } else {
+            params.delete('page_type');
+        }
+        
+        if (status) {
+            params.set('is_active', status);
+        } else {
+            params.delete('is_active');
+        }
+        
+        window.location.href = `?${params.toString()}`;
+    }
+</script>
+{% endblock %}

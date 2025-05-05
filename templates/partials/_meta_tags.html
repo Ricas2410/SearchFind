@@ -1,0 +1,33 @@
+{% load static %}
+
+<!-- Primary Meta Tags -->
+<meta name="title" content="{% block meta_title %}SearchFind - Find Your Dream Job{% endblock %}">
+<meta name="description" content="{% block meta_description %}SearchFind connects job seekers with employers. Find your dream job or hire the perfect candidate today.{% endblock %}">
+<meta name="keywords" content="{% block meta_keywords %}jobs, career, employment, hiring, job search, job board{% endblock %}">
+<meta name="author" content="SearchFind">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:title" content="{% block og_title %}SearchFind - Find Your Dream Job{% endblock %}">
+<meta property="og:description" content="{% block og_description %}SearchFind connects job seekers with employers. Find your dream job or hire the perfect candidate today.{% endblock %}">
+<meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/og-image.jpg' %}{% endblock %}">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+<meta property="twitter:title" content="{% block twitter_title %}SearchFind - Find Your Dream Job{% endblock %}">
+<meta property="twitter:description" content="{% block twitter_description %}SearchFind connects job seekers with employers. Find your dream job or hire the perfect candidate today.{% endblock %}">
+<meta property="twitter:image" content="{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'img/twitter-image.jpg' %}{% endblock %}">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+<!-- Favicon -->
+<link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/favicon/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon/favicon-32x32.png' %}">
+<link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon/favicon-16x16.png' %}">
+<link rel="manifest" href="{% static 'img/favicon/site.webmanifest' %}">
+<link rel="mask-icon" href="{% static 'img/favicon/safari-pinned-tab.svg' %}" color="#5bbad5">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="theme-color" content="#ffffff">

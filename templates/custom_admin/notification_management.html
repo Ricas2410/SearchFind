@@ -1,0 +1,418 @@
+{% extends 'custom_admin/management_base.html' %}
+
+{% block title %}Notification Management - Admin Dashboard{% endblock %}
+{% block header %}Notification Management{% endblock %}
+{% block breadcrumb %}Notifications{% endblock %}
+
+{% block filters %}
+<div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+    <!-- Notification Type Filter -->
+    <div>
+        <label for="notification-type-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Type</label>
+        <select id="notification-type-filter" class="form-control">
+            <option value="">All Types</option>
+            <option value="system" {% if notification_type == 'system' %}selected{% endif %}>System</option>
+            <option value="job" {% if notification_type == 'job' %}selected{% endif %}>Job</option>
+            <option value="application" {% if notification_type == 'application' %}selected{% endif %}>Application</option>
+            <option value="company" {% if notification_type == 'company' %}selected{% endif %}>Company</option>
+            <option value="subscription" {% if notification_type == 'subscription' %}selected{% endif %}>Subscription</option>
+        </select>
+    </div>
+    
+    <!-- Read Status Filter -->
+    <div>
+        <label for="read-status-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+        <select id="read-status-filter" class="form-control">
+            <option value="">All Statuses</option>
+            <option value="true" {% if is_read == True %}selected{% endif %}>Read</option>
+            <option value="false" {% if is_read == False %}selected{% endif %}>Unread</option>
+        </select>
+    </div>
+    
+    <!-- Search Form -->
+    <div>
+        <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div class="flex">
+            <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}" placeholder="Search notifications..." 
+                   class="form-control rounded-r-none focus:z-10">
+            <button type="button" id="search-button" class="btn btn-primary rounded-l-none">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block action_buttons %}
+<div class="flex space-x-2">
+    <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#markAllReadModal">
+        <i class="fas fa-check-double mr-2"></i> Mark All as Read
+    </button>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addItemModal">
+        <i class="fas fa-plus mr-2"></i> Send New Notification
+    </button>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recipient</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for notification in notifications %}
+    <tr class="{% if not notification.is_read %}bg-blue-50{% endif %}">
+        <td class="px-6 py-4">
+            <div class="text-sm font-medium text-gray-900">{{ notification.title }}</div>
+            <div class="text-xs text-gray-500 truncate max-w-xs">{{ notification.message|truncatechars:60 }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                {% if notification.notification_type == 'system' %}bg-purple-100 text-purple-800
+                {% elif notification.notification_type == 'job' %}bg-blue-100 text-blue-800
+                {% elif notification.notification_type == 'application' %}bg-green-100 text-green-800
+                {% elif notification.notification_type == 'company' %}bg-yellow-100 text-yellow-800
+                {% elif notification.notification_type == 'subscription' %}bg-indigo-100 text-indigo-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ notification.get_notification_type_display }}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            {% if notification.user %}
+                <div class="flex items-center">
+                    {% if notification.user.profile_picture %}
+                        <img class="h-8 w-8 rounded-full object-cover" src="{{ notification.user.profile_picture.url }}" alt="{{ notification.user.get_full_name }}">
+                    {% else %}
+                        <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                            {{ notification.user.first_name|first|upper }}
+                        </div>
+                    {% endif %}
+                    <div class="ml-3">
+                        <div class="text-sm font-medium text-gray-900">{{ notification.user.get_full_name }}</div>
+                        <div class="text-xs text-gray-500">{{ notification.user.email }}</div>
+                    </div>
+                </div>
+            {% else %}
+                <span class="text-sm text-gray-500">All Users</span>
+            {% endif %}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                {% if notification.is_read %}bg-gray-100 text-gray-800{% else %}bg-red-100 text-red-800{% endif %}">
+                {% if notification.is_read %}Read{% else %}Unread{% endif %}
+            </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ notification.created_at|date:"M d, Y" }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-3">
+                <button type="button" class="btn-action btn-view" data-toggle="modal" data-target="#viewNotificationModal{{ notification.id }}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                {% if not notification.is_read %}
+                <form action="{% url 'custom_admin:notification_management' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_read">
+                    <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                    <button type="submit" class="btn-action btn-success">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </form>
+                {% endif %}
+                <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deleteNotificationModal{{ notification.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    
+    <!-- View Notification Modal -->
+    <div class="modal fade" id="viewNotificationModal{{ notification.id }}" tabindex="-1" role="dialog" aria-labelledby="viewNotificationModalLabel{{ notification.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewNotificationModalLabel{{ notification.id }}">View Notification</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if notification.notification_type == 'system' %}bg-purple-100 text-purple-800
+                            {% elif notification.notification_type == 'job' %}bg-blue-100 text-blue-800
+                            {% elif notification.notification_type == 'application' %}bg-green-100 text-green-800
+                            {% elif notification.notification_type == 'company' %}bg-yellow-100 text-yellow-800
+                            {% elif notification.notification_type == 'subscription' %}bg-indigo-100 text-indigo-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ notification.get_notification_type_display }}
+                        </span>
+                        <span class="text-sm text-gray-500 ml-2">{{ notification.created_at|date:"F d, Y" }} at {{ notification.created_at|time:"g:i A" }}</span>
+                    </div>
+                    
+                    <h6 class="text-lg font-semibold mb-2">{{ notification.title }}</h6>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        {{ notification.message|linebreaks }}
+                    </div>
+                    
+                    {% if notification.user %}
+                    <div class="mt-4">
+                        <div class="font-medium">Recipient:</div>
+                        <div class="flex items-center mt-1">
+                            {% if notification.user.profile_picture %}
+                                <img class="h-8 w-8 rounded-full object-cover" src="{{ notification.user.profile_picture.url }}" alt="{{ notification.user.get_full_name }}">
+                            {% else %}
+                                <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                                    {{ notification.user.first_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="ml-3">
+                                <div class="text-sm font-medium">{{ notification.user.get_full_name }}</div>
+                                <div class="text-xs text-gray-500">{{ notification.user.email }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mt-4">
+                        <div class="font-medium">Recipient:</div>
+                        <div class="text-sm mt-1">All Users</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if notification.related_id %}
+                    <div class="mt-4">
+                        <div class="font-medium">Related Item:</div>
+                        <div class="text-sm mt-1">
+                            {% if notification.notification_type == 'job' %}
+                                <a href="{% url 'jobs:job_detail' notification.related_id %}" target="_blank" class="text-blue-600 hover:underline">
+                                    View Job <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            {% elif notification.notification_type == 'application' %}
+                                <a href="{% url 'jobs:application_detail' notification.related_id %}" target="_blank" class="text-blue-600 hover:underline">
+                                    View Application <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            {% elif notification.notification_type == 'company' %}
+                                <a href="{% url 'jobs:company_detail' notification.related_id %}" target="_blank" class="text-blue-600 hover:underline">
+                                    View Company <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            {% elif notification.notification_type == 'subscription' %}
+                                <a href="{% url 'subscriptions:subscription_detail' notification.related_id %}" target="_blank" class="text-blue-600 hover:underline">
+                                    View Subscription <i class="fas fa-external-link-alt ml-1"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    {% if not notification.is_read %}
+                    <form action="{% url 'custom_admin:notification_management' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_read">
+                        <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                        <button type="submit" class="btn btn-primary">Mark as Read</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Notification Modal -->
+    <div class="modal fade" id="deleteNotificationModal{{ notification.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteNotificationModalLabel{{ notification.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteNotificationModalLabel{{ notification.id }}">Delete Notification</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this notification?</p>
+                    <div class="bg-gray-50 p-3 rounded-lg mt-3">
+                        <div class="font-medium">{{ notification.title }}</div>
+                        <div class="text-sm text-gray-500 mt-1">{{ notification.message|truncatechars:100 }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'custom_admin:notification_management' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="notification_id" value="{{ notification.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <tr>
+        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+            <div class="flex flex-col items-center justify-center py-8">
+                <i class="fas fa-bell-slash text-gray-400 text-5xl mb-4"></i>
+                <p class="text-lg font-medium">No notifications found</p>
+                <p class="text-sm text-gray-500 mt-1">Notifications will appear here when they are created</p>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+{% endblock %}
+
+{% block modals %}
+<!-- Add Notification Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Send New Notification</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{% url 'custom_admin:notification_management' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body">
+                    <div class="form-group mb-4">
+                        <label for="add-title" class="block text-gray-700 text-sm font-bold mb-2">Title:</label>
+                        <input type="text" id="add-title" name="title" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="add-message" class="block text-gray-700 text-sm font-bold mb-2">Message:</label>
+                        <textarea id="add-message" name="message" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="add-notification-type" class="block text-gray-700 text-sm font-bold mb-2">Notification Type:</label>
+                        <select id="add-notification-type" name="notification_type" class="form-control" required>
+                            <option value="system">System</option>
+                            <option value="job">Job</option>
+                            <option value="application">Application</option>
+                            <option value="company">Company</option>
+                            <option value="subscription">Subscription</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="add-recipient" class="block text-gray-700 text-sm font-bold mb-2">Recipient:</label>
+                        <select id="add-recipient" name="recipient_type" class="form-control" required>
+                            <option value="all">All Users</option>
+                            <option value="job_seekers">All Job Seekers</option>
+                            <option value="employers">All Employers</option>
+                            <option value="specific">Specific User</option>
+                        </select>
+                    </div>
+                    <div id="specific-user-container" class="form-group mb-4" style="display: none;">
+                        <label for="add-user-id" class="block text-gray-700 text-sm font-bold mb-2">Select User:</label>
+                        <select id="add-user-id" name="user_id" class="form-control">
+                            <option value="">Select a user</option>
+                            {% for user in all_users %}
+                                <option value="{{ user.id }}">{{ user.get_full_name }} ({{ user.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Notification</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Mark All as Read Modal -->
+<div class="modal fade" id="markAllReadModal" tabindex="-1" role="dialog" aria-labelledby="markAllReadModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="markAllReadModalLabel">Mark All as Read</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to mark all unread notifications as read?</p>
+                <p class="text-sm text-gray-500 mt-2">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form action="{% url 'custom_admin:notification_management' %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="mark_all_read">
+                    <button type="submit" class="btn btn-primary">Mark All as Read</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block common_js %}
+// Filter functionality
+document.getElementById('notification-type-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('read-status-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('search-button').addEventListener('click', function() {
+    applyFilters();
+});
+
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        applyFilters();
+    }
+});
+
+function applyFilters() {
+    const notificationType = document.getElementById('notification-type-filter').value;
+    const readStatus = document.getElementById('read-status-filter').value;
+    const searchQuery = document.getElementById('search-input').value;
+    
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+    
+    if (notificationType) {
+        params.set('notification_type', notificationType);
+    } else {
+        params.delete('notification_type');
+    }
+    
+    if (readStatus) {
+        params.set('is_read', readStatus);
+    } else {
+        params.delete('is_read');
+    }
+    
+    if (searchQuery) {
+        params.set('search', searchQuery);
+    } else {
+        params.delete('search');
+    }
+    
+    window.location.href = `?${params.toString()}`;
+}
+
+// Show/hide specific user dropdown based on recipient type
+document.getElementById('add-recipient').addEventListener('change', function() {
+    const specificUserContainer = document.getElementById('specific-user-container');
+    if (this.value === 'specific') {
+        specificUserContainer.style.display = 'block';
+        document.getElementById('add-user-id').setAttribute('required', 'required');
+    } else {
+        specificUserContainer.style.display = 'none';
+        document.getElementById('add-user-id').removeAttribute('required');
+    }
+});
+{% endblock %}

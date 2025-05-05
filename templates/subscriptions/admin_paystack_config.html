@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Paystack Configuration" %} | SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "Paystack Payment Configuration" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Configure your Paystack API keys and settings" %}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "API Configuration" %}</h2>
+            </div>
+            <div class="p-6">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-6">
+                        <label for="id_public_key" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Paystack Public Key" %}</label>
+                        <input type="text" name="public_key" id="id_public_key" value="{{ form.public_key.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="pk_test_..." required>
+                        {% if form.public_key.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.public_key.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">{% trans "Your Paystack public key (starts with pk_)" %}</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="id_secret_key" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Paystack Secret Key" %}</label>
+                        <input type="password" name="secret_key" id="id_secret_key" value="{{ form.secret_key.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="sk_test_..." required>
+                        {% if form.secret_key.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.secret_key.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">{% trans "Your Paystack secret key (starts with sk_)" %}</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="id_webhook_secret" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Webhook Secret" %}</label>
+                        <input type="password" name="webhook_secret" id="id_webhook_secret" value="{{ form.webhook_secret.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="whsec_...">
+                        {% if form.webhook_secret.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.webhook_secret.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-xs text-gray-500 mt-1">{% trans "Optional: Your Paystack webhook secret for verifying webhook signatures" %}</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="id_currency" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Currency" %}</label>
+                        <select name="currency" id="id_currency" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="NGN" {% if form.currency.value == 'NGN' %}selected{% endif %}>NGN - Nigerian Naira (Recommended)</option>
+                            <option value="GHS" {% if form.currency.value == 'GHS' %}selected{% endif %}>GHS - Ghanaian Cedi</option>
+                            <option value="ZAR" {% if form.currency.value == 'ZAR' %}selected{% endif %}>ZAR - South African Rand</option>
+                            <option value="USD" {% if form.currency.value == 'USD' %}selected{% endif %}>USD - US Dollar (Requires USD account)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">{% trans "Note: NGN is recommended as it's always supported. USD requires a USD Paystack account." %}</p>
+                        {% if form.currency.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.currency.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-6">
+                        <div class="flex items-center">
+                            <input type="checkbox" name="is_live" id="id_is_live" {% if form.is_live.value %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="id_is_live" class="ml-2 block text-sm text-gray-700">
+                                {% trans "Use Live Mode" %}
+                            </label>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1 ml-6">{% trans "Check to use live mode instead of test mode" %}</p>
+                        {% if form.is_live.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.is_live.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex justify-between">
+                        <a href="{% url 'admin:index' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition duration-300">
+                            {% trans "Back to Admin" %}
+                        </a>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition duration-300">
+                            {% trans "Save Configuration" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-6 bg-yellow-50 border-b border-yellow-200">
+                <h2 class="text-xl font-semibold text-yellow-800">{% trans "Webhook Setup" %}</h2>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-700 mb-4">{% trans "To receive payment notifications, set up a webhook in your Paystack dashboard with the following URL:" %}</p>
+
+                <div class="bg-gray-100 p-3 rounded-md mb-4 font-mono text-sm break-all">
+                    {{ webhook_url }}
+                </div>
+
+                <p class="text-gray-700 mb-2">{% trans "Events to subscribe to:" %}</p>
+                <ul class="list-disc list-inside text-gray-700 mb-4">
+                    <li>{% trans "charge.success" %}</li>
+                    <li>{% trans "subscription.create" %}</li>
+                    <li>{% trans "subscription.disable" %}</li>
+                </ul>
+
+                <div class="bg-yellow-100 text-yellow-800 p-4 rounded-md">
+                    <p class="font-medium">{% trans "Important:" %}</p>
+                    <p>{% trans "After setting up the webhook in your Paystack dashboard, copy the webhook secret and paste it in the configuration form above." %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

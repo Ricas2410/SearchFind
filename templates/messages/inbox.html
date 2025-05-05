@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}Messages - SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row gap-6">
+        <!-- Sidebar -->
+        <div class="w-full md:w-1/4">
+            <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                <h2 class="text-xl font-bold mb-4">Messages</h2>
+                <nav class="space-y-2">
+                    <a href="{% url 'messaging:inbox' %}" class="block px-4 py-2 rounded-md {% if active_tab == 'inbox' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                        <i class="fas fa-inbox mr-2"></i> Inbox
+                    </a>
+                    <a href="{% url 'messaging:connections' %}" class="block px-4 py-2 rounded-md {% if active_tab == 'connections' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                        <i class="fas fa-user-friends mr-2"></i> Connections
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="w-full md:w-3/4">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold">Inbox</h1>
+                </div>
+
+                {% if conversation_data %}
+                    <div class="divide-y">
+                        {% for item in conversation_data %}
+                            <a href="{% url 'messaging:conversation_detail' conversation_id=item.conversation.id %}" class="block py-4 hover:bg-gray-50">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mr-4">
+                                        {% if item.other_user.profile_picture %}
+                                            <img src="{{ item.other_user.profile_picture.url }}" alt="{{ item.other_user.get_full_name }}" class="w-12 h-12 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                                                {{ item.other_user.first_name|first|upper }}{{ item.other_user.last_name|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="flex justify-between">
+                                            <h3 class="font-semibold">{{ item.other_user.get_full_name|default:item.other_user.email }}</h3>
+                                            <span class="text-sm text-gray-500">{{ item.last_message.created_at|timesince }} ago</span>
+                                        </div>
+                                        <p class="text-gray-600 truncate {% if item.unread_count > 0 and item.last_message.sender != request.user %}font-semibold{% endif %}">
+                                            {% if item.last_message.sender == request.user %}
+                                                <span class="text-gray-400">You: </span>
+                                            {% endif %}
+                                            {{ item.last_message.content|truncatechars:60 }}
+                                        </p>
+                                        {% if item.unread_count > 0 and item.last_message.sender != request.user %}
+                                            <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-blue-600 rounded-full mt-1">
+                                                {{ item.unread_count }} new
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="text-gray-400 mb-4">
+                            <i class="fas fa-inbox text-5xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">No messages yet</h3>
+                        <p class="text-gray-600 mb-6">
+                            Your inbox is empty. Start a conversation with someone to see messages here.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

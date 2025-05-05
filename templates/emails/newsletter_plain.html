@@ -1,0 +1,30 @@
+Latest Job Opportunities from SearchFind
+=======================================
+
+{% if custom_message %}
+{{ custom_message }}
+{% else %}
+Hello,
+
+Here are some of the latest job opportunities that might interest you:
+{% endif %}
+
+{% for job in jobs %}
+* {{ job.title }} - {{ job.company.company_name|default:job.company.get_full_name }}
+  Location: {{ job.location }}{% if job.is_remote %} (Remote){% endif %}
+  Type: {{ job.get_job_type_display }} - {{ job.get_experience_level_display }}
+  {% if job.salary_min and job.salary_max %}Salary: ${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}{% elif job.salary_min %}Salary: ${{ job.salary_min|floatformat:0 }}+{% endif %}
+  Posted: {{ job.created_at|date:"F j, Y" }}
+  Deadline: {{ job.application_deadline|date:"F j, Y" }}
+  View Job: {{ site_url }}{% url 'jobs:job_detail' slug=job.slug %}
+
+{% endfor %}
+
+View All Jobs: {{ site_url }}{% url 'jobs:job_list' %}
+
+---
+
+You're receiving this email because you subscribed to job alerts from SearchFind.
+To unsubscribe, visit: {{ unsubscribe_url }}
+
+© {% now "Y" %} SearchFind. All rights reserved.

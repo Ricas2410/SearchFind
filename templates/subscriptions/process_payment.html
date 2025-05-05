@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Process Payment" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-card {
+        transition: all 0.3s ease;
+    }
+    .payment-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .payment-method-option {
+        transition: all 0.2s ease;
+    }
+    .payment-method-option:hover {
+        background-color: #F3F4F6;
+    }
+    .payment-method-option.selected {
+        background-color: #EFF6FF;
+        border-color: #3B82F6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "Complete Your Subscription" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "You're just one step away from unlocking premium features" %}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8 payment-card">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Order Summary" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between mb-4">
+                    <span class="text-gray-600">{% trans "Plan" %}:</span>
+                    <span class="font-medium">{{ subscription.plan.name }}</span>
+                </div>
+                <div class="flex justify-between mb-4">
+                    <span class="text-gray-600">{% trans "Duration" %}:</span>
+                    <span class="font-medium">{{ subscription.plan.duration_days }} {% trans "days" %}</span>
+                </div>
+                <div class="flex justify-between mb-4">
+                    <span class="text-gray-600">{% trans "Price" %}:</span>
+                    <span class="font-medium text-green-700 font-bold">GH₵{{ amount_paid_in_ngn }} GHS</span>
+                    {% if subscription.amount_paid != amount_paid_in_ngn %}
+                    <span class="text-xs text-gray-500">(Equivalent to ${{ subscription.amount_paid }} USD)</span>
+                    {% endif %}
+                </div>
+                <div class="bg-green-50 p-3 rounded-md mt-2 mb-3 border border-green-200">
+                    <p class="text-sm text-green-700 font-medium text-center">
+                        <i class="fas fa-shield-alt mr-1"></i> {% trans "Secure payments processed in Ghanaian Cedi (GHS)" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 payment-card">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Payment Method" %}</h2>
+            </div>
+            <div class="p-6">
+                <form id="payment-form" method="post" action="{% url 'subscriptions:process_payment' subscription_id=subscription.id %}">
+                    {% csrf_token %}
+
+
+
+                <!-- Paystack payment form - Simplified for NGN only -->
+                <div id="paystack-container" class="mb-6 p-6 border border-gray-200 rounded-lg bg-gray-50">
+                    <div class="text-center mb-4">
+                        <div class="bg-green-100 text-green-800 p-3 rounded-lg inline-block">
+                            <i class="fas fa-lock mr-2"></i> {% trans "Secure Payment via Paystack" %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">{% trans "Email Address" %}</label>
+                        <input type="email" id="email" name="email" value="{{ request.user.email }}" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <!-- Critical hidden fields -->
+                    <input type="hidden" name="currency" value="NGN">
+                    <input type="hidden" name="payment_amount" value="{{ amount_paid_in_ngn }}">
+                    <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+                    <input type="hidden" name="payment_reference" id="payment_reference" value="{{ payment_reference }}">
+
+                    <div class="mt-4 text-center">
+                        <p class="text-sm text-gray-600">
+                            {% trans "Payment will be securely processed by Paystack." %}
+                        </p>
+                    </div>
+                </div>
+
+                    <div class="flex items-center mb-6">
+                        <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="terms" class="ml-2 block text-sm text-gray-700">
+                            {% trans "I agree to the" %} <a href="#" class="text-blue-600 hover:text-blue-800">{% trans "Terms and Conditions" %}</a>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <a href="{% url 'subscriptions:plans' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 rounded-lg transition duration-300">
+                            {% trans "Back" %}
+                        </a>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-300">
+                            {% trans "Complete Payment" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>{% trans "Your payment is secure and encrypted." %}</p>
+            <p>{% trans "If you have any questions, please contact our support team." %}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Paystack JS SDK -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle form submission for Paystack
+        const paymentForm = document.getElementById('payment-form');
+
+        paymentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Check terms checkbox
+            const termsCheckbox = document.getElementById('terms');
+            if (!termsCheckbox.checked) {
+                alert("{% trans 'Please agree to the Terms and Conditions' %}");
+                return;
+            }
+
+            // Show loading state
+            const submitButton = paymentForm.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> {% trans "Processing..." %}';
+            submitButton.disabled = true;
+
+            // Direct Paystack integration using the inline.js approach
+            try {
+                // Log for debugging
+                console.log("Initializing Paystack payment...");
+                console.log("Amount:", {{ amount_paid_in_ngn }} * 100);
+                console.log("Email:", document.getElementById('email').value);
+
+                // Use the server-generated payment reference
+                const paymentReference = document.getElementById('payment_reference').value;
+
+                console.log("Using server reference:", paymentReference);
+                console.log("Payment amount (NGN):", {{ amount_paid_in_ngn }} * 100, "kobo");
+
+                // Comprehensive Paystack initialization with NGN-specific parameters
+                let handler = PaystackPop.setup({
+                    key: 'pk_test_3e58947994e1d69561d4f58adae8960f49fbdcae',
+                    email: document.getElementById('email').value,
+                    amount: {{ amount_paid_in_ngn }} * 100, // Amount in pesewas (smallest GHS unit)
+                    currency: 'GHS', // Must be GHS for this Paystack merchant account
+                    ref: paymentReference, // Use server-generated reference for consistency
+
+                    // Enhanced metadata for better transaction identification
+                    metadata: {
+                        subscription_id: '{{ subscription.id }}',
+                        plan_name: '{{ subscription.plan.name }}',
+                        user_email: '{{ request.user.email }}',
+                        custom_fields: [
+                            {
+                                display_name: "Plan Duration",
+                                variable_name: "duration_days",
+                                value: "{{ subscription.plan.duration_days }} days"
+                            }
+                        ]
+                    },
+
+                    // Specify payment channels available for NGN
+                    channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
+                    callback: function(response) {
+                        // Payment successful, add the reference to the form and submit
+                        console.log("Payment successful! Reference:", response.reference);
+
+                        const referenceInput = document.createElement('input');
+                        referenceInput.type = 'hidden';
+                        referenceInput.name = 'paystack_reference';
+                        referenceInput.value = response.reference;
+
+                        paymentForm.appendChild(referenceInput);
+
+                        // Show success message before submitting
+                        submitButton.innerHTML = '<i class="fas fa-check-circle mr-2"></i> {% trans "Payment Successful" %}';
+                        submitButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        submitButton.classList.add('bg-green-600', 'hover:bg-green-700');
+
+                        // Submit the form after a short delay to show success state
+                        setTimeout(() => {
+                            paymentForm.submit();
+                        }, 1000);
+                    },
+                    onClose: function() {
+                        console.log("Payment window closed");
+                        // Reset button when user cancels
+                        submitButton.innerHTML = originalButtonText;
+                        submitButton.disabled = false;
+                    },
+
+                    // Add clear error handling
+                    onError: function(error) {
+                        console.error("Paystack Error:", error);
+                        submitButton.innerHTML = originalButtonText;
+                        submitButton.disabled = false;
+
+                        // Provide more detailed error messages based on error type
+                        if (error && error.message) {
+                            if (error.message.includes("currency")) {
+                                alert("{% trans 'Currency error: Only Nigerian Naira (NGN) is supported. Please try again.' %}");
+                            } else {
+                                alert("{% trans 'Payment error: ' %}" + error.message);
+                            }
+                        } else {
+                            alert("{% trans 'There was an error processing your payment. Please try again.' %}");
+                        }
+                    }
+                });
+
+                // Open the payment iframe
+                handler.openIframe();
+
+                console.log("Paystack iframe should be open now");
+            } catch (error) {
+                console.error("Error initializing Paystack:", error);
+                alert("There was an error initializing the payment. Please try again.");
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}Test Paystack Payment - Admin Dashboard{% endblock %}
+
+{% block header %}Test Paystack Payment{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'custom_admin:paystack_config_management' %}" class="text-blue-600 hover:text-blue-800">Paystack Configuration</a> / Test Payment
+{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+    <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Test Payment</h3>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">Complete the test payment to verify your Paystack integration.</p>
+    </div>
+    
+    <div class="border-t border-gray-200">
+        <div class="p-6">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                <div class="p-6 bg-blue-50 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Payment Details</h2>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between mb-4">
+                        <span class="text-gray-600">Email:</span>
+                        <span class="font-medium">{{ email }}</span>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <span class="text-gray-600">Amount:</span>
+                        <span class="font-medium text-green-700 font-bold">NGN {{ amount }}</span>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <span class="text-gray-600">Reference:</span>
+                        <span class="font-medium">{{ reference }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-between">
+                <a href="{% url 'custom_admin:paystack_config_management' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 rounded-lg transition duration-300">
+                    Back
+                </a>
+                <button id="pay-button" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-300">
+                    Complete Test Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Paystack JS SDK -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle payment button click
+        const payButton = document.getElementById('pay-button');
+        
+        payButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            payButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+            payButton.disabled = true;
+            
+            // Initialize Paystack payment
+            try {
+                console.log("Initializing Paystack payment...");
+                
+                // Use the simplest possible Paystack configuration
+                let handler = PaystackPop.setup({
+                    key: "{{ public_key }}",
+                    email: "{{ email }}",
+                    amount: {{ amount_in_kobo }},
+                    currency: "NGN",
+                    ref: "{{ reference }}",
+                    callback: function(response) {
+                        // Payment successful
+                        console.log("Payment successful! Reference:", response.reference);
+                        
+                        // Redirect to callback URL
+                        window.location.href = "{{ callback_url }}?reference=" + response.reference;
+                    },
+                    onClose: function() {
+                        // Reset button when user cancels
+                        payButton.innerHTML = 'Complete Test Payment';
+                        payButton.disabled = false;
+                    }
+                });
+                
+                // Open the payment iframe
+                handler.openIframe();
+                
+            } catch (error) {
+                console.error("Error initializing Paystack:", error);
+                alert("There was an error initializing the payment. Please try again.");
+                payButton.innerHTML = 'Complete Test Payment';
+                payButton.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}

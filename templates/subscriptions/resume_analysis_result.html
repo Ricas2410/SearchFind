@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% load job_extras %}
+
+{% block title %}{% trans "Resume Analysis Results" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .progress-circle {
+        position: relative;
+        width: 120px;
+        height: 120px;
+    }
+    .progress-circle svg {
+        transform: rotate(-90deg);
+    }
+    .progress-circle circle {
+        fill: none;
+        stroke-width: 8;
+    }
+    .progress-circle .bg {
+        stroke: #E5E7EB;
+    }
+    .progress-circle .progress {
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s ease;
+    }
+    .progress-circle .text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .score-meter {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #E5E7EB;
+        overflow: hidden;
+    }
+    .score-meter-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    .score-meter-fill.high {
+        background-color: #10B981;
+    }
+    .score-meter-fill.medium {
+        background-color: #F59E0B;
+    }
+    .score-meter-fill.low {
+        background-color: #EF4444;
+    }
+
+    .suggestion-item {
+        transition: all 0.2s ease;
+    }
+    .suggestion-item:hover {
+        background-color: #F3F4F6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <a href="{% url 'subscriptions:resume_analysis' %}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> {% trans "Back to Resume Analysis" %}
+            </a>
+        </div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "Resume Analysis Results" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "See how your resume performs and get suggestions for improvement" %}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Overall Score" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="text-center mb-6 md:mb-0">
+                        <div class="progress-circle mx-auto">
+                            <svg width="120" height="120" viewBox="0 0 120 120">
+                                <circle class="bg" cx="60" cy="60" r="54" />
+                                <circle class="progress" cx="60" cy="60" r="54"
+                                    stroke="{% if analysis.overall_score >= 80 %}#10B981{% elif analysis.overall_score >= 50 %}#F59E0B{% else %}#EF4444{% endif %}"
+                                    stroke-dasharray="339.292"
+                                    stroke-dashoffset="{{ 339.292|multiply:0.01|multiply:100|subtract:analysis.overall_score }}" />
+                            </svg>
+                            <div class="text">{{ analysis.overall_score }}%</div>
+                        </div>
+                        <p class="text-gray-700 font-medium mt-2">{% trans "Overall Score" %}</p>
+                    </div>
+
+                    <div class="w-full md:w-2/3 space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-700 font-medium">{% trans "Skills" %}</span>
+                                <span class="text-gray-700 font-medium">{{ analysis.skill_score }}%</span>
+                            </div>
+                            <div class="score-meter">
+                                <div class="score-meter-fill {% if analysis.skill_score >= 70 %}high{% elif analysis.skill_score >= 40 %}medium{% else %}low{% endif %}" style="width: {{ analysis.skill_score }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-700 font-medium">{% trans "Experience" %}</span>
+                                <span class="text-gray-700 font-medium">{{ analysis.experience_score }}%</span>
+                            </div>
+                            <div class="score-meter">
+                                <div class="score-meter-fill {% if analysis.experience_score >= 70 %}high{% elif analysis.experience_score >= 40 %}medium{% else %}low{% endif %}" style="width: {{ analysis.experience_score }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-700 font-medium">{% trans "Education" %}</span>
+                                <span class="text-gray-700 font-medium">{{ analysis.education_score }}%</span>
+                            </div>
+                            <div class="score-meter">
+                                <div class="score-meter-fill {% if analysis.education_score >= 70 %}high{% elif analysis.education_score >= 40 %}medium{% else %}low{% endif %}" style="width: {{ analysis.education_score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                <div class="p-4 bg-blue-50 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-800">{% trans "Skills Analysis" %}</h2>
+                </div>
+                <div class="p-4">
+                    <div class="mb-4">
+                        <h3 class="font-medium text-gray-800 mb-2">{% trans "Technical Skills" %}</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for skill in analysis.parsed_skills.technical %}
+                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">{{ skill }}</span>
+                            {% empty %}
+                                <p class="text-gray-500 text-sm">{% trans "No technical skills detected" %}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="font-medium text-gray-800 mb-2">{% trans "Soft Skills" %}</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for skill in analysis.parsed_skills.soft %}
+                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">{{ skill }}</span>
+                            {% empty %}
+                                <p class="text-gray-500 text-sm">{% trans "No soft skills detected" %}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                <div class="p-4 bg-blue-50 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-800">{% trans "Experience Analysis" %}</h2>
+                </div>
+                <div class="p-4">
+                    <div class="space-y-3">
+                        {% for exp in analysis.parsed_experience %}
+                            <div class="p-3 border border-gray-200 rounded-lg">
+                                <p class="font-medium">{{ exp.title }}</p>
+                                <p class="text-sm text-gray-600">{{ exp.company }} | {{ exp.years }}</p>
+                            </div>
+                        {% empty %}
+                            <p class="text-gray-500">{% trans "No experience details detected" %}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Improvement Suggestions" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for suggestion in analysis.suggestions %}
+                        <div class="suggestion-item p-4 border border-yellow-200 rounded-lg bg-yellow-50">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-gray-800">{{ suggestion }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="text-gray-500 text-center">{% trans "No suggestions available" %}</p>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-8 flex justify-between">
+                    <a href="{% url 'subscriptions:resume_analysis' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-300">
+                        {% trans "Back" %}
+                    </a>
+
+                    <a href="{% url 'subscriptions:resume_builder' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                        {% trans "Build Improved Resume" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATS Compatibility Section -->
+        {% if analysis.detailed_analysis.ats_compatibility %}
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "ATS Compatibility" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center mb-4">
+                    <div class="progress-circle mr-4" style="width: 80px; height: 80px;">
+                        <svg width="80" height="80" viewBox="0 0 80 80">
+                            <circle class="bg" cx="40" cy="40" r="36" />
+                            <circle class="progress" cx="40" cy="40" r="36"
+                                stroke="{% if analysis.detailed_analysis.ats_compatibility.score >= 80 %}#10B981{% elif analysis.detailed_analysis.ats_compatibility.score >= 50 %}#F59E0B{% else %}#EF4444{% endif %}"
+                                stroke-dasharray="226.195"
+                                stroke-dashoffset="{{ 226.195|multiply:0.01|multiply:100|subtract:analysis.detailed_analysis.ats_compatibility.score }}" />
+                        </svg>
+                        <div class="text" style="font-size: 1rem;">{{ analysis.detailed_analysis.ats_compatibility.score }}%</div>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-800 mb-1">{% trans "ATS Compatibility Score" %}</h3>
+                        <p class="text-gray-600 text-sm">{% trans "Level" %}: {{ analysis.detailed_analysis.ats_compatibility.level }}</p>
+                    </div>
+                </div>
+
+                {% if analysis.detailed_analysis.ats_compatibility.improvement_tips %}
+                <div class="mt-4">
+                    <h4 class="font-medium text-gray-800 mb-2">{% trans "ATS Improvement Tips" %}</h4>
+                    <ul class="list-disc pl-5 space-y-1 text-gray-600">
+                        {% for tip in analysis.detailed_analysis.ats_compatibility.improvement_tips %}
+                            <li>{{ tip }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Extracted Text Section -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Extracted Resume Text" %}</h2>
+                <p class="text-gray-600 text-sm mt-1">{% trans "This is the text that was extracted from your resume file and analyzed" %}</p>
+            </div>
+            <div class="p-6">
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 whitespace-pre-wrap font-mono text-sm text-gray-700 max-h-96 overflow-y-auto">
+                    {{ analysis.extracted_text|default:"No text was extracted from the resume file." }}
+                </div>
+
+                <div class="mt-4 text-sm text-gray-500">
+                    <p>{% trans "If the extracted text doesn't match your resume content, try uploading your resume in a different format (PDF, DOCX, or TXT)." %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

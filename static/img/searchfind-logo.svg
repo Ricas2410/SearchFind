@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="200" height="50" viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Rectangle -->
+  <rect width="200" height="50" rx="8" fill="#3B82F6" />
+  
+  <!-- Magnifying Glass Icon -->
+  <circle cx="30" cy="25" r="12" stroke="white" stroke-width="3" fill="none" />
+  <line x1="39" y1="34" x2="48" y2="43" stroke="white" stroke-width="3" stroke-linecap="round" />
+  
+  <!-- Text: SearchFind -->
+  <text x="55" y="32" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">SearchFind</text>
+</svg>

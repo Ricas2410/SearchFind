@@ -1,0 +1,152 @@
+{% extends 'custom_admin/base.html' %}
+{% load static %}
+
+{% block title %}Test Paystack Payment - Admin Dashboard{% endblock %}
+
+{% block header %}Test Paystack Payment{% endblock %}
+{% block breadcrumb %}
+<a href="{% url 'custom_admin:paystack_config_management' %}" class="text-blue-600 hover:text-blue-800">Paystack Configuration</a> / Test Payment
+{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+    <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+        <div>
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Test Payment</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Complete the test payment to verify your Paystack integration.</p>
+        </div>
+        <div class="flex items-center">
+            <span class="px-3 py-1 text-sm rounded-full {% if config.is_live_mode %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                {% if config.is_live_mode %}Live Mode{% else %}Test Mode{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <div class="border-t border-gray-200">
+        <div class="p-6">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                <div class="p-6 bg-blue-50 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">Payment Details</h2>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between mb-4">
+                        <span class="text-gray-600">Email:</span>
+                        <span class="font-medium">{{ email }}</span>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <span class="text-gray-600">Amount:</span>
+                        <span class="font-medium text-green-700 font-bold">NGN {{ amount }}</span>
+                    </div>
+                    <div class="flex justify-between mb-4">
+                        <span class="text-gray-600">Reference:</span>
+                        <span class="font-medium">{{ reference }}</span>
+                    </div>
+                    <div class="bg-green-50 p-3 rounded-md mt-2 mb-3 border border-green-200">
+                        <p class="text-sm text-green-700 font-medium text-center">
+                            <i class="fas fa-shield-alt mr-1"></i> Secure payment processed by Paystack
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <a href="{% url 'custom_admin:paystack_config_management' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-6 rounded-lg transition duration-300">
+                    Back
+                </a>
+                <button id="pay-button" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition duration-300">
+                    Complete Test Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Paystack JS SDK -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle payment button click
+        const payButton = document.getElementById('pay-button');
+
+        payButton.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Show loading state
+            const originalButtonText = payButton.innerHTML;
+            payButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+            payButton.disabled = true;
+
+            // Initialize Paystack payment
+            try {
+                console.log("Initializing Paystack payment...");
+                console.log("Amount:", {{ amount_in_kobo }});
+                console.log("Email:", "{{ email }}");
+                console.log("Reference:", "{{ reference }}");
+
+                let handler = PaystackPop.setup({
+                    key: "{{ public_key }}",
+                    email: "{{ email }}",
+                    amount: {{ amount_in_kobo }}, // Amount in kobo
+                    currency: "NGN", // Always use NGN for test payments
+                    ref: "{{ reference }}",
+
+                    metadata: {
+                        payment_type: "test",
+                        admin_email: "{{ email }}"
+                    },
+
+                    // Specify payment channels
+                    channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
+
+                    callback: function(response) {
+                        // Payment successful
+                        console.log("Payment successful! Reference:", response.reference);
+
+                        // Show success message
+                        payButton.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Payment Successful';
+                        payButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        payButton.classList.add('bg-green-600', 'hover:bg-green-700');
+
+                        // Redirect to callback URL after a short delay
+                        setTimeout(() => {
+                            window.location.href = "{{ callback_url }}?reference=" + response.reference;
+                        }, 1500);
+                    },
+
+                    onClose: function() {
+                        console.log("Payment window closed");
+                        // Reset button when user cancels
+                        payButton.innerHTML = originalButtonText;
+                        payButton.disabled = false;
+                    },
+
+                    onError: function(error) {
+                        console.error("Paystack Error:", error);
+                        payButton.innerHTML = originalButtonText;
+                        payButton.disabled = false;
+
+                        // Provide error message
+                        if (error && error.message) {
+                            alert("Payment error: " + error.message);
+                        } else {
+                            alert("There was an error processing your payment. Please try again.");
+                        }
+                    }
+                });
+
+                // Open the payment iframe
+                handler.openIframe();
+
+                console.log("Paystack iframe should be open now");
+            } catch (error) {
+                console.error("Error initializing Paystack:", error);
+                alert("There was an error initializing the payment. Please try again.");
+                payButton.innerHTML = originalButtonText;
+                payButton.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}

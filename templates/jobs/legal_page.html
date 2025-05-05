@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}{{ legal_page.title }} - SearchFind{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative bg-blue-700 text-white mb-8 rounded-lg overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-800 opacity-90"></div>
+    <div class="absolute inset-0 bg-pattern opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+
+    <div class="relative container mx-auto px-6 py-12 flex flex-col items-center text-center z-10">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4">{{ legal_page.title }}</h1>
+        <p class="text-xl max-w-3xl">Last updated: {{ legal_page.updated_at|date:"F j, Y" }}</p>
+    </div>
+</div>
+
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8">
+        <div class="prose prose-lg max-w-none legal-content">
+            {{ legal_page.content|safe }}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-content h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        color: #1a56db;
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 0.5rem;
+    }
+    
+    .legal-content h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: #2563eb;
+    }
+    
+    .legal-content h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 1.25rem;
+        margin-bottom: 0.5rem;
+        color: #3b82f6;
+    }
+    
+    .legal-content p {
+        margin-bottom: 1rem;
+        line-height: 1.7;
+    }
+    
+    .legal-content ul, 
+    .legal-content ol {
+        margin-left: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .legal-content ul {
+        list-style-type: disc;
+    }
+    
+    .legal-content ol {
+        list-style-type: decimal;
+    }
+    
+    .legal-content li {
+        margin-bottom: 0.5rem;
+    }
+    
+    .legal-content a {
+        color: #2563eb;
+        text-decoration: underline;
+    }
+    
+    .legal-content a:hover {
+        color: #1d4ed8;
+    }
+    
+    .legal-content strong {
+        font-weight: 600;
+    }
+</style>
+{% endblock %}

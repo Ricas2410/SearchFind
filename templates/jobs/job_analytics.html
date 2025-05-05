@@ -1,0 +1,534 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics for {{ job.title }} - SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Analytics for "{{ job.title }}"</h1>
+            <div>
+                <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-eye mr-2"></i> View Job
+                </a>
+                <a href="{% url 'jobs:applications_list' job_id=job.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md ml-2">
+                    <i class="fas fa-users mr-2"></i> View Applications
+                </a>
+            </div>
+        </div>
+
+        <!-- Job Status -->
+        <div class="mb-6">
+            <div class="flex items-center mb-2">
+                <h2 class="text-xl font-semibold">Job Status</h2>
+                <span class="ml-3 px-3 py-1 text-sm font-semibold rounded-full
+                    {% if job.status == 'published' %}bg-green-100 text-green-800
+                    {% elif job.status == 'draft' %}bg-gray-100 text-gray-800
+                    {% elif job.status == 'closed' %}bg-red-100 text-red-800
+                    {% elif job.status == 'expired' %}bg-yellow-100 text-yellow-800{% endif %}">
+                    {{ job.get_status_display }}
+                </span>
+
+                {% if job.is_expired %}
+                    <span class="ml-2 text-red-600">
+                        <i class="fas fa-exclamation-circle mr-1"></i> Expired
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-gray-600 text-sm">Posted</p>
+                    <p class="text-lg font-semibold">{{ job.created_at|date:"M d, Y" }}</p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-gray-600 text-sm">Application Deadline</p>
+                    <p class="text-lg font-semibold">
+                        {% if job.application_deadline %}
+                            {{ job.application_deadline|date:"M d, Y g:i A" }}
+                        {% else %}
+                            No deadline set
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-gray-600 text-sm">Days Active</p>
+                    <p class="text-lg font-semibold">{{ job.created_at|timesince|split:" "|first }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Overview -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Performance Overview</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 rounded-full p-3 mr-4">
+                            <i class="fas fa-eye text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 text-sm">Total Views</p>
+                            <p class="text-2xl font-bold">{{ analytics.total_views }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 rounded-full p-3 mr-4">
+                            <i class="fas fa-file-alt text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 text-sm">Applications</p>
+                            <p class="text-2xl font-bold">{{ analytics.total_applications }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 rounded-full p-3 mr-4">
+                            <i class="fas fa-percentage text-purple-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 text-sm">Application Rate</p>
+                            <p class="text-2xl font-bold">{{ analytics.application_rate|floatformat:1 }}%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <div class="bg-yellow-100 rounded-full p-3 mr-4">
+                            <i class="fas fa-bookmark text-yellow-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-gray-600 text-sm">Saved</p>
+                            <p class="text-2xl font-bold">{{ analytics.save_count }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Funnel -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Application Funnel</h2>
+
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <div class="grid grid-cols-5 gap-4 mb-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">{{ analytics.total_applications }}</div>
+                        <p class="text-gray-600">Applications</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-indigo-600">{{ analytics.shortlisted_count }}</div>
+                        <p class="text-gray-600">Shortlisted</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-purple-600">{{ analytics.interview_count }}</div>
+                        <p class="text-gray-600">Interviews</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-600">{{ analytics.hired_count }}</div>
+                        <p class="text-gray-600">Hired</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-gray-600">
+                            {{ analytics.total_applications|subtract:analytics.shortlisted_count|subtract:analytics.interview_count|subtract:analytics.hired_count }}
+                        </div>
+                        <p class="text-gray-600">Rejected/Pending</p>
+                    </div>
+                </div>
+
+                <!-- Funnel Chart -->
+                <div class="mt-6">
+                    <canvas id="applicationFunnelChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Metrics -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Time Metrics</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-3">Average Time to Apply</h3>
+                    {% if analytics.avg_time_to_apply %}
+                        <p class="text-3xl font-bold text-blue-600">
+                            {% if analytics.avg_time_to_apply.days > 0 %}
+                                {{ analytics.avg_time_to_apply.days }} day{{ analytics.avg_time_to_apply.days|pluralize }}
+                            {% else %}
+                                {{ analytics.avg_time_to_apply.seconds|divide:3600|floatformat:1 }} hour{{ analytics.avg_time_to_apply.seconds|divide:3600|floatformat:1|pluralize }}
+                            {% endif %}
+                        </p>
+                        <p class="text-gray-600 mt-2">Average time between viewing the job and submitting an application</p>
+                    {% else %}
+                        <p class="text-gray-500 italic">No data available</p>
+                    {% endif %}
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-3">Time to First Application</h3>
+                    {% if analytics.time_to_first_application %}
+                        <p class="text-3xl font-bold text-green-600">
+                            {% if analytics.time_to_first_application.days > 0 %}
+                                {{ analytics.time_to_first_application.days }} day{{ analytics.time_to_first_application.days|pluralize }}
+                            {% else %}
+                                {{ analytics.time_to_first_application.seconds|divide:3600|floatformat:1 }} hour{{ analytics.time_to_first_application.seconds|divide:3600|floatformat:1|pluralize }}
+                            {% endif %}
+                        </p>
+                        <p class="text-gray-600 mt-2">Time between posting the job and receiving the first application</p>
+                    {% else %}
+                        <p class="text-gray-500 italic">No data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Views and Applications Over Time -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Performance Trends</h2>
+
+            <div class="bg-white border border-gray-200 rounded-lg p-6">
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold">Views & Applications</h3>
+                        <div class="flex space-x-4">
+                            <button class="text-sm text-gray-600 hover:text-blue-600 time-range-btn" data-range="7">7 days</button>
+                            <button class="text-sm text-gray-600 hover:text-blue-600 time-range-btn" data-range="30">30 days</button>
+                            <button class="text-sm text-blue-600 font-medium time-range-btn active" data-range="all">All time</button>
+                        </div>
+                    </div>
+                    <canvas id="performanceTrendsChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applicant Locations -->
+        {% if analytics.applicant_locations %}
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">Applicant Locations</h2>
+
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {% for location, count in analytics.applicant_locations.items %}
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <p class="font-semibold">{{ location }}</p>
+                                        <p class="text-gray-600">{{ count }} applicant{{ count|pluralize }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div>
+                            <canvas id="locationChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Referral Sources -->
+        {% if analytics.referral_sources %}
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">Traffic Sources</h2>
+
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {% for source, count in analytics.referral_sources.items %}
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <p class="font-semibold">{{ source }}</p>
+                                        <p class="text-gray-600">{{ count }} view{{ count|pluralize }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div>
+                            <canvas id="referralChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Application Funnel Chart
+        const funnelCtx = document.getElementById('applicationFunnelChart').getContext('2d');
+        const funnelChart = new Chart(funnelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Total Applications', 'Shortlisted', 'Interviews', 'Hired'],
+                datasets: [{
+                    label: 'Application Funnel',
+                    data: [
+                        {{ analytics.total_applications }},
+                        {{ analytics.shortlisted_count }},
+                        {{ analytics.interview_count }},
+                        {{ analytics.hired_count }}
+                    ],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)',  // blue
+                        'rgba(79, 70, 229, 0.7)',   // indigo
+                        'rgba(139, 92, 246, 0.7)',  // purple
+                        'rgba(16, 185, 129, 0.7)'   // green
+                    ],
+                    borderColor: [
+                        'rgb(59, 130, 246)',
+                        'rgb(79, 70, 229)',
+                        'rgb(139, 92, 246)',
+                        'rgb(16, 185, 129)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = {{ analytics.total_applications|default:1 }};
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Performance Trends Chart with real data from backend
+        const trendsCtx = document.getElementById('performanceTrendsChart').getContext('2d');
+
+        // Parse the performance data from the backend
+        const performanceData = JSON.parse('{{ performance_data|safe }}');
+        const dates = performanceData.dates;
+        const viewsData = performanceData.views;
+        const applicationsData = performanceData.applications;
+
+        const trendsChart = new Chart(trendsCtx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Views',
+                        data: viewsData,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Applications',
+                        data: applicationsData,
+                        borderColor: 'rgb(16, 185, 129)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Time range buttons for performance trends
+        document.querySelectorAll('.time-range-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.time-range-btn').forEach(btn => {
+                    btn.classList.remove('active', 'text-blue-600', 'font-medium');
+                    btn.classList.add('text-gray-600');
+                });
+
+                // Add active class to clicked button
+                this.classList.add('active', 'text-blue-600', 'font-medium');
+                this.classList.remove('text-gray-600');
+
+                // Update chart data based on selected range
+                const range = this.getAttribute('data-range');
+                let newDates = [];
+                let newViewsData = [];
+                let newApplicationsData = [];
+
+                if (range === '7') {
+                    // Last 7 days
+                    newDates = dates.slice(-7);
+                    newViewsData = viewsData.slice(-7);
+                    newApplicationsData = applicationsData.slice(-7);
+                } else if (range === '30') {
+                    // Last 30 days
+                    newDates = dates.slice(-30);
+                    newViewsData = viewsData.slice(-30);
+                    newApplicationsData = applicationsData.slice(-30);
+                } else {
+                    // All time
+                    newDates = dates;
+                    newViewsData = viewsData;
+                    newApplicationsData = applicationsData;
+                }
+
+                trendsChart.data.labels = newDates;
+                trendsChart.data.datasets[0].data = newViewsData;
+                trendsChart.data.datasets[1].data = newApplicationsData;
+                trendsChart.update();
+            });
+        });
+
+        {% if analytics.applicant_locations %}
+        // Applicant Locations Chart
+        const locationCtx = document.getElementById('locationChart').getContext('2d');
+        const locationChart = new Chart(locationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    {% for location, count in analytics.applicant_locations.items %}
+                        '{{ location }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for location, count in analytics.applicant_locations.items %}
+                            {{ count }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)',   // blue
+                        'rgba(16, 185, 129, 0.7)',   // green
+                        'rgba(245, 158, 11, 0.7)',   // amber
+                        'rgba(239, 68, 68, 0.7)',    // red
+                        'rgba(139, 92, 246, 0.7)',   // purple
+                        'rgba(236, 72, 153, 0.7)',   // pink
+                        'rgba(75, 85, 99, 0.7)'      // gray
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        {% if analytics.referral_sources %}
+        // Referral Sources Chart
+        const referralCtx = document.getElementById('referralChart').getContext('2d');
+        const referralChart = new Chart(referralCtx, {
+            type: 'pie',
+            data: {
+                labels: [
+                    {% for source, count in analytics.referral_sources.items %}
+                        '{{ source }}',
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for source, count in analytics.referral_sources.items %}
+                            {{ count }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)',   // blue
+                        'rgba(16, 185, 129, 0.7)',   // green
+                        'rgba(245, 158, 11, 0.7)',   // amber
+                        'rgba(239, 68, 68, 0.7)',    // red
+                        'rgba(139, 92, 246, 0.7)',   // purple
+                        'rgba(236, 72, 153, 0.7)',   // pink
+                        'rgba(75, 85, 99, 0.7)'      // gray
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${context.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

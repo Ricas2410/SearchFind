@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}Connections - SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex flex-col md:flex-row gap-6">
+        <!-- Sidebar -->
+        <div class="w-full md:w-1/4">
+            <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                <h2 class="text-xl font-bold mb-4">Messages</h2>
+                <nav class="space-y-2">
+                    <a href="{% url 'messaging:inbox' %}" class="block px-4 py-2 rounded-md {% if active_tab == 'inbox' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                        <i class="fas fa-inbox mr-2"></i> Inbox
+                    </a>
+                    <a href="{% url 'messaging:connections' %}" class="block px-4 py-2 rounded-md {% if active_tab == 'connections' %}bg-blue-100 text-blue-700{% else %}hover:bg-gray-100{% endif %}">
+                        <i class="fas fa-user-friends mr-2"></i> Connections
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="w-full md:w-3/4">
+            <!-- Connection Requests -->
+            {% if pending_requests %}
+                <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h2 class="text-xl font-bold mb-4">Connection Requests</h2>
+
+                    <div class="divide-y">
+                        {% for connection in pending_requests %}
+                            <div class="py-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mr-4">
+                                        {% if connection.sender.profile_picture %}
+                                            <img src="{{ connection.sender.profile_picture.url }}" alt="{{ connection.sender.first_name }}" class="w-12 h-12 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                                                {{ connection.sender.first_name|first|upper }}{{ connection.sender.last_name|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="flex justify-between">
+                                            <h3 class="font-semibold">{{ connection.sender.first_name|default:connection.sender.email }}</h3>
+                                            <span class="text-sm text-gray-500">{{ connection.created_at|timesince }} ago</span>
+                                        </div>
+                                        <p class="text-gray-600 mb-2">
+                                            {% if connection.sender.job_title %}
+                                                {{ connection.sender.job_title }}
+                                            {% elif connection.sender.company_name %}
+                                                {{ connection.sender.company_name }}
+                                            {% endif %}
+                                        </p>
+                                        <div class="flex space-x-2">
+                                            <form method="post" action="{% url 'messaging:accept_connection' connection_id=connection.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md text-sm">
+                                                    Accept
+                                                </button>
+                                            </form>
+                                            <form method="post" action="{% url 'messaging:reject_connection' connection_id=connection.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-1 rounded-md text-sm">
+                                                    Decline
+                                                </button>
+                                            </form>
+                                            <a href="{% url 'accounts:profile_detail' user_id=connection.sender.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-1 rounded-md text-sm">
+                                                View Profile
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Your Connections -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">Your Connections</h2>
+
+                {% if connections %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for connection in connections %}
+                            {% if connection.sender == request.user %}
+                                {% with user=connection.receiver %}
+                                    <div class="border rounded-lg p-4 hover:shadow-md transition duration-300">
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0 mr-4">
+                                                {% if user.profile_picture %}
+                                                    <img src="{{ user.profile_picture.url }}" alt="{{ user.first_name }}" class="w-16 h-16 rounded-full object-cover">
+                                                {% else %}
+                                                    <div class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl">
+                                                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow">
+                                                <h3 class="font-semibold text-lg">{{ user.first_name|default:user.email }}</h3>
+                                                <p class="text-gray-600 mb-2">
+                                                    {% if user.job_title %}
+                                                        {{ user.job_title }}
+                                                    {% elif user.company_name %}
+                                                        {{ user.company_name }}
+                                                    {% endif %}
+                                                </p>
+                                                <div class="flex space-x-2 mt-2">
+                                                    <a href="{% url 'messaging:new_conversation' user_id=user.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm">
+                                                        <i class="fas fa-comment-alt mr-1"></i> Message
+                                                    </a>
+                                                    <a href="{% url 'accounts:profile_detail' user_id=user.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-md text-sm">
+                                                        <i class="fas fa-user mr-1"></i> Profile
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% else %}
+                                {% with user=connection.sender %}
+                                    <div class="border rounded-lg p-4 hover:shadow-md transition duration-300">
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0 mr-4">
+                                                {% if user.profile_picture %}
+                                                    <img src="{{ user.profile_picture.url }}" alt="{{ user.first_name }}" class="w-16 h-16 rounded-full object-cover">
+                                                {% else %}
+                                                    <div class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl">
+                                                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow">
+                                                <h3 class="font-semibold text-lg">{{ user.first_name|default:user.email }}</h3>
+                                                <p class="text-gray-600 mb-2">
+                                                    {% if user.job_title %}
+                                                        {{ user.job_title }}
+                                                    {% elif user.company_name %}
+                                                        {{ user.company_name }}
+                                                    {% endif %}
+                                                </p>
+                                                <div class="flex space-x-2 mt-2">
+                                                    <a href="{% url 'messaging:new_conversation' user_id=user.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-md text-sm">
+                                                        <i class="fas fa-comment-alt mr-1"></i> Message
+                                                    </a>
+                                                    <a href="{% url 'accounts:profile_detail' user_id=user.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-md text-sm">
+                                                        <i class="fas fa-user mr-1"></i> Profile
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <div class="text-gray-400 mb-4">
+                            <i class="fas fa-user-friends text-5xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">No connections yet</h3>
+                        <p class="text-gray-600 mb-6">
+                            Connect with other users to build your professional network.
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Sent Requests -->
+            {% if sent_requests %}
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold mb-4">Sent Requests</h2>
+
+                    <div class="divide-y">
+                        {% for connection in sent_requests %}
+                            <div class="py-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 mr-4">
+                                        {% if connection.receiver.profile_picture %}
+                                            <img src="{{ connection.receiver.profile_picture.url }}" alt="{{ connection.receiver.first_name }}" class="w-12 h-12 rounded-full object-cover">
+                                        {% else %}
+                                            <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center">
+                                                {{ connection.receiver.first_name|first|upper }}{{ connection.receiver.last_name|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="flex justify-between">
+                                            <h3 class="font-semibold">{{ connection.receiver.first_name|default:connection.receiver.email }}</h3>
+                                            <span class="text-sm text-gray-500">{{ connection.created_at|timesince }} ago</span>
+                                        </div>
+                                        <p class="text-gray-600 mb-2">
+                                            {% if connection.receiver.job_title %}
+                                                {{ connection.receiver.job_title }}
+                                            {% elif connection.receiver.company_name %}
+                                                {{ connection.receiver.company_name }}
+                                            {% endif %}
+                                        </p>
+                                        <div class="flex space-x-2">
+                                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-md text-sm">
+                                                <i class="fas fa-clock mr-1"></i> Pending
+                                            </span>
+                                            <a href="{% url 'accounts:profile_detail' user_id=connection.receiver.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded-md text-sm">
+                                                View Profile
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

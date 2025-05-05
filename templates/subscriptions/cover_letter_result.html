@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Cover Letter" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cover-letter {
+        font-family: 'Georgia', serif;
+        line-height: 1.6;
+    }
+    .tip-card {
+        transition: all 0.3s ease;
+    }
+    .tip-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "Your AI-Generated Cover Letter" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Customize this cover letter for your application to" %} {{ job.title }} {% trans "at" %} {{ job.company.name }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Cover Letter -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                    <div class="p-6 bg-blue-50 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-xl font-semibold text-gray-800">{% trans "Cover Letter" %}</h2>
+                        <div>
+                            <button id="copy-btn" class="text-blue-600 hover:text-blue-800 mr-2">
+                                <i class="fas fa-copy"></i> {% trans "Copy" %}
+                            </button>
+                            <button id="download-btn" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-download"></i> {% trans "Download" %}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <textarea id="cover-letter-text" class="cover-letter w-full h-96 p-4 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">{{ cover_letter }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips and Analysis -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                    <div class="p-4 bg-blue-50 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "Customization Tips" %}</h2>
+                    </div>
+                    <div class="p-4">
+                        <ul class="space-y-2">
+                            {% for tip in customization_tips %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                    <span>{{ tip }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {% if structure_analysis %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                    <div class="p-4 bg-blue-50 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "Structure Analysis" %}</h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-3">
+                            {% for key, value in structure_analysis.items %}
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">{{ key|title|replace:"_":" " }}</p>
+                                    <p class="text-sm text-gray-600">{{ value }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mt-6">
+                    <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-lg font-medium transition duration-300">
+                        {% trans "Apply with this Cover Letter" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Copy button functionality
+        const copyBtn = document.getElementById('copy-btn');
+        const coverLetterText = document.getElementById('cover-letter-text');
+        
+        copyBtn.addEventListener('click', function() {
+            coverLetterText.select();
+            document.execCommand('copy');
+            
+            // Show copied message
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(function() {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        });
+        
+        // Download button functionality
+        const downloadBtn = document.getElementById('download-btn');
+        
+        downloadBtn.addEventListener('click', function() {
+            const text = coverLetterText.value;
+            const filename = "cover_letter_{{ job.title|slugify }}.txt";
+            
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            
+            element.click();
+            
+            document.body.removeChild(element);
+        });
+    });
+</script>
+{% endblock %}

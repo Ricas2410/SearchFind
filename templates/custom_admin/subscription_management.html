@@ -1,0 +1,736 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Subscription Management - Admin Dashboard{% endblock %}
+
+{% block header %}Subscription Management{% endblock %}
+
+{% block content %}
+    <!-- Tabs -->
+    <div class="mb-6">
+        <div class="sm:hidden">
+            <label for="tabs" class="sr-only">Select a tab</label>
+            <select id="tabs" name="tabs" class="block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                <option value="plans" selected>Subscription Plans</option>
+                <option value="subscriptions">User Subscriptions</option>
+            </select>
+        </div>
+        <div class="hidden sm:block">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <a href="#plans-tab" id="plans-tab-btn" class="tab-btn active border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" aria-current="page">
+                        Subscription Plans
+                    </a>
+                    <a href="#subscriptions-tab" id="subscriptions-tab-btn" class="tab-btn border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        User Subscriptions
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plans Tab -->
+    <div id="plans-tab" class="tab-content">
+        <div class="mb-6 flex justify-end">
+            <a href="#" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-plus mr-2"></i> Add New Plan
+            </a>
+        </div>
+
+        <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for plan in plans %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ plan.name }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if plan.plan_type == 'job_seeker' %}bg-blue-100 text-blue-800
+                                    {% elif plan.plan_type == 'employer' %}bg-green-100 text-green-800
+                                    {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                    {{ plan.get_plan_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">${{ plan.price }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ plan.duration_days }} days</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if plan.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if plan.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button type="button" class="text-blue-600 hover:text-blue-900 mr-3" data-toggle="modal" data-target="#viewPlanModal{{ plan.id }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button type="button" class="text-indigo-600 hover:text-indigo-900 mr-3" data-toggle="modal" data-target="#editPlanModal{{ plan.id }}">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                {% if plan.is_active %}
+                                    <form action="{% url 'custom_admin:subscription_management' %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="deactivate_plan">
+                                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                                        <button type="submit" class="text-red-600 hover:text-red-900 border-0 bg-transparent">
+                                            <i class="fas fa-ban"></i> Deactivate
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <form action="{% url 'custom_admin:subscription_management' %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="activate_plan">
+                                        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                                        <button type="submit" class="text-green-600 hover:text-green-900 border-0 bg-transparent">
+                                            <i class="fas fa-check"></i> Activate
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">No subscription plans found</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Subscriptions Tab -->
+    <div id="subscriptions-tab" class="tab-content hidden">
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                <div>
+                    <label for="plan-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Plan</label>
+                    <select id="plan-filter" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="">All Plans</option>
+                        {% for plan in plans %}
+                            <option value="{{ plan.id }}">{{ plan.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+                    <select id="status-filter" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="">All Statuses</option>
+                        <option value="active">Active</option>
+                        <option value="expired">Expired</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="w-full sm:w-1/3">
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search Users</label>
+                <div class="relative rounded-md shadow-sm">
+                    <input type="text" id="search" name="search" class="block w-full rounded-md border-gray-300 pr-10 focus:border-blue-500 focus:ring-blue-500 sm:text-sm" placeholder="Search by name or email">
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for subscription in subscriptions %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    {% if subscription.user.profile_picture %}
+                                        <img class="h-10 w-10 rounded-full object-cover" src="{{ subscription.user.profile_picture.url }}" alt="{{ subscription.user.get_full_name }}">
+                                    {% else %}
+                                        <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                            {{ subscription.user.first_name|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ subscription.user.get_full_name }}</div>
+                                        <div class="text-sm text-gray-500">{{ subscription.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ subscription.plan.name }}</div>
+                                <div class="text-xs text-gray-500">${{ subscription.plan.price }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ subscription.start_date|date:"M d, Y" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ subscription.end_date|date:"M d, Y" }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if subscription.is_active %}bg-green-100 text-green-800
+                                    {% elif subscription.status == 'cancelled' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ subscription.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button type="button" class="text-blue-600 hover:text-blue-900 mr-3" data-toggle="modal" data-target="#viewSubscriptionModal{{ subscription.id }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button type="button" class="text-indigo-600 hover:text-indigo-900 mr-3" data-toggle="modal" data-target="#editSubscriptionModal{{ subscription.id }}">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                {% if subscription.is_active %}
+                                    <form action="{% url 'custom_admin:subscription_management' %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="cancel_subscription">
+                                        <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+                                        <button type="submit" class="text-red-600 hover:text-red-900 border-0 bg-transparent">
+                                            <i class="fas fa-ban"></i> Cancel
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <form action="{% url 'custom_admin:subscription_management' %}" method="post" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="renew_subscription">
+                                        <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+                                        <button type="submit" class="text-green-600 hover:text-green-900 border-0 bg-transparent">
+                                            <i class="fas fa-sync"></i> Renew
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">No subscriptions found</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+            <div class="flex flex-1 justify-between sm:hidden">
+                <a href="#" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
+                <a href="#" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
+            </div>
+            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">{{ subscriptions.count }}</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                        <a href="#" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                            <span class="sr-only">Previous</span>
+                            <i class="fas fa-chevron-left h-5 w-5"></i>
+                        </a>
+                        <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">1</a>
+                        <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</a>
+                        <a href="#" class="relative hidden items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 md:inline-flex">3</a>
+                        <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">...</span>
+                        <a href="#" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
+                            <span class="sr-only">Next</span>
+                            <i class="fas fa-chevron-right h-5 w-5"></i>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+<!-- Subscription Plan Modals -->
+{% for plan in plans %}
+    <!-- View Plan Modal -->
+    <div class="modal fade" id="viewPlanModal{{ plan.id }}" tabindex="-1" role="dialog" aria-labelledby="viewPlanModalLabel{{ plan.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewPlanModalLabel{{ plan.id }}">Plan Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold">{{ plan.name }}</h3>
+                        <div class="flex items-center mt-2">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if plan.plan_type == 'job_seeker' %}bg-blue-100 text-blue-800
+                                {% elif plan.plan_type == 'employer' %}bg-green-100 text-green-800
+                                {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                {{ plan.get_plan_type_display }}
+                            </span>
+                            <span class="ml-3 px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if plan.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if plan.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Price</h4>
+                            <p class="text-lg font-semibold">${{ plan.price }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Duration</h4>
+                            <p class="text-lg font-semibold">{{ plan.duration_days }} days</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Description</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p>{{ plan.description }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <h4 class="text-lg font-medium mb-2">Job Seeker Features</h4>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li class="{% if plan.resume_builder %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    AI Resume Builder
+                                </li>
+                                <li class="{% if plan.resume_review %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    AI Resume Review
+                                </li>
+                                <li class="{% if plan.job_match_recommendations %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Job Match Recommendations
+                                </li>
+                                <li class="{% if plan.company_recommendations %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Company Recommendations
+                                </li>
+                                <li class="{% if plan.interview_preparation %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Interview Preparation
+                                </li>
+                                <li class="{% if plan.salary_insights %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Salary Insights
+                                </li>
+                                <li class="{% if plan.career_path_planning %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Career Path Planning
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-medium mb-2">Employer Features</h4>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li class="{% if plan.featured_jobs %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Featured Jobs
+                                </li>
+                                <li class="{% if plan.priority_listing %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Priority Listing
+                                </li>
+                                <li class="{% if plan.candidate_matching %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    AI Candidate Matching
+                                </li>
+                                <li class="{% if plan.advanced_analytics %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Advanced Analytics
+                                </li>
+                                <li class="{% if plan.unlimited_job_posts %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Unlimited Job Posts
+                                </li>
+                                <li class="{% if plan.applicant_tracking %}text-green-600{% else %}text-gray-400 line-through{% endif %}">
+                                    Applicant Tracking System
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Created</h4>
+                            <p>{{ plan.created_at|date:"M d, Y" }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Last Updated</h4>
+                            <p>{{ plan.updated_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" data-toggle="modal" data-target="#editPlanModal{{ plan.id }}">Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Plan Modal -->
+    <div class="modal fade" id="editPlanModal{{ plan.id }}" tabindex="-1" role="dialog" aria-labelledby="editPlanModalLabel{{ plan.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPlanModalLabel{{ plan.id }}">Edit Subscription Plan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'custom_admin:subscription_management' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit_plan">
+                    <input type="hidden" name="plan_id" value="{{ plan.id }}">
+                    <div class="modal-body">
+                        <div class="form-group mb-4">
+                            <label for="edit-name-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Plan Name:</label>
+                            <input type="text" id="edit-name-{{ plan.id }}" name="name" value="{{ plan.name }}" class="form-control" required>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="edit-plan-type-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Plan Type:</label>
+                            <select id="edit-plan-type-{{ plan.id }}" name="plan_type" class="form-select" required>
+                                <option value="job_seeker" {% if plan.plan_type == 'job_seeker' %}selected{% endif %}>Job Seeker</option>
+                                <option value="employer" {% if plan.plan_type == 'employer' %}selected{% endif %}>Employer</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="edit-description-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Description:</label>
+                            <textarea id="edit-description-{{ plan.id }}" name="description" class="form-control" rows="3" required>{{ plan.description }}</textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="form-group">
+                                <label for="edit-price-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Price ($):</label>
+                                <input type="number" id="edit-price-{{ plan.id }}" name="price" value="{{ plan.price }}" class="form-control" min="0" step="0.01" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="edit-duration-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Duration (days):</label>
+                                <input type="number" id="edit-duration-{{ plan.id }}" name="duration_days" value="{{ plan.duration_days }}" class="form-control" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="edit-is-active-{{ plan.id }}" class="block text-gray-700 text-sm font-bold mb-2">Status:</label>
+                            <select id="edit-is-active-{{ plan.id }}" name="is_active" class="form-select">
+                                <option value="true" {% if plan.is_active %}selected{% endif %}>Active</option>
+                                <option value="false" {% if not plan.is_active %}selected{% endif %}>Inactive</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <h4 class="text-gray-700 text-sm font-bold mb-2">Job Seeker Features:</h4>
+                                <div class="space-y-2">
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-resume-builder-{{ plan.id }}" name="resume_builder" class="form-check-input" {% if plan.resume_builder %}checked{% endif %}>
+                                        <label for="edit-resume-builder-{{ plan.id }}" class="form-check-label">AI Resume Builder</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-resume-review-{{ plan.id }}" name="resume_review" class="form-check-input" {% if plan.resume_review %}checked{% endif %}>
+                                        <label for="edit-resume-review-{{ plan.id }}" class="form-check-label">AI Resume Review</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-job-match-{{ plan.id }}" name="job_match_recommendations" class="form-check-input" {% if plan.job_match_recommendations %}checked{% endif %}>
+                                        <label for="edit-job-match-{{ plan.id }}" class="form-check-label">Job Match Recommendations</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-company-recommendations-{{ plan.id }}" name="company_recommendations" class="form-check-input" {% if plan.company_recommendations %}checked{% endif %}>
+                                        <label for="edit-company-recommendations-{{ plan.id }}" class="form-check-label">Company Recommendations</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-interview-prep-{{ plan.id }}" name="interview_preparation" class="form-check-input" {% if plan.interview_preparation %}checked{% endif %}>
+                                        <label for="edit-interview-prep-{{ plan.id }}" class="form-check-label">Interview Preparation</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-salary-insights-{{ plan.id }}" name="salary_insights" class="form-check-input" {% if plan.salary_insights %}checked{% endif %}>
+                                        <label for="edit-salary-insights-{{ plan.id }}" class="form-check-label">Salary Insights</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-career-path-{{ plan.id }}" name="career_path_planning" class="form-check-input" {% if plan.career_path_planning %}checked{% endif %}>
+                                        <label for="edit-career-path-{{ plan.id }}" class="form-check-label">Career Path Planning</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-gray-700 text-sm font-bold mb-2">Employer Features:</h4>
+                                <div class="space-y-2">
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-featured-jobs-{{ plan.id }}" name="featured_jobs" class="form-check-input" {% if plan.featured_jobs %}checked{% endif %}>
+                                        <label for="edit-featured-jobs-{{ plan.id }}" class="form-check-label">Featured Jobs</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-priority-listing-{{ plan.id }}" name="priority_listing" class="form-check-input" {% if plan.priority_listing %}checked{% endif %}>
+                                        <label for="edit-priority-listing-{{ plan.id }}" class="form-check-label">Priority Listing</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-candidate-matching-{{ plan.id }}" name="candidate_matching" class="form-check-input" {% if plan.candidate_matching %}checked{% endif %}>
+                                        <label for="edit-candidate-matching-{{ plan.id }}" class="form-check-label">AI Candidate Matching</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-advanced-analytics-{{ plan.id }}" name="advanced_analytics" class="form-check-input" {% if plan.advanced_analytics %}checked{% endif %}>
+                                        <label for="edit-advanced-analytics-{{ plan.id }}" class="form-check-label">Advanced Analytics</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-unlimited-jobs-{{ plan.id }}" name="unlimited_job_posts" class="form-check-input" {% if plan.unlimited_job_posts %}checked{% endif %}>
+                                        <label for="edit-unlimited-jobs-{{ plan.id }}" class="form-check-label">Unlimited Job Posts</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" id="edit-applicant-tracking-{{ plan.id }}" name="applicant_tracking" class="form-check-input" {% if plan.applicant_tracking %}checked{% endif %}>
+                                        <label for="edit-applicant-tracking-{{ plan.id }}" class="form-check-label">Applicant Tracking System</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<!-- User Subscription Modals -->
+{% for subscription in subscriptions %}
+    <!-- View Subscription Modal -->
+    <div class="modal fade" id="viewSubscriptionModal{{ subscription.id }}" tabindex="-1" role="dialog" aria-labelledby="viewSubscriptionModalLabel{{ subscription.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewSubscriptionModalLabel{{ subscription.id }}">Subscription Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-6">
+                        <h3 class="text-xl font-semibold">{{ subscription.plan.name }}</h3>
+                        <div class="flex items-center mt-2">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if subscription.plan.plan_type == 'job_seeker' %}bg-blue-100 text-blue-800
+                                {% elif subscription.plan.plan_type == 'employer' %}bg-green-100 text-green-800
+                                {% else %}bg-purple-100 text-purple-800{% endif %}">
+                                {{ subscription.plan.get_plan_type_display }}
+                            </span>
+                            <span class="ml-3 px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {% if subscription.status == 'active' %}bg-green-100 text-green-800
+                                {% elif subscription.status == 'cancelled' %}bg-red-100 text-red-800
+                                {% elif subscription.status == 'expired' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ subscription.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">User</h4>
+                            <p class="text-lg font-semibold">{{ subscription.user.get_full_name }}</p>
+                            <p class="text-sm text-gray-500">{{ subscription.user.email }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Price Paid</h4>
+                            <p class="text-lg font-semibold">${{ subscription.amount_paid }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Start Date</h4>
+                            <p>{{ subscription.start_date|date:"M d, Y" }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">End Date</h4>
+                            <p>{{ subscription.end_date|date:"M d, Y" }}</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Duration</h4>
+                            <p>{{ subscription.plan.duration_days }} days</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">Payment Information</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <h5 class="text-xs font-medium text-gray-500">Payment Method</h5>
+                                    <p>{{ subscription.payment_method|default:"Not specified" }}</p>
+                                </div>
+
+                                <div>
+                                    <h5 class="text-xs font-medium text-gray-500">Transaction ID</h5>
+                                    <p>{{ subscription.transaction_id|default:"Not available" }}</p>
+                                </div>
+
+                                <div>
+                                    <h5 class="text-xs font-medium text-gray-500">Payment Date</h5>
+                                    <p>{{ subscription.payment_date|date:"M d, Y H:i"|default:"Not available" }}</p>
+                                </div>
+
+                                <div>
+                                    <h5 class="text-xs font-medium text-gray-500">Auto-Renewal</h5>
+                                    <p>{% if subscription.auto_renew %}Enabled{% else %}Disabled{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if subscription.cancellation_date or subscription.cancellation_reason %}
+                        <div class="mb-6">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">Cancellation Details</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                {% if subscription.cancellation_date %}
+                                    <div class="mb-2">
+                                        <h5 class="text-xs font-medium text-gray-500">Cancellation Date</h5>
+                                        <p>{{ subscription.cancellation_date|date:"M d, Y" }}</p>
+                                    </div>
+                                {% endif %}
+
+                                {% if subscription.cancellation_reason %}
+                                    <div>
+                                        <h5 class="text-xs font-medium text-gray-500">Reason</h5>
+                                        <p>{{ subscription.cancellation_reason }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" data-toggle="modal" data-target="#editSubscriptionModal{{ subscription.id }}">Edit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Subscription Modal -->
+    <div class="modal fade" id="editSubscriptionModal{{ subscription.id }}" tabindex="-1" role="dialog" aria-labelledby="editSubscriptionModalLabel{{ subscription.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editSubscriptionModalLabel{{ subscription.id }}">Edit Subscription</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'custom_admin:subscription_management' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit_subscription">
+                    <input type="hidden" name="subscription_id" value="{{ subscription.id }}">
+                    <div class="modal-body">
+                        <div class="form-group mb-4">
+                            <label for="edit-status-{{ subscription.id }}" class="block text-gray-700 text-sm font-bold mb-2">Status:</label>
+                            <select id="edit-status-{{ subscription.id }}" name="status" class="form-select" required>
+                                <option value="active" {% if subscription.status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="cancelled" {% if subscription.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                <option value="expired" {% if subscription.status == 'expired' %}selected{% endif %}>Expired</option>
+                                <option value="pending" {% if subscription.status == 'pending' %}selected{% endif %}>Pending</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="edit-start-date-{{ subscription.id }}" class="block text-gray-700 text-sm font-bold mb-2">Start Date:</label>
+                            <input type="date" id="edit-start-date-{{ subscription.id }}" name="start_date" value="{{ subscription.start_date|date:'Y-m-d' }}" class="form-control" required>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="edit-end-date-{{ subscription.id }}" class="block text-gray-700 text-sm font-bold mb-2">End Date:</label>
+                            <input type="date" id="edit-end-date-{{ subscription.id }}" name="end_date" value="{{ subscription.end_date|date:'Y-m-d' }}" class="form-control" required>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="edit-auto-renew-{{ subscription.id }}" class="block text-gray-700 text-sm font-bold mb-2">Auto-Renewal:</label>
+                            <select id="edit-auto-renew-{{ subscription.id }}" name="auto_renew" class="form-select">
+                                <option value="true" {% if subscription.auto_renew %}selected{% endif %}>Enabled</option>
+                                <option value="false" {% if not subscription.auto_renew %}selected{% endif %}>Disabled</option>
+                            </select>
+                        </div>
+
+                        {% if subscription.status == 'cancelled' or subscription.status == 'expired' %}
+                            <div class="form-group mb-4">
+                                <label for="edit-cancellation-reason-{{ subscription.id }}" class="block text-gray-700 text-sm font-bold mb-2">Cancellation Reason:</label>
+                                <textarea id="edit-cancellation-reason-{{ subscription.id }}" name="cancellation_reason" class="form-control" rows="3">{{ subscription.cancellation_reason|default:'' }}</textarea>
+                            </div>
+
+                            <div class="form-group mb-4">
+                                <label for="edit-cancellation-date-{{ subscription.id }}" class="block text-gray-700 text-sm font-bold mb-2">Cancellation Date:</label>
+                                <input type="date" id="edit-cancellation-date-{{ subscription.id }}" name="cancellation_date" value="{{ subscription.cancellation_date|date:'Y-m-d'|default:'' }}" class="form-control">
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{% block extra_js %}
+<script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Show the selected tab content
+            const tabId = this.getAttribute('href').substring(1);
+            document.getElementById(tabId).classList.remove('hidden');
+
+            // Add active class to the clicked button
+            this.classList.add('active', 'border-blue-500', 'text-blue-600');
+            this.classList.remove('border-transparent', 'text-gray-500');
+        });
+    });
+
+    // Mobile tab selector
+    document.getElementById('tabs').addEventListener('change', function() {
+        const tabId = this.value + '-tab';
+        document.getElementById(tabId + '-btn').click();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Details - SearchFind{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Application Details</h1>
+            <a href="{% url 'jobs:applications_list' job_id=application.job.id %}" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Applications
+            </a>
+        </div>
+        
+        <!-- Application Header -->
+        <div class="flex flex-col md:flex-row md:justify-between md:items-start mb-8 border-b pb-6">
+            <div class="flex items-center mb-4 md:mb-0">
+                {% if application.applicant.profile_picture %}
+                    <img class="h-16 w-16 rounded-full mr-4" src="{{ application.applicant.profile_picture.url }}" alt="{{ application.applicant.get_full_name }}">
+                {% else %}
+                    <div class="h-16 w-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl mr-4">
+                        {{ application.applicant.first_name|first|upper }}{{ application.applicant.last_name|first|upper }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h2 class="text-xl font-semibold">{{ application.applicant.get_full_name }}</h2>
+                    <p class="text-gray-600">{{ application.applicant.email }}</p>
+                    <p class="text-gray-600">Applied on {{ application.applied_at|date:"F j, Y" }} at {{ application.applied_at|time:"g:i A" }}</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-end">
+                <div class="mb-2">
+                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
+                        {% if application.status == 'pending' %}bg-yellow-100 text-yellow-800
+                        {% elif application.status == 'reviewed' %}bg-blue-100 text-blue-800
+                        {% elif application.status == 'shortlisted' %}bg-green-100 text-green-800
+                        {% elif application.status == 'interview' %}bg-purple-100 text-purple-800
+                        {% elif application.status == 'rejected' %}bg-red-100 text-red-800
+                        {% elif application.status == 'hired' %}bg-indigo-100 text-indigo-800
+                        {% elif application.status == 'withdrawn' %}bg-gray-100 text-gray-800
+                        {% endif %}">
+                        {{ application.get_status_display }}
+                    </span>
+                    {% if application.is_withdrawn %}
+                        <span class="ml-1 px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                            Withdrawn
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <div class="flex space-x-2">
+                    <a href="{{ application.resume.url }}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        <i class="fas fa-file-pdf mr-1"></i> View Resume
+                    </a>
+                    <a href="{% url 'messaging:new_conversation' user_id=application.applicant.id %}?job_id={{ application.job.id }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                        <i class="fas fa-comment-alt mr-1"></i> Message
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Job Information -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-3">Job Information</h3>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex items-center mb-2">
+                    <h4 class="text-xl font-semibold">
+                        <a href="{% url 'jobs:job_detail' slug=application.job.slug %}" class="text-blue-600 hover:text-blue-800">
+                            {{ application.job.title }}
+                        </a>
+                    </h4>
+                </div>
+                <div class="flex flex-wrap gap-2 mb-2">
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        <span>{{ application.job.location }}</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-briefcase mr-1"></i>
+                        <span>{{ application.job.get_job_type_display }}</span>
+                    </div>
+                    <div class="flex items-center text-gray-700">
+                        <i class="fas fa-graduation-cap mr-1"></i>
+                        <span>{{ application.job.get_experience_level_display }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cover Letter -->
+        {% if application.cover_letter %}
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold mb-3">Cover Letter</h3>
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="prose max-w-none">
+                        {{ application.cover_letter|linebreaks }}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Applicant Profile -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-3">Applicant Profile</h3>
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% if application.applicant.job_title %}
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Current Job Title</h4>
+                            <p class="mt-1">{{ application.applicant.job_title }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if application.applicant.location %}
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Location</h4>
+                            <p class="mt-1">{{ application.applicant.location }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if application.applicant.phone_number and application.applicant.show_contact_info %}
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-500">Phone Number</h4>
+                            <p class="mt-1">{{ application.applicant.phone_number }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if application.applicant.skills %}
+                        <div class="md:col-span-2">
+                            <h4 class="text-sm font-medium text-gray-500">Skills</h4>
+                            <div class="mt-1 flex flex-wrap gap-2">
+                                {% for skill in application.applicant.skills.split|slice:":10" %}
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">{{ skill }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if application.applicant.bio %}
+                        <div class="md:col-span-2">
+                            <h4 class="text-sm font-medium text-gray-500">Bio</h4>
+                            <p class="mt-1">{{ application.applicant.bio }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'accounts:profile_detail' user_id=application.applicant.id %}" class="text-blue-600 hover:text-blue-800">
+                        View Full Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Update Application Status -->
+        <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-3">Update Application Status</h3>
+            <form method="post" action="{% url 'jobs:update_application_status' application_id=application.id %}" class="bg-gray-50 rounded-lg p-4">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="id_status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select name="status" id="id_status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="reviewed" {% if application.status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                            <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                            <option value="interview" {% if application.status == 'interview' %}selected{% endif %}>Interview</option>
+                            <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            <option value="hired" {% if application.status == 'hired' %}selected{% endif %}>Hired</option>
+                        </select>
+                    </div>
+                    
+                    <div id="interview-fields" class="{% if application.status != 'interview' %}hidden{% endif %}">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="id_interview_date" class="block text-sm font-medium text-gray-700 mb-1">Interview Date</label>
+                                <input type="datetime-local" name="interview_date" id="id_interview_date" 
+                                       value="{% if application.interview_date %}{{ application.interview_date|date:'Y-m-d' }}T{{ application.interview_date|time:'H:i' }}{% endif %}" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="id_interview_type" class="block text-sm font-medium text-gray-700 mb-1">Interview Type</label>
+                                <select name="interview_type" id="id_interview_type" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="in_person" {% if application.interview_type == 'in_person' %}selected{% endif %}>In Person</option>
+                                    <option value="phone" {% if application.interview_type == 'phone' %}selected{% endif %}>Phone</option>
+                                    <option value="video" {% if application.interview_type == 'video' %}selected{% endif %}>Video</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label for="id_interview_location" class="block text-sm font-medium text-gray-700 mb-1">Interview Location/Details</label>
+                            <input type="text" name="interview_location" id="id_interview_location" value="{{ application.interview_location|default:'' }}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="Office address or video call link">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <label for="id_employer_notes" class="block text-sm font-medium text-gray-700 mb-1">Private Notes (only visible to you)</label>
+                    <textarea name="employer_notes" id="id_employer_notes" rows="3" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Add your private notes about this candidate...">{{ application.employer_notes|default:'' }}</textarea>
+                </div>
+                
+                <div class="mt-4">
+                    <label for="id_feedback_to_applicant" class="block text-sm font-medium text-gray-700 mb-1">Feedback to Applicant (will be shared with the applicant)</label>
+                    <textarea name="feedback_to_applicant" id="id_feedback_to_applicant" rows="3" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Provide feedback to the applicant...">{{ application.feedback_to_applicant|default:'' }}</textarea>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        Update Application
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Messages -->
+        <div>
+            <h3 class="text-lg font-semibold mb-3">Messages</h3>
+            <div class="bg-gray-50 rounded-lg p-4">
+                {% if messages %}
+                    <div class="space-y-4 mb-4">
+                        {% for message in messages %}
+                            <div class="flex {% if message.sender == request.user %}justify-end{% endif %}">
+                                <div class="max-w-md rounded-lg p-3 {% if message.sender == request.user %}bg-blue-100 text-blue-800{% else %}bg-gray-200 text-gray-800{% endif %}">
+                                    <div class="text-sm mb-1">
+                                        {% if message.sender == request.user %}
+                                            You
+                                        {% else %}
+                                            {{ message.sender.get_full_name }}
+                                        {% endif %}
+                                        <span class="text-xs text-gray-500 ml-2">{{ message.created_at|date:"M d, g:i A" }}</span>
+                                    </div>
+                                    <p>{{ message.content }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 text-center py-4">No messages yet. Start a conversation with the applicant.</p>
+                {% endif %}
+                
+                <form method="post" action="{% url 'jobs:send_application_message' application_id=application.id %}" class="mt-4">
+                    {% csrf_token %}
+                    <div class="flex">
+                        <input type="text" name="content" required class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Type a message...">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-md">
+                            Send
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const statusSelect = document.getElementById('id_status');
+        const interviewFields = document.getElementById('interview-fields');
+        
+        statusSelect.addEventListener('change', function() {
+            if (this.value === 'interview') {
+                interviewFields.classList.remove('hidden');
+            } else {
+                interviewFields.classList.add('hidden');
+            }
+        });
+    });
+</script>
+{% endblock %}

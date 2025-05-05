@@ -1,0 +1,110 @@
+[
+{
+  "model": "jobs.company",
+  "pk": 3,
+  "fields": {
+    "name": "Default Company",
+    "slug": "default-company",
+    "owner": 2,
+    "logo": "",
+    "cover_image": "",
+    "website": null,
+    "description": "Default company for migration purposes",
+    "short_description": null,
+    "industry": "technology",
+    "other_industry": null,
+    "company_size": "1-10",
+    "founded_year": null,
+    "country": null,
+    "headquarters": "Default Location",
+    "specialties": null,
+    "facebook": null,
+    "twitter": null,
+    "linkedin": null,
+    "instagram": null,
+    "status": "approved",
+    "rejection_reason": null,
+    "is_featured": false,
+    "created_at": "2025-05-05T00:56:08.266Z",
+    "updated_at": "2025-05-05T00:56:08.266Z"
+  }
+},
+{
+  "model": "jobs.jobpackage",
+  "pk": 1,
+  "fields": {
+    "name": "Basic",
+    "description": "Standard job listing with basic features.",
+    "price": "49.99",
+    "duration_days": 30,
+    "featured_job": false,
+    "priority_placement": false,
+    "is_active": true,
+    "created_at": "2025-05-05T00:52:17.128Z",
+    "updated_at": "2025-05-05T00:52:17.128Z"
+  }
+},
+{
+  "model": "jobs.jobpackage",
+  "pk": 2,
+  "fields": {
+    "name": "Premium",
+    "description": "Enhanced visibility with featured placement and extended duration.",
+    "price": "99.99",
+    "duration_days": 60,
+    "featured_job": true,
+    "priority_placement": false,
+    "is_active": true,
+    "created_at": "2025-05-05T00:52:17.433Z",
+    "updated_at": "2025-05-05T00:52:17.433Z"
+  }
+},
+{
+  "model": "jobs.jobpackage",
+  "pk": 3,
+  "fields": {
+    "name": "Enterprise",
+    "description": "Maximum exposure with top placement, featured status, and longest duration.",
+    "price": "199.99",
+    "duration_days": 90,
+    "featured_job": true,
+    "priority_placement": true,
+    "is_active": true,
+    "created_at": "2025-05-05T00:52:17.587Z",
+    "updated_at": "2025-05-05T00:52:17.587Z"
+  }
+},
+{
+  "model": "jobs.legalpage",
+  "pk": 1,
+  "fields": {
+    "title": "Terms and Conditions",
+    "slug": "terms-and-conditions",
+    "page_type": "terms",
+    "content": "\n<h1>1. Introduction</h1>\n<p>Welcome to SearchFind. These Terms and Conditions govern your use of our website and services. By accessing or using SearchFind, you agree to be bound by these Terms. If you disagree with any part of the terms, you may not access the service.</p>\n\n<h2>2. Definitions</h2>\n<ul>\n    <li><strong>\"Service\"</strong> refers to the SearchFind website and platform.</li>\n    <li><strong>\"User\"</strong> refers to individuals who access or use our Service.</li>\n    <li><strong>\"Job Seeker\"</strong> refers to users who use our Service to search for and apply to jobs.</li>\n    <li><strong>\"Employer\"</strong> refers to users who use our Service to post job listings and recruit candidates.</li>\n    <li><strong>\"Content\"</strong> refers to text, images, videos, and other materials that appear on our Service.</li>\n</ul>\n\n<h2>3. User Accounts</h2>\n<p>When you create an account with us, you must provide accurate, complete, and up-to-date information. You are responsible for safeguarding the password and for all activities that occur under your account. You agree to notify us immediately of any unauthorized use of your account.</p>\n\n<h2>4. Job Listings and Applications</h2>\n<p>Employers are responsible for the accuracy of their job listings. SearchFind does not guarantee the validity of job listings or the qualifications of applicants. Job seekers are responsible for the accuracy of their applications and resumes.</p>\n\n<h2>5. Subscription Services</h2>\n<p>Some features of our Service require a paid subscription. By subscribing to a premium plan, you agree to pay the fees as described at the time of purchase. Subscription fees are non-refundable except as required by law or as explicitly stated in these Terms.</p>\n\n<h2>6. Payment Terms</h2>\n<p>We use third-party payment processors to bill you through a payment account linked to your account. The processing of payments will be subject to the terms, conditions, and privacy policies of the payment processor in addition to these Terms.</p>\n\n<h2>7. Content and Conduct</h2>\n<p>You retain all rights to any content you submit, post, or display on or through the Service. By submitting content to SearchFind, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, adapt, publish, and display such content.</p>\n<p>You agree not to post content that:</p>\n<ul>\n    <li>Is unlawful, harmful, threatening, abusive, harassing, defamatory, or invasive of another's privacy</li>\n    <li>Infringes any patent, trademark, trade secret, copyright, or other intellectual property rights</li>\n    <li>Contains software viruses or any other code designed to interrupt, destroy, or limit the functionality of any computer software or hardware</li>\n    <li>Is false, inaccurate, or misleading</li>\n</ul>\n\n<h2>8. Termination</h2>\n<p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason, including without limitation if you breach the Terms. Upon termination, your right to use the Service will immediately cease.</p>\n\n<h2>9. Limitation of Liability</h2>\n<p>In no event shall SearchFind, its directors, employees, partners, agents, suppliers, or affiliates be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.</p>\n\n<h2>10. Changes to Terms</h2>\n<p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.</p>\n\n<h2>11. Contact Us</h2>\n<p>If you have any questions about these Terms, please contact us at <a href=\"mailto:info@searchfind.com\">info@searchfind.com</a>.</p>\n",
+    "is_active": true,
+    "created_at": "2025-05-05T00:56:09.713Z",
+    "updated_at": "2025-05-05T00:56:09.713Z"
+  }
+},
+{
+  "model": "jobs.legalpage",
+  "pk": 2,
+  "fields": {
+    "title": "Privacy Policy",
+    "slug": "privacy-policy",
+    "page_type": "privacy",
+    "content": "\n<h1>1. Introduction</h1>\n<p>At SearchFind, we respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our website and services.</p>\n\n<h2>2. Information We Collect</h2>\n<p>We collect several types of information from and about users of our website, including:</p>\n<ul>\n    <li><strong>Personal Information:</strong> Name, email address, phone number, postal address, and professional information such as work history, education, and skills.</li>\n    <li><strong>Account Information:</strong> Username, password, and account preferences.</li>\n    <li><strong>Profile Information:</strong> Resume, profile picture, and other information you choose to include in your profile.</li>\n    <li><strong>Usage Data:</strong> Information about how you use our website, including browsing patterns, search queries, and interaction with job listings.</li>\n    <li><strong>Technical Data:</strong> IP address, browser type and version, device information, and other technology identifiers.</li>\n</ul>\n\n<h2>3. How We Collect Your Information</h2>\n<p>We collect information through:</p>\n<ul>\n    <li>Direct interactions when you create an account, upload a resume, apply for jobs, or contact us.</li>\n    <li>Automated technologies such as cookies and similar tracking technologies.</li>\n    <li>Third parties such as social media platforms if you choose to link your account.</li>\n</ul>\n\n<h2>4. How We Use Your Information</h2>\n<p>We use your information to:</p>\n<ul>\n    <li>Provide and maintain our services</li>\n    <li>Match job seekers with relevant job opportunities</li>\n    <li>Process job applications</li>\n    <li>Communicate with you about our services</li>\n    <li>Improve and personalize your experience</li>\n    <li>Analyze usage patterns and trends</li>\n    <li>Prevent fraud and enhance security</li>\n</ul>\n\n<h2>5. Disclosure of Your Information</h2>\n<p>We may share your personal information with:</p>\n<ul>\n    <li><strong>Employers:</strong> When you apply for jobs, your application and profile information will be shared with the employer.</li>\n    <li><strong>Service Providers:</strong> Third-party vendors who perform services on our behalf, such as payment processing and data analysis.</li>\n    <li><strong>Legal Requirements:</strong> When required by law or to protect our rights.</li>\n</ul>\n\n<h2>6. Data Security</h2>\n<p>We have implemented appropriate security measures to prevent your personal data from being accidentally lost, used, or accessed in an unauthorized way. We limit access to your personal data to employees and third parties who have a business need to know.</p>\n\n<h2>7. Your Data Protection Rights</h2>\n<p>Depending on your location, you may have the following rights:</p>\n<ul>\n    <li>The right to access your personal data</li>\n    <li>The right to correct inaccurate personal data</li>\n    <li>The right to request deletion of your personal data</li>\n    <li>The right to restrict processing of your personal data</li>\n    <li>The right to data portability</li>\n    <li>The right to object to processing of your personal data</li>\n</ul>\n\n<h2>8. Cookies and Tracking Technologies</h2>\n<p>We use cookies and similar tracking technologies to track activity on our website and store certain information. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent. However, if you do not accept cookies, you may not be able to use some portions of our Service.</p>\n\n<h2>9. Children's Privacy</h2>\n<p>Our Service is not intended for use by children under the age of 16. We do not knowingly collect personally identifiable information from children under 16. If you are a parent or guardian and you are aware that your child has provided us with personal data, please contact us.</p>\n\n<h2>10. Changes to This Privacy Policy</h2>\n<p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the \"Last updated\" date.</p>\n\n<h2>11. Contact Us</h2>\n<p>If you have any questions about this Privacy Policy, please contact us at <a href=\"mailto:privacy@searchfind.com\">privacy@searchfind.com</a>.</p>\n",
+    "is_active": true,
+    "created_at": "2025-05-05T00:56:10.045Z",
+    "updated_at": "2025-05-05T00:56:10.045Z"
+  }
+},
+{
+  "model": "jobs.legalpage",
+  "pk": 3,
+  "fields": {
+    "title": "Cookie Policy",
+    "slug": "cookie-policy",
+    "page_type": "cookies",
+    "content": 

@@ -1,0 +1,300 @@
+{% extends 'custom_admin/management_base.html' %}
+
+{% block title %}Company Followers - Admin Dashboard{% endblock %}
+{% block header %}Company Followers Management{% endblock %}
+{% block breadcrumb %}Company Followers{% endblock %}
+
+{% block filters %}
+<div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+    <!-- Company Filter -->
+    <div>
+        <label for="company-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Company</label>
+        <select id="company-filter" class="form-control">
+            <option value="">All Companies</option>
+            {% for company in all_companies %}
+                <option value="{{ company.id }}" {% if company_id == company.id|stringformat:"i" %}selected{% endif %}>{{ company.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Search Form -->
+    <div>
+        <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div class="flex">
+            <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}" placeholder="Search followers..."
+                   class="form-control rounded-r-none focus:z-10">
+            <button type="button" id="search-button" class="btn btn-primary rounded-l-none">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Followed On</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notifications</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for follower in followers %}
+    <tr>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                {% if follower.user.profile_picture %}
+                    <img class="h-10 w-10 rounded-full object-cover" src="{{ follower.user.profile_picture.url }}" alt="{{ follower.user.get_full_name }}">
+                {% else %}
+                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                        {{ follower.user.first_name|first|upper }}
+                    </div>
+                {% endif %}
+                <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ follower.user.get_full_name }}</div>
+                    <div class="text-xs text-gray-500">{{ follower.user.email }}</div>
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                {% if follower.company.logo %}
+                    <img class="h-8 w-8 rounded-full object-cover" src="{{ follower.company.logo.url }}" alt="{{ follower.company.name }}">
+                {% else %}
+                    <div class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+                        {{ follower.company.name|first|upper }}
+                    </div>
+                {% endif %}
+                <div class="ml-3">
+                    <div class="text-sm font-medium text-gray-900">{{ follower.company.name }}</div>
+                    <div class="text-xs text-gray-500">{{ follower.company.industry }}</div>
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ follower.created_at|date:"M d, Y" }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {% if follower.receive_notifications %}
+                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    Enabled
+                </span>
+            {% else %}
+                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                    Disabled
+                </span>
+            {% endif %}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-3">
+                <button type="button" class="btn-action btn-view" data-toggle="modal" data-target="#viewFollowerModal{{ follower.id }}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deleteFollowerModal{{ follower.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+
+    <!-- View Follower Modal -->
+    <div class="modal fade" id="viewFollowerModal{{ follower.id }}" tabindex="-1" role="dialog" aria-labelledby="viewFollowerModalLabel{{ follower.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewFollowerModalLabel{{ follower.id }}">Follower Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">User Information</h3>
+                        <div class="flex items-center mb-4">
+                            {% if follower.user.profile_picture %}
+                                <img class="h-16 w-16 rounded-full object-cover" src="{{ follower.user.profile_picture.url }}" alt="{{ follower.user.get_full_name }}">
+                            {% else %}
+                                <div class="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-bold">
+                                    {{ follower.user.first_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="ml-4">
+                                <div class="text-lg font-medium">{{ follower.user.get_full_name }}</div>
+                                <div class="text-sm text-gray-500">{{ follower.user.email }}</div>
+                                <div class="text-sm text-gray-500">User Type: {{ follower.user.get_user_type_display }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Company Information</h3>
+                        <div class="flex items-center mb-4">
+                            {% if follower.company.logo %}
+                                <img class="h-16 w-16 rounded-full object-cover" src="{{ follower.company.logo.url }}" alt="{{ follower.company.name }}">
+                            {% else %}
+                                <div class="h-16 w-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xl font-bold">
+                                    {{ follower.company.name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="ml-4">
+                                <div class="text-lg font-medium">{{ follower.company.name }}</div>
+                                <div class="text-sm text-gray-500">{{ follower.company.industry }}</div>
+                                <div class="text-sm text-gray-500">{{ follower.company.location }}</div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <a href="{% url 'jobs:company_detail' follower.company.slug %}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-external-link-alt mr-1"></i> View Company Profile
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Following Details</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Followed On</div>
+                                    <div class="text-sm">{{ follower.created_at|date:"F d, Y H:i" }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Notifications</div>
+                                    <div class="text-sm">
+                                        {% if follower.receive_notifications %}
+                                            <span class="text-green-600">
+                                                <i class="fas fa-check-circle mr-1"></i> Enabled
+                                            </span>
+                                        {% else %}
+                                            <span class="text-gray-600">
+                                                <i class="fas fa-times-circle mr-1"></i> Disabled
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            {% if follower.recent_applications %}
+                                <div class="space-y-3">
+                                    {% for application in follower.recent_applications %}
+                                        <div class="flex items-start">
+                                            <div class="flex-shrink-0 mt-1">
+                                                <i class="fas fa-file-alt text-blue-500"></i>
+                                            </div>
+                                            <div class="ml-3">
+                                                <div class="text-sm font-medium">Applied to {{ application.job.title }}</div>
+                                                <div class="text-xs text-gray-500">{{ application.applied_at|date:"M d, Y" }}</div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-sm text-gray-500">No recent job applications with this company.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Follower Modal -->
+    <div class="modal fade" id="deleteFollowerModal{{ follower.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteFollowerModalLabel{{ follower.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteFollowerModalLabel{{ follower.id }}">Delete Follower</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to remove {{ follower.user.get_full_name }} as a follower of {{ follower.company.name }}?</p>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        This action cannot be undone. The user will no longer receive notifications about this company.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'custom_admin:company_follower_management' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="follower_id" value="{{ follower.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <tr>
+        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+            <div class="flex flex-col items-center justify-center py-8">
+                <i class="fas fa-users text-gray-400 text-5xl mb-4"></i>
+                <p class="text-lg font-medium">No company followers found</p>
+                <p class="text-sm text-gray-500 mt-1">Company followers will appear here when users follow companies</p>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+{% endblock %}
+
+{% block common_js %}
+// Filter functionality
+document.getElementById('company-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('search-button').addEventListener('click', function() {
+    applyFilters();
+});
+
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        applyFilters();
+    }
+});
+
+function applyFilters() {
+    const companyId = document.getElementById('company-filter').value;
+    const searchQuery = document.getElementById('search-input').value;
+
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+
+    if (companyId) {
+        params.set('company', companyId);
+    } else {
+        params.delete('company');
+    }
+
+    if (searchQuery) {
+        params.set('search', searchQuery);
+    } else {
+        params.delete('search');
+    }
+
+    window.location.href = `?${params.toString()}`;
+}
+
+// Add button styling for action buttons
+document.querySelectorAll('.btn-action').forEach(function(button) {
+    button.classList.add('inline-flex', 'items-center', 'justify-center', 'p-2', 'rounded-full', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2');
+
+    if (button.classList.contains('btn-view')) {
+        button.classList.add('text-blue-600', 'hover:text-blue-800', 'focus:ring-blue-500');
+    } else if (button.classList.contains('btn-delete')) {
+        button.classList.add('text-red-600', 'hover:text-red-800', 'focus:ring-red-500');
+    }
+});
+{% endblock %}

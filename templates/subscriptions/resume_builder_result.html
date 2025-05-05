@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Resume Builder Results" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .resume-section {
+        transition: all 0.3s ease;
+    }
+    .resume-section:hover {
+        background-color: #F9FAFB;
+    }
+    .resume-preview {
+        font-family: 'Times New Roman', Times, serif;
+        line-height: 1.5;
+    }
+    .resume-preview h1 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+    .resume-preview h2 {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 16px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #E5E7EB;
+        padding-bottom: 4px;
+    }
+    .resume-preview ul {
+        list-style-type: disc;
+        padding-left: 20px;
+        margin-top: 8px;
+    }
+    .resume-preview p {
+        margin-bottom: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <a href="{% url 'subscriptions:resume_builder' %}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> {% trans "Back to Resume Builder" %}
+            </a>
+        </div>
+
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "Your AI-Enhanced Resume" %}</h1>
+            <p class="text-gray-600 mt-2">
+                {% if resume_builder.job_listing %}
+                    {% blocktrans with job_title=resume_builder.job_listing.title %}Tailored for "{{ job_title }}" position{% endblocktrans %}
+                {% else %}
+                    {% trans "Optimized for maximum impact" %}
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                    <div class="p-6 bg-blue-50 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-xl font-semibold text-gray-800">{% trans "Resume Preview" %}</h2>
+                        <button id="download-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300 flex items-center">
+                            <i class="fas fa-download mr-2"></i> {% trans "Download" %}
+                        </button>
+                    </div>
+                    <div class="p-6 resume-preview" id="resume-content">
+                        <h1>{{ request.user.get_full_name }}</h1>
+                        <p>{{ request.user.email }} | {{ request.user.phone_number|default:"" }}</p>
+                        
+                        <h2>{% trans "Professional Summary" %}</h2>
+                        <p>{{ resume_builder.generated_summary }}</p>
+                        
+                        <h2>{% trans "Skills" %}</h2>
+                        <ul>
+                            {% for skill in resume_builder.generated_skills %}
+                                <li>{{ skill }}</li>
+                            {% endfor %}
+                        </ul>
+                        
+                        <h2>{% trans "Experience" %}</h2>
+                        {% for exp in resume_builder.generated_experience %}
+                            <p><strong>{{ exp.title }}</strong> - {{ exp.company }}</p>
+                            <p>{{ exp.years }}</p>
+                            {% if exp.description %}
+                                <p>{{ exp.description }}</p>
+                            {% endif %}
+                            {% if not forloop.last %}<br>{% endif %}
+                        {% endfor %}
+                        
+                        <h2>{% trans "Education" %}</h2>
+                        {% for edu in resume_builder.generated_education %}
+                            <p><strong>{{ edu.degree }}</strong> - {{ edu.institution }}</p>
+                            <p>{{ edu.year }}</p>
+                            {% if not forloop.last %}<br>{% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8 sticky top-4">
+                    <div class="p-4 bg-blue-50 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "AI Enhancements" %}</h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-4">
+                            <div class="resume-section p-3 rounded-lg border border-green-200 bg-green-50">
+                                <h3 class="font-semibold text-gray-800 mb-2">
+                                    <i class="fas fa-magic text-green-500 mr-2"></i> {% trans "Professional Summary" %}
+                                </h3>
+                                <p class="text-sm text-gray-600">{% trans "Concise, impactful summary highlighting your key qualifications" %}</p>
+                            </div>
+                            
+                            <div class="resume-section p-3 rounded-lg border border-blue-200 bg-blue-50">
+                                <h3 class="font-semibold text-gray-800 mb-2">
+                                    <i class="fas fa-check-circle text-blue-500 mr-2"></i> {% trans "Skills Optimization" %}
+                                </h3>
+                                <p class="text-sm text-gray-600">{% trans "Relevant skills highlighted and formatted for maximum impact" %}</p>
+                            </div>
+                            
+                            <div class="resume-section p-3 rounded-lg border border-purple-200 bg-purple-50">
+                                <h3 class="font-semibold text-gray-800 mb-2">
+                                    <i class="fas fa-briefcase text-purple-500 mr-2"></i> {% trans "Experience Formatting" %}
+                                </h3>
+                                <p class="text-sm text-gray-600">{% trans "Work history presented in a clear, professional format" %}</p>
+                            </div>
+                            
+                            <div class="resume-section p-3 rounded-lg border border-yellow-200 bg-yellow-50">
+                                <h3 class="font-semibold text-gray-800 mb-2">
+                                    <i class="fas fa-graduation-cap text-yellow-500 mr-2"></i> {% trans "Education Formatting" %}
+                                </h3>
+                                <p class="text-sm text-gray-600">{% trans "Educational background presented clearly and professionally" %}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6">
+                            <a href="{% url 'subscriptions:resume_builder' %}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 px-4 rounded-lg font-medium transition duration-300">
+                                {% trans "Create Another Resume" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle download button
+        document.getElementById('download-btn').addEventListener('click', function() {
+            const resumeContent = document.getElementById('resume-content').innerHTML;
+            const blob = new Blob([`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Resume - {{ request.user.get_full_name }}</title>
+                    <style>
+                        body {
+                            font-family: 'Times New Roman', Times, serif;
+                            line-height: 1.5;
+                            margin: 30px;
+                        }
+                        h1 {
+                            font-size: 24px;
+                            font-weight: bold;
+                            margin-bottom: 8px;
+                        }
+                        h2 {
+                            font-size: 18px;
+                            font-weight: bold;
+                            margin-top: 16px;
+                            margin-bottom: 8px;
+                            border-bottom: 1px solid #ccc;
+                            padding-bottom: 4px;
+                        }
+                        ul {
+                            list-style-type: disc;
+                            padding-left: 20px;
+                            margin-top: 8px;
+                        }
+                        p {
+                            margin-bottom: 8px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${resumeContent}
+                </body>
+                </html>
+            `], {type: 'text/html'});
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'resume-{{ request.user.get_full_name|slugify }}.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    });
+</script>
+{% endblock %}

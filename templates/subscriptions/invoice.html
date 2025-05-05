@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Invoice" %} #{{ invoice_number }} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .invoice-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 40px;
+    }
+    .invoice-logo {
+        max-width: 200px;
+    }
+    .invoice-title {
+        font-size: 28px;
+        color: #1F2937;
+        margin-bottom: 5px;
+    }
+    .invoice-subtitle {
+        color: #6B7280;
+        font-size: 16px;
+    }
+    .invoice-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+    .invoice-details-col {
+        flex: 1;
+    }
+    .invoice-label {
+        color: #6B7280;
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
+    .invoice-value {
+        color: #1F2937;
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+    .invoice-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+    .invoice-table th {
+        background-color: #F3F4F6;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #4B5563;
+        font-size: 14px;
+    }
+    .invoice-table td {
+        padding: 12px;
+        border-bottom: 1px solid #E5E7EB;
+        color: #1F2937;
+        font-size: 14px;
+    }
+    .invoice-total-row td {
+        border-top: 2px solid #E5E7EB;
+        border-bottom: none;
+        padding-top: 20px;
+        font-weight: 600;
+    }
+    .text-right {
+        text-align: right;
+    }
+    @media print {
+        .no-print {
+            display: none;
+        }
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        .container {
+            max-width: 100%;
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="invoice-container bg-white rounded-lg shadow-md p-8">
+        <div class="flex justify-end mb-6 no-print">
+            <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-300">
+                <i class="fas fa-print mr-2"></i> {% trans "Print Invoice" %}
+            </button>
+        </div>
+        
+        <div class="invoice-header">
+            <div>
+                <h1 class="invoice-title">{% trans "INVOICE" %}</h1>
+                <p class="invoice-subtitle">{{ invoice_number }}</p>
+            </div>
+            <div class="text-right">
+                <img src="{% static 'img/logo.png' %}" alt="SearchFind Logo" class="invoice-logo">
+                <p class="mt-2">{{ company_name }}</p>
+                <p>{{ company_address }}</p>
+                <p>{{ company_email }}</p>
+            </div>
+        </div>
+        
+        <div class="invoice-details">
+            <div class="invoice-details-col">
+                <p class="invoice-label">{% trans "Bill To" %}</p>
+                <p class="invoice-value">{{ subscription.user.get_full_name }}</p>
+                <p class="invoice-value">{{ subscription.user.email }}</p>
+                
+                <p class="invoice-label mt-6">{% trans "Payment Method" %}</p>
+                <p class="invoice-value">{{ subscription.payment_method|default:"Credit Card"|title }}</p>
+            </div>
+            <div class="invoice-details-col text-right">
+                <p class="invoice-label">{% trans "Invoice Date" %}</p>
+                <p class="invoice-value">{{ invoice_date|date:"F j, Y" }}</p>
+                
+                <p class="invoice-label">{% trans "Due Date" %}</p>
+                <p class="invoice-value">{{ due_date|date:"F j, Y" }}</p>
+                
+                <p class="invoice-label">{% trans "Status" %}</p>
+                <p class="invoice-value">
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-semibold">
+                        {% trans "Paid" %}
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>{% trans "Description" %}</th>
+                    <th>{% trans "Period" %}</th>
+                    <th class="text-right">{% trans "Amount" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <p class="font-medium">{{ subscription.plan.name }} {% trans "Subscription" %}</p>
+                        <p class="text-gray-500 text-sm">{{ subscription.plan.description }}</p>
+                    </td>
+                    <td>
+                        {% if subscription.start_date and subscription.end_date %}
+                            {{ subscription.start_date|date:"M d, Y" }} - {{ subscription.end_date|date:"M d, Y" }}
+                        {% else %}
+                            {% trans "N/A" %}
+                        {% endif %}
+                    </td>
+                    <td class="text-right">${{ subtotal }}</td>
+                </tr>
+                
+                <tr class="invoice-total-row">
+                    <td colspan="2" class="text-right">{% trans "Subtotal" %}</td>
+                    <td class="text-right">${{ subtotal }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="text-right">{% trans "Tax" %} ({{ tax_rate }}%)</td>
+                    <td class="text-right">${{ tax_amount }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="text-right font-bold">{% trans "Total" %}</td>
+                    <td class="text-right font-bold">${{ total }}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="border-t border-gray-200 pt-6 mt-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-3">{% trans "Notes" %}</h3>
+            <p class="text-gray-600">
+                {% trans "Thank you for your business! If you have any questions about this invoice, please contact our support team." %}
+            </p>
+        </div>
+        
+        <div class="mt-8 text-center text-sm text-gray-500">
+            <p>{{ company_name }} &copy; {% now "Y" %}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

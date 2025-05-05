@@ -1,0 +1,249 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Site Settings - Admin Dashboard{% endblock %}
+
+{% block header %}Site Settings{% endblock %}
+
+{% block content %}
+    <div class="max-w-4xl mx-auto">
+        <form method="post" enctype="multipart/form-data" class="space-y-8">
+            {% csrf_token %}
+
+            <!-- Site Information -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-blue-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Site Information</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">Basic information about your site.</p>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-4">
+                            <label for="site_name" class="block text-sm font-medium text-gray-700">Site Name</label>
+                            <div class="mt-1">
+                                <input type="text" name="site_name" id="site_name" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.site_name }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="contact_email" class="block text-sm font-medium text-gray-700">Contact Email</label>
+                            <div class="mt-1">
+                                <input type="email" name="contact_email" id="contact_email" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.contact_email }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="support_email" class="block text-sm font-medium text-gray-700">Support Email</label>
+                            <div class="mt-1">
+                                <input type="email" name="support_email" id="support_email" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.support_email }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-blue-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Contact Information</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">Contact details displayed on your site.</p>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-3">
+                            <label for="phone_number" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                            <div class="mt-1">
+                                <input type="text" name="phone_number" id="phone_number" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.phone_number }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label for="address_line1" class="block text-sm font-medium text-gray-700">Address Line 1</label>
+                            <div class="mt-1">
+                                <input type="text" name="address_line1" id="address_line1" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.address_line1 }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label for="address_line2" class="block text-sm font-medium text-gray-700">Address Line 2</label>
+                            <div class="mt-1">
+                                <input type="text" name="address_line2" id="address_line2" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.address_line2 }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="city" class="block text-sm font-medium text-gray-700">City</label>
+                            <div class="mt-1">
+                                <input type="text" name="city" id="city" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.city }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="state" class="block text-sm font-medium text-gray-700">State/Province</label>
+                            <div class="mt-1">
+                                <input type="text" name="state" id="state" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.state }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="postal_code" class="block text-sm font-medium text-gray-700">Postal Code</label>
+                            <div class="mt-1">
+                                <input type="text" name="postal_code" id="postal_code" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.postal_code }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="country" class="block text-sm font-medium text-gray-700">Country</label>
+                            <div class="mt-1">
+                                <input type="text" name="country" id="country" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.country }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label for="business_hours" class="block text-sm font-medium text-gray-700">Business Hours</label>
+                            <div class="mt-1">
+                                <textarea name="business_hours" id="business_hours" rows="4" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ settings.business_hours }}</textarea>
+                                <p class="mt-1 text-sm text-gray-500">Enter each line of business hours on a new line.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Branding -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-blue-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Branding</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">Customize your site's look and feel.</p>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-6">
+                            <label class="block text-sm font-medium text-gray-700">Site Logo</label>
+                            <div class="mt-2 flex items-center">
+                                {% if settings.site_logo %}
+                                    <div class="mr-4">
+                                        <img src="{{ settings.site_logo.url }}" alt="Site Logo" class="h-16 w-auto">
+                                    </div>
+                                {% endif %}
+                                <div class="flex-1">
+                                    <input type="file" name="site_logo" id="site_logo" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <p class="mt-1 text-sm text-gray-500">Recommended size: 200x50 pixels. PNG or SVG format.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-6">
+                            <label class="block text-sm font-medium text-gray-700">Favicon</label>
+                            <div class="mt-2 flex items-center">
+                                {% if settings.site_favicon %}
+                                    <div class="mr-4">
+                                        <img src="{{ settings.site_favicon.url }}" alt="Favicon" class="h-8 w-8">
+                                    </div>
+                                {% endif %}
+                                <div class="flex-1">
+                                    <input type="file" name="site_favicon" id="site_favicon" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <p class="mt-1 text-sm text-gray-500">Recommended size: 32x32 pixels. ICO, PNG, or SVG format.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="primary_color" class="block text-sm font-medium text-gray-700">Primary Color</label>
+                            <div class="mt-1 flex items-center">
+                                <input type="color" name="primary_color" id="primary_color" class="h-8 w-8 rounded-md border border-gray-300 mr-2" value="{{ settings.primary_color }}">
+                                <input type="text" name="primary_color_hex" id="primary_color_hex" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.primary_color }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="secondary_color" class="block text-sm font-medium text-gray-700">Secondary Color</label>
+                            <div class="mt-1 flex items-center">
+                                <input type="color" name="secondary_color" id="secondary_color" class="h-8 w-8 rounded-md border border-gray-300 mr-2" value="{{ settings.secondary_color }}">
+                                <input type="text" name="secondary_color_hex" id="secondary_color_hex" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md" value="{{ settings.secondary_color }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Media -->
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6 bg-blue-50">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Social Media</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">Connect your social media accounts.</p>
+                </div>
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-3">
+                            <label for="facebook_url" class="block text-sm font-medium text-gray-700">Facebook URL</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                    <i class="fab fa-facebook-f"></i>
+                                </span>
+                                <input type="url" name="facebook_url" id="facebook_url" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300" value="{{ settings.facebook_url|default:'' }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="twitter_url" class="block text-sm font-medium text-gray-700">Twitter URL</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                    <i class="fab fa-twitter"></i>
+                                </span>
+                                <input type="url" name="twitter_url" id="twitter_url" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300" value="{{ settings.twitter_url|default:'' }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="linkedin_url" class="block text-sm font-medium text-gray-700">LinkedIn URL</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </span>
+                                <input type="url" name="linkedin_url" id="linkedin_url" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300" value="{{ settings.linkedin_url|default:'' }}">
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-3">
+                            <label for="instagram_url" class="block text-sm font-medium text-gray-700">Instagram URL</label>
+                            <div class="mt-1 flex rounded-md shadow-sm">
+                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                    <i class="fab fa-instagram"></i>
+                                </span>
+                                <input type="url" name="instagram_url" id="instagram_url" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300" value="{{ settings.instagram_url|default:'' }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end">
+                <button type="submit" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Sync color inputs
+    document.getElementById('primary_color').addEventListener('input', function() {
+        document.getElementById('primary_color_hex').value = this.value;
+    });
+
+    document.getElementById('primary_color_hex').addEventListener('input', function() {
+        document.getElementById('primary_color').value = this.value;
+    });
+
+    document.getElementById('secondary_color').addEventListener('input', function() {
+        document.getElementById('secondary_color_hex').value = this.value;
+    });
+
+    document.getElementById('secondary_color_hex').addEventListener('input', function() {
+        document.getElementById('secondary_color').value = this.value;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard - SearchFind{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        /* Custom styles */
+        body {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .sidebar {
+            background-color: #1e293b;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            width: 280px !important;
+            overflow-y: auto;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            bottom: 0;
+        }
+        .sidebar-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid #334155;
+            background-color: #0f172a;
+        }
+        .sidebar-link {
+            color: #cbd5e1;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+            font-size: 1.05rem;
+            border-radius: 0.25rem;
+            margin: 0.1rem 0.5rem;
+        }
+        .sidebar-link:hover {
+            background-color: #334155;
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar-link.active {
+            background-color: #4f46e5;
+            color: white;
+            font-weight: 500;
+        }
+        .icon-container {
+            margin-right: 0.75rem;
+            width: 1.25rem;
+            text-align: center;
+            color: #94a3b8;
+        }
+        .sidebar-link:hover .icon-container {
+            color: white;
+        }
+        .sidebar-link.active .icon-container {
+            color: white;
+        }
+        .main-content {
+            margin-left: 280px;
+            padding: 1.5rem;
+            min-height: 100vh;
+        }
+        @media (max-width: 992px) {
+            .main-content {
+                margin-left: 0;
+            }
+        }
+        .section-heading {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748b;
+            margin: 1rem 1rem 0.25rem;
+            letter-spacing: 0.05em;
+        }
+        /* Dropdown menu in sidebar */
+        .sidebar-dropdown {
+            margin: 0.1rem 0.5rem;
+        }
+        .sidebar-dropdown-toggle {
+            color: #cbd5e1;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+            font-size: 1.05rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+        }
+        .sidebar-dropdown-toggle:hover {
+            background-color: #334155;
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar-dropdown-toggle .icon-container {
+            margin-right: 0.75rem;
+        }
+        .sidebar-dropdown-menu {
+            padding-left: 1.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .sidebar-dropdown.show .sidebar-dropdown-menu {
+            max-height: 500px;
+        }
+        .sidebar-dropdown-item {
+            color: #cbd5e1;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 0.4rem 1rem;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            border-radius: 0.25rem;
+            margin: 0.1rem 0;
+        }
+        .sidebar-dropdown-item:hover {
+            background-color: #334155;
+            color: white;
+            text-decoration: none;
+        }
+        .sidebar-dropdown-item.active {
+            background-color: #4f46e5;
+            color: white;
+            font-weight: 500;
+        }
+        /* Form styling */
+        .form-control {
+            border: 2px solid #cbd5e1;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            background-color: #f8fafc;
+            color: #1e293b;
+            font-size: 1rem;
+        }
+        .form-control:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+            background-color: #ffffff;
+        }
+        .form-control::placeholder {
+            color: #94a3b8;
+            opacity: 0.7;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+        /* Improve visibility of select dropdowns */
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+            padding-right: 2rem;
+        }
+        /* Improve visibility of file inputs */
+        .form-control-file {
+            padding: 0.375rem 0.75rem;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.375rem;
+            background-color: #f8fafc;
+            width: 100%;
+        }
+        /* Improve visibility of textareas */
+        textarea.form-control {
+            min-height: 100px;
+        }
+        /* Action buttons */
+        .btn-action {
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-view {
+            color: #1e40af;
+            background-color: #dbeafe;
+            border: 1px solid #bfdbfe;
+        }
+        .btn-view:hover {
+            background-color: #bfdbfe;
+        }
+        .btn-edit {
+            color: #047857;
+            background-color: #d1fae5;
+            border: 1px solid #a7f3d0;
+        }
+        .btn-edit:hover {
+            background-color: #a7f3d0;
+        }
+        .btn-delete {
+            color: #b91c1c;
+            background-color: #fee2e2;
+            border: 1px solid #fecaca;
+        }
+        .btn-delete:hover {
+            background-color: #fecaca;
+        }
+        /* Custom scrollbar for sidebar */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: #4f46e5;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Navbar -->
+    <nav class="navbar navbar-dark bg-dark d-lg-none">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">SearchFind Admin</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#mobileSidebar" aria-controls="mobileSidebar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar d-none d-lg-block">
+        <div class="sidebar-header">
+            <div class="d-flex align-items-center">
+                <div class="bg-indigo-600 rounded d-flex align-items-center justify-content-center mr-3" style="width: 40px; height: 40px;">
+                    <i class="fas fa-chart-line text-white"></i>
+                </div>
+                <div>
+                    <h2 class="h5 mb-0">SearchFind</h2>
+                    <p class="small mb-0 text-muted">Admin Dashboard</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-4 py-3 border-bottom border-dark">
+            <div class="d-flex align-items-center">
+                {% if request.user.profile_picture %}
+                    <img src="{{ request.user.profile_picture.url }}" alt="{{ request.user.get_full_name }}" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover;">
+                {% else %}
+                    <div class="rounded-circle bg-indigo-600 d-flex align-items-center justify-content-center text-white" style="width: 36px; height: 36px;">
+                        {{ request.user.first_name|first|upper }}
+                    </div>
+                {% endif %}
+                <div class="ml-3">
+                    <p class="small mb-0 text-muted">{{ request.user.email }}</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="nav flex-column py-2">
+            <a href="{% url 'custom_admin:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <div class="icon-container"><i class="fas fa-tachometer-alt"></i></div> Overview
+            </a>
+
+            <div class="mt-3"></div>
+
+            <!-- Users Dropdown -->
+            <div class="sidebar-dropdown" id="users-dropdown">
+                <div class="sidebar-dropdown-toggle">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container"><i class="fas fa-users"></i></div> Users
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="sidebar-dropdown-menu">
+                    <a href="{% url 'custom_admin:user_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'user_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-user"></i></div> All Users
+                    </a>
+                    <a href="{% url 'custom_admin:user_management' %}?user_type=admin" class="sidebar-dropdown-item">
+                        <div class="icon-container"><i class="fas fa-user-shield"></i></div> Admins
+                    </a>
+                    <a href="{% url 'custom_admin:user_management' %}?user_type=employer" class="sidebar-dropdown-item">
+                        <div class="icon-container"><i class="fas fa-user-tie"></i></div> Employers
+                    </a>
+                    <a href="{% url 'custom_admin:user_management' %}?user_type=job_seeker" class="sidebar-dropdown-item">
+                        <div class="icon-container"><i class="fas fa-user-graduate"></i></div> Job Seekers
+                    </a>
+                </div>
+            </div>
+
+            <!-- Jobs Dropdown -->
+            <div class="sidebar-dropdown" id="jobs-dropdown">
+                <div class="sidebar-dropdown-toggle">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container"><i class="fas fa-briefcase"></i></div> Jobs
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="sidebar-dropdown-menu">
+                    <a href="{% url 'custom_admin:job_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-list"></i></div> Job Listings
+                    </a>
+                    <a href="{% url 'custom_admin:job_category_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_category_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-th-large"></i></div> Job Categories
+                    </a>
+                    <a href="{% url 'custom_admin:job_application_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_application_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-file-alt"></i></div> Job Applications
+                    </a>
+                    <a href="{% url 'custom_admin:saved_job_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'saved_job_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-bookmark"></i></div> Saved Jobs
+                    </a>
+                    <a href="{% url 'custom_admin:job_renewal_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_renewal_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-sync"></i></div> Job Renewals
+                    </a>
+                    <a href="{% url 'custom_admin:job_package_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_package_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-box"></i></div> Job Packages
+                    </a>
+                    <a href="{% url 'custom_admin:job_analytics_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_analytics_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-chart-line"></i></div> Job Analytics
+                    </a>
+                </div>
+            </div>
+
+            <!-- Companies Dropdown -->
+            <div class="sidebar-dropdown" id="companies-dropdown">
+                <div class="sidebar-dropdown-toggle">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container"><i class="fas fa-building"></i></div> Companies
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="sidebar-dropdown-menu">
+                    <a href="{% url 'custom_admin:company_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'company_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-list"></i></div> All Companies
+                    </a>
+                    <a href="{% url 'custom_admin:company_connection_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'company_connection_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-link"></i></div> Company Connections
+                    </a>
+                    <a href="{% url 'custom_admin:company_follower_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'company_follower_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-heart"></i></div> Company Followers
+                    </a>
+                    <a href="{% url 'custom_admin:trusted_company_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'trusted_company_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-handshake"></i></div> Trusted Companies
+                    </a>
+                </div>
+            </div>
+
+            <!-- Subscriptions Dropdown -->
+            <div class="sidebar-dropdown" id="subscriptions-dropdown">
+                <div class="sidebar-dropdown-toggle">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container"><i class="fas fa-credit-card"></i></div> Subscriptions
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="sidebar-dropdown-menu">
+                    <a href="{% url 'custom_admin:subscription_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'subscription_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-list"></i></div> All Subscriptions
+                    </a>
+                    <a href="{% url 'custom_admin:subscription_plan_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'subscription_plan_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-tags"></i></div> Subscription Plans
+                    </a>
+                    <a href="{% url 'custom_admin:user_subscription_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'user_subscription_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-user-tag"></i></div> User Subscriptions
+                    </a>
+                    <a href="{% url 'custom_admin:paystack_config_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'paystack_config_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-money-bill-wave"></i></div> Paystack Config
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-3"></div>
+
+            <!-- Content Management Dropdown -->
+            <div class="sidebar-dropdown" id="content-dropdown">
+                <div class="sidebar-dropdown-toggle">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container"><i class="fas fa-file-alt"></i></div> Content
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="sidebar-dropdown-menu">
+                    <a href="{% url 'custom_admin:testimonial_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'testimonial_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-quote-left"></i></div> Testimonials
+                    </a>
+                    <a href="{% url 'custom_admin:team_member_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'team_member_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-user-tie"></i></div> Team Members
+                    </a>
+                    <a href="{% url 'custom_admin:newsletter_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'newsletter_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-envelope"></i></div> Newsletter
+                    </a>
+                    <a href="{% url 'custom_admin:hero_section_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'hero_section_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-image"></i></div> Hero Sections
+                    </a>
+                    <a href="{% url 'custom_admin:legal_page_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'legal_page_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-file-contract"></i></div> Legal Pages
+                    </a>
+                    <a href="{% url 'custom_admin:notification_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'notification_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-bell"></i></div> Notifications
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pro Features Dropdown -->
+            <div class="sidebar-dropdown" id="pro-features-dropdown">
+                <div class="sidebar-dropdown-toggle">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container"><i class="fas fa-star"></i></div> Pro Features
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="sidebar-dropdown-menu">
+                    <a href="{% url 'custom_admin:resume_builder_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'resume_builder_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-file-alt"></i></div> Resume Builders
+                    </a>
+                    <a href="{% url 'custom_admin:resume_analysis_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'resume_analysis_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-chart-pie"></i></div> Resume Analyses
+                    </a>
+                    <a href="{% url 'custom_admin:job_match_score_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_match_score_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-percentage"></i></div> Job Match Scores
+                    </a>
+                    <a href="{% url 'custom_admin:company_match_score_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'company_match_score_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-building"></i></div> Company Match Scores
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-3"></div>
+
+            <!-- Settings Dropdown -->
+            <div class="sidebar-dropdown" id="settings-dropdown">
+                <div class="sidebar-dropdown-toggle">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container"><i class="fas fa-cog"></i></div> Settings
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="sidebar-dropdown-menu">
+                    <a href="{% url 'custom_admin:site_settings' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'site_settings' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-sliders-h"></i></div> Site Settings
+                    </a>
+                    <a href="{% url 'custom_admin:social_account_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'social_account_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-share-alt"></i></div> Social Accounts
+                    </a>
+                    <a href="{% url 'custom_admin:social_application_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'social_application_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-plug"></i></div> Social Applications
+                    </a>
+                    <a href="{% url 'custom_admin:social_app_token_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'social_app_token_management' %}active{% endif %}">
+                        <div class="icon-container"><i class="fas fa-key"></i></div> Social App Tokens
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-3 border-top border-dark pt-3 px-3">
+                <a href="{% url 'jobs:home' %}" class="sidebar-link">
+                    <div class="icon-container"><i class="fas fa-arrow-left"></i></div> Back to Site
+                </a>
+                <a href="{% url 'accounts:logout' %}" class="sidebar-link text-danger">
+                    <div class="icon-container"><i class="fas fa-sign-out-alt"></i></div> Logout
+                </a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Mobile Sidebar -->
+    <div class="collapse navbar-collapse d-lg-none" id="mobileSidebar" style="max-height: calc(100vh - 56px); overflow-y: auto;">
+        <div class="bg-dark p-3">
+            <nav class="nav flex-column">
+                <a href="{% url 'custom_admin:dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <div class="icon-container"><i class="fas fa-tachometer-alt"></i></div> Overview
+                </a>
+
+                <div class="mt-3"></div>
+
+                <!-- Mobile Users Dropdown -->
+                <div class="sidebar-dropdown" id="mobile-users-dropdown">
+                    <div class="sidebar-dropdown-toggle">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container"><i class="fas fa-users"></i></div> Users
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="{% url 'custom_admin:user_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'user_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-user"></i></div> All Users
+                        </a>
+                        <a href="#" class="sidebar-dropdown-item">
+                            <div class="icon-container"><i class="fas fa-user-shield"></i></div> Admins
+                        </a>
+                        <a href="#" class="sidebar-dropdown-item">
+                            <div class="icon-container"><i class="fas fa-user-tie"></i></div> Employers
+                        </a>
+                        <a href="#" class="sidebar-dropdown-item">
+                            <div class="icon-container"><i class="fas fa-user-graduate"></i></div> Job Seekers
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mobile Jobs Dropdown -->
+                <div class="sidebar-dropdown" id="mobile-jobs-dropdown">
+                    <div class="sidebar-dropdown-toggle">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container"><i class="fas fa-briefcase"></i></div> Jobs
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="{% url 'custom_admin:job_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-list"></i></div> Job Listings
+                        </a>
+                        <a href="{% url 'custom_admin:job_category_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_category_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-th-large"></i></div> Job Categories
+                        </a>
+                        <a href="{% url 'custom_admin:job_application_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_application_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-file-alt"></i></div> Job Applications
+                        </a>
+                        <a href="{% url 'custom_admin:saved_job_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'saved_job_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-bookmark"></i></div> Saved Jobs
+                        </a>
+                        <a href="{% url 'custom_admin:job_package_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_package_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-box"></i></div> Job Packages
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mobile Companies Dropdown -->
+                <div class="sidebar-dropdown" id="mobile-companies-dropdown">
+                    <div class="sidebar-dropdown-toggle">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container"><i class="fas fa-building"></i></div> Companies
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="{% url 'custom_admin:company_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'company_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-list"></i></div> All Companies
+                        </a>
+                        <a href="{% url 'custom_admin:company_connection_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'company_connection_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-link"></i></div> Company Connections
+                        </a>
+                        <a href="{% url 'custom_admin:company_follower_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'company_follower_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-heart"></i></div> Company Followers
+                        </a>
+                        <a href="{% url 'custom_admin:trusted_company_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'trusted_company_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-handshake"></i></div> Trusted Companies
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-3"></div>
+
+                <!-- Mobile Content Dropdown -->
+                <div class="sidebar-dropdown" id="mobile-content-dropdown">
+                    <div class="sidebar-dropdown-toggle">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container"><i class="fas fa-file-alt"></i></div> Content
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="{% url 'custom_admin:testimonial_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'testimonial_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-quote-left"></i></div> Testimonials
+                        </a>
+                        <a href="{% url 'custom_admin:team_member_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'team_member_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-user-tie"></i></div> Team Members
+                        </a>
+                        <a href="{% url 'custom_admin:newsletter_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'newsletter_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-envelope"></i></div> Newsletter
+                        </a>
+                        <a href="{% url 'custom_admin:hero_section_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'hero_section_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-image"></i></div> Hero Sections
+                        </a>
+                        <a href="{% url 'custom_admin:legal_page_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'legal_page_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-file-contract"></i></div> Legal Pages
+                        </a>
+                        <a href="{% url 'custom_admin:notification_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'notification_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-bell"></i></div> Notifications
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-3"></div>
+
+                <!-- Mobile Settings Dropdown -->
+                <div class="sidebar-dropdown" id="mobile-settings-dropdown">
+                    <div class="sidebar-dropdown-toggle">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container"><i class="fas fa-cog"></i></div> Settings
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="{% url 'custom_admin:site_settings' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'site_settings' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-sliders-h"></i></div> Site Settings
+                        </a>
+                        <a href="{% url 'custom_admin:social_account_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'social_account_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-share-alt"></i></div> Social Accounts
+                        </a>
+                        <a href="{% url 'custom_admin:social_application_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'social_application_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-plug"></i></div> Social Apps
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Mobile Pro Features Dropdown -->
+                <div class="sidebar-dropdown" id="mobile-pro-dropdown">
+                    <div class="sidebar-dropdown-toggle">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container"><i class="fas fa-star"></i></div> Pro Features
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="sidebar-dropdown-menu">
+                        <a href="{% url 'custom_admin:resume_builder_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'resume_builder_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-file-alt"></i></div> Resume Builders
+                        </a>
+                        <a href="{% url 'custom_admin:job_match_score_management' %}" class="sidebar-dropdown-item {% if request.resolver_match.url_name == 'job_match_score_management' %}active{% endif %}">
+                            <div class="icon-container"><i class="fas fa-percentage"></i></div> Job Match Scores
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-top border-secondary pt-3">
+                    <a href="{% url 'jobs:home' %}" class="sidebar-link">
+                        <div class="icon-container"><i class="fas fa-arrow-left"></i></div> Back to Site
+                    </a>
+                    <a href="{% url 'accounts:logout' %}" class="sidebar-link text-danger">
+                        <div class="icon-container"><i class="fas fa-sign-out-alt"></i></div> Logout
+                    </a>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h4">{% block header %}Admin Dashboard{% endblock %}</h1>
+            <div class="dropdown">
+                <button id="user-menu-button" class="btn btn-light dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {% if request.user.profile_picture %}
+                        <img src="{{ request.user.profile_picture.url }}" alt="{{ request.user.get_full_name }}" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-indigo-600 d-flex align-items-center justify-content-center text-white" style="width: 32px; height: 32px;">
+                            {{ request.user.first_name|first|upper }}
+                        </div>
+                    {% endif %}
+                    <span class="d-none d-md-inline ml-2">{{ request.user.get_full_name }}</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="user-menu-button">
+                    <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                        <i class="fas fa-user mr-2 text-muted"></i> Your Profile
+                    </a>
+                    <a class="dropdown-item" href="{% url 'accounts:edit_profile' %}">
+                        <i class="fas fa-edit mr-2 text-muted"></i> Edit Profile
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Breadcrumbs -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'custom_admin:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% block breadcrumb %}{{ self.header }}{% endblock %}</li>
+            </ol>
+        </nav>
+
+        <!-- Messages -->
+        {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} d-flex align-items-center">
+                        <div class="mr-3">
+                            {% if message.tags == 'success' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div>{{ message }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Content -->
+        <div class="bg-white rounded shadow-sm p-4">
+            {% block content %}{% endblock %}
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-4 text-center text-muted">
+            <p>&copy; {% now "Y" %} SearchFind Admin Dashboard. All rights reserved.</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        $(document).ready(function() {
+            // Sidebar dropdown toggle
+            $('.sidebar-dropdown-toggle').click(function(e) {
+                e.preventDefault();
+                $(this).parent().toggleClass('show');
+                $(this).find('i.fas.fa-chevron-down').toggleClass('fa-chevron-down fa-chevron-up');
+            });
+
+            // Expand active dropdown menu on page load
+            $('.sidebar-dropdown-item.active').parents('.sidebar-dropdown').addClass('show');
+            $('.sidebar-dropdown.show').find('.sidebar-dropdown-toggle i.fas.fa-chevron-down').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+
+            // Close dropdown menu when clicking outside
+            $(document).click(function(e) {
+                var target = e.target;
+                if (!$(target).is('.dropdown-toggle') && !$(target).parents().is('.dropdown-toggle')) {
+                    $('.dropdown-menu').removeClass('show');
+                }
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

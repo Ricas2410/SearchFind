@@ -1,0 +1,27 @@
+Hello {{ job.company.get_full_name }},
+
+This is a friendly reminder that your job listing "{{ job.title }}" is about to expire.
+
+{% if days_left > 0 %}
+Time Remaining: {{ days_left }} day{{ days_left|pluralize }} and {{ hours_left }} hour{{ hours_left|pluralize }}
+{% else %}
+Time Remaining: {{ hours_left }} hour{{ hours_left|pluralize }}
+{% endif %}
+Expiration Date: {{ expiration_date|date:"F j, Y g:i A" }}
+
+Once the job listing expires, it will no longer be visible to job seekers and will be marked as "Expired" in your dashboard.
+
+If you'd like to extend the application deadline, you can do so from your employer dashboard:
+{{ dashboard_url }}
+
+Or you can directly view and edit this job listing:
+{{ job_url }}
+
+Thank you for using SearchFind for your hiring needs!
+
+Best regards,
+The SearchFind Team
+
+---
+This is an automated message. Please do not reply to this email.
+© {% now "Y" %} SearchFind. All rights reserved.

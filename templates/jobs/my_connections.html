@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Company Connections - SearchFind{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-12 rounded-lg shadow-xl mb-12">
+    <div class="container mx-auto px-4">
+        <h1 class="text-3xl font-bold mb-4">My Company Connections</h1>
+        <p class="text-xl text-blue-100">Manage your connections with companies</p>
+    </div>
+</section>
+
+<!-- Main Content -->
+<section class="mb-20">
+    <div class="container mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <!-- Tabs -->
+            <div class="border-b border-gray-200">
+                <nav class="flex -mb-px">
+                    <a href="#approved" class="tab-link active-tab text-blue-600 border-blue-500 whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm" data-tab="approved">
+                        Active Connections <span class="ml-2 bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">{{ approved_connections.count }}</span>
+                    </a>
+                    <a href="#pending" class="tab-link text-gray-500 hover:text-gray-700 whitespace-nowrap py-4 px-6 border-b-2 border-transparent font-medium text-sm" data-tab="pending">
+                        Pending Requests <span class="ml-2 bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs">{{ pending_connections.count }}</span>
+                    </a>
+                    <a href="#rejected" class="tab-link text-gray-500 hover:text-gray-700 whitespace-nowrap py-4 px-6 border-b-2 border-transparent font-medium text-sm" data-tab="rejected">
+                        Rejected Connections <span class="ml-2 bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs">{{ rejected_connections.count }}</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Approved Connections Tab -->
+                <div id="approved-tab" class="tab-content">
+                    {% if approved_connections %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for connection in approved_connections %}
+                                <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                    <!-- Company Header -->
+                                    <div class="h-24 bg-gradient-to-r from-blue-50 to-indigo-50 relative">
+                                        {% if connection.company.cover_image %}
+                                            <img src="{{ connection.company.cover_image.url }}" alt="{{ connection.company.name }} cover" class="w-full h-full object-cover">
+                                        {% endif %}
+                                        
+                                        <!-- Company Logo -->
+                                        <div class="absolute -bottom-6 left-4 w-12 h-12 rounded-lg bg-white shadow-md p-1">
+                                            {% if connection.company.logo %}
+                                                <img src="{{ connection.company.logo.url }}" alt="{{ connection.company.name }} logo" class="w-full h-full object-contain">
+                                            {% else %}
+                                                <div class="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-sm">
+                                                    {{ connection.company.name|slice:":1" }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Company Info -->
+                                    <div class="pt-8 px-4 pb-4">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-1">{{ connection.company.name }}</h3>
+                                        <p class="text-blue-600 text-xs mb-3">{{ connection.company.industry }}</p>
+                                        
+                                        <div class="flex items-center text-sm text-gray-500 mb-4">
+                                            <i class="fas fa-clock mr-2"></i>
+                                            Connected since {{ connection.updated_at|date:"M j, Y" }}
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="{% url 'jobs:company_detail' slug=connection.company.slug %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center px-3 py-2 rounded-md text-sm transition-colors duration-200">
+                                                <i class="fas fa-building mr-1"></i> View Company
+                                            </a>
+                                            <form action="{% url 'jobs:remove_connection' connection_id=connection.id %}" method="post" class="flex-1">
+                                                {% csrf_token %}
+                                                <button type="submit" class="w-full bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-md text-sm transition-colors duration-200">
+                                                    <i class="fas fa-user-minus mr-1"></i> Remove
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-400 rounded-full mb-4">
+                                <i class="fas fa-handshake text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">No Active Connections</h3>
+                            <p class="text-gray-600 max-w-md mx-auto">You don't have any active connections with companies yet.</p>
+                            <a href="{% url 'jobs:company_list' %}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
+                                <i class="fas fa-building mr-2"></i> Explore Companies
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Pending Connections Tab -->
+                <div id="pending-tab" class="tab-content hidden">
+                    {% if pending_connections %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for connection in pending_connections %}
+                                <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                    <!-- Company Header -->
+                                    <div class="h-24 bg-gradient-to-r from-blue-50 to-indigo-50 relative">
+                                        {% if connection.company.cover_image %}
+                                            <img src="{{ connection.company.cover_image.url }}" alt="{{ connection.company.name }} cover" class="w-full h-full object-cover">
+                                        {% endif %}
+                                        
+                                        <!-- Company Logo -->
+                                        <div class="absolute -bottom-6 left-4 w-12 h-12 rounded-lg bg-white shadow-md p-1">
+                                            {% if connection.company.logo %}
+                                                <img src="{{ connection.company.logo.url }}" alt="{{ connection.company.name }} logo" class="w-full h-full object-contain">
+                                            {% else %}
+                                                <div class="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-sm">
+                                                    {{ connection.company.name|slice:":1" }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Pending Badge -->
+                                        <div class="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-md text-xs font-bold">
+                                            Pending
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Company Info -->
+                                    <div class="pt-8 px-4 pb-4">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-1">{{ connection.company.name }}</h3>
+                                        <p class="text-blue-600 text-xs mb-3">{{ connection.company.industry }}</p>
+                                        
+                                        <div class="flex items-center text-sm text-gray-500 mb-2">
+                                            <i class="fas fa-clock mr-2"></i>
+                                            Requested on {{ connection.created_at|date:"M j, Y" }}
+                                        </div>
+                                        
+                                        {% if connection.message %}
+                                            <div class="bg-gray-50 p-3 rounded-md mb-4 text-sm text-gray-700">
+                                                <p class="font-medium text-gray-900 mb-1">Your message:</p>
+                                                {{ connection.message }}
+                                            </div>
+                                        {% endif %}
+                                        
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="{% url 'jobs:company_detail' slug=connection.company.slug %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center px-3 py-2 rounded-md text-sm transition-colors duration-200">
+                                                <i class="fas fa-building mr-1"></i> View Company
+                                            </a>
+                                            <form action="{% url 'jobs:remove_connection' connection_id=connection.id %}" method="post" class="flex-1">
+                                                {% csrf_token %}
+                                                <button type="submit" class="w-full bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-md text-sm transition-colors duration-200">
+                                                    <i class="fas fa-times mr-1"></i> Cancel Request
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-400 rounded-full mb-4">
+                                <i class="fas fa-clock text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">No Pending Requests</h3>
+                            <p class="text-gray-600 max-w-md mx-auto">You don't have any pending connection requests with companies.</p>
+                            <a href="{% url 'jobs:company_list' %}" class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
+                                <i class="fas fa-building mr-2"></i> Explore Companies
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Rejected Connections Tab -->
+                <div id="rejected-tab" class="tab-content hidden">
+                    {% if rejected_connections %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {% for connection in rejected_connections %}
+                                <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                    <!-- Company Header -->
+                                    <div class="h-24 bg-gradient-to-r from-blue-50 to-indigo-50 relative">
+                                        {% if connection.company.cover_image %}
+                                            <img src="{{ connection.company.cover_image.url }}" alt="{{ connection.company.name }} cover" class="w-full h-full object-cover">
+                                        {% endif %}
+                                        
+                                        <!-- Company Logo -->
+                                        <div class="absolute -bottom-6 left-4 w-12 h-12 rounded-lg bg-white shadow-md p-1">
+                                            {% if connection.company.logo %}
+                                                <img src="{{ connection.company.logo.url }}" alt="{{ connection.company.name }} logo" class="w-full h-full object-contain">
+                                            {% else %}
+                                                <div class="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold text-sm">
+                                                    {{ connection.company.name|slice:":1" }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Rejected Badge -->
+                                        <div class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-md text-xs font-bold">
+                                            Rejected
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Company Info -->
+                                    <div class="pt-8 px-4 pb-4">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-1">{{ connection.company.name }}</h3>
+                                        <p class="text-blue-600 text-xs mb-3">{{ connection.company.industry }}</p>
+                                        
+                                        <div class="flex items-center text-sm text-gray-500 mb-4">
+                                            <i class="fas fa-clock mr-2"></i>
+                                            Rejected on {{ connection.updated_at|date:"M j, Y" }}
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap gap-2">
+                                            <a href="{% url 'jobs:company_detail' slug=connection.company.slug %}" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-center px-3 py-2 rounded-md text-sm transition-colors duration-200">
+                                                <i class="fas fa-building mr-1"></i> View Company
+                                            </a>
+                                            <form action="{% url 'jobs:remove_connection' connection_id=connection.id %}" method="post" class="flex-1">
+                                                {% csrf_token %}
+                                                <button type="submit" class="w-full bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-md text-sm transition-colors duration-200">
+                                                    <i class="fas fa-trash-alt mr-1"></i> Remove
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-12">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-400 rounded-full mb-4">
+                                <i class="fas fa-times-circle text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">No Rejected Connections</h3>
+                            <p class="text-gray-600 max-w-md mx-auto">You don't have any rejected connection requests.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tab functionality
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Check if hash exists and activate that tab
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            activateTab(hash);
+        }
+        
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tab = this.getAttribute('data-tab');
+                activateTab(tab);
+                
+                // Update URL hash without scrolling
+                history.pushState(null, null, `#${tab}`);
+            });
+        });
+        
+        function activateTab(tab) {
+            // Deactivate all tabs
+            tabLinks.forEach(link => {
+                link.classList.remove('active-tab', 'text-blue-600', 'border-blue-500');
+                link.classList.add('text-gray-500', 'border-transparent');
+            });
+            
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Activate selected tab
+            const selectedLink = document.querySelector(`.tab-link[data-tab="${tab}"]`);
+            if (selectedLink) {
+                selectedLink.classList.add('active-tab', 'text-blue-600', 'border-blue-500');
+                selectedLink.classList.remove('text-gray-500', 'border-transparent');
+                
+                const selectedContent = document.getElementById(`${tab}-tab`);
+                if (selectedContent) {
+                    selectedContent.classList.remove('hidden');
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

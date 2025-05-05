@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - SearchFind{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Notifications</h1>
+        
+        {% if unread_count > 0 %}
+            <a href="{% url 'jobs:notifications' %}?mark_all_read=1" class="text-blue-600 hover:text-blue-800">
+                Mark all as read
+            </a>
+        {% endif %}
+    </div>
+    
+    <div class="space-y-4">
+        {% for notification in notifications %}
+            <div class="border-l-4 {% if notification.is_read %}border-gray-300 bg-gray-50{% else %}border-blue-500 bg-blue-50{% endif %} p-4 rounded-r-md">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-semibold {% if not notification.is_read %}text-blue-800{% endif %}">{{ notification.title }}</h3>
+                        <p class="text-gray-700 mt-1">{{ notification.message }}</p>
+                        
+                        <div class="mt-2 flex items-center text-sm text-gray-500">
+                            <span class="mr-3">{{ notification.created_at|date:"M d, Y" }} at {{ notification.created_at|time:"H:i" }}</span>
+                            
+                            {% if notification.related_job %}
+                                <a href="{% url 'jobs:job_detail' slug=notification.related_job.slug %}" class="text-blue-600 hover:text-blue-800 mr-3">
+                                    <i class="fas fa-briefcase mr-1"></i> View Job
+                                </a>
+                            {% endif %}
+                            
+                            {% if notification.related_application and user.user_type == 'employer' %}
+                                <button type="button" class="text-blue-600 hover:text-blue-800 update-status-btn" data-application-id="{{ notification.related_application.id }}">
+                                    <i class="fas fa-edit mr-1"></i> Update Status
+                                </button>
+                                
+                                <!-- Status Update Modal (hidden by default) -->
+                                <div id="status-modal-{{ notification.related_application.id }}" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center hidden z-50">
+                                    <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+                                        <h3 class="text-lg font-bold mb-4">Update Application Status</h3>
+                                        
+                                        <form method="post" action="{% url 'jobs:update_application' application_id=notification.related_application.id %}">
+                                            {% csrf_token %}
+                                            
+                                            <div class="mb-4">
+                                                <label for="status-{{ notification.related_application.id }}" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                                <select id="status-{{ notification.related_application.id }}" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                    {% for value, text in notification.related_application.STATUS_CHOICES %}
+                                                        <option value="{{ value }}" {% if notification.related_application.status == value %}selected{% endif %}>{{ text }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="mb-4">
+                                                <label for="notes-{{ notification.related_application.id }}" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                                                <textarea id="notes-{{ notification.related_application.id }}" name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ notification.related_application.employer_notes }}</textarea>
+                                            </div>
+                                            
+                                            <div class="flex justify-end space-x-2">
+                                                <button type="button" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md cancel-btn">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                                                    Update
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if not notification.is_read %}
+                        <button class="mark-read-btn text-gray-400 hover:text-gray-600" data-notification-id="{{ notification.id }}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="text-center py-8">
+                <i class="fas fa-bell-slash text-gray-400 text-5xl mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">No notifications</h3>
+                <p class="text-gray-600">You don't have any notifications at the moment.</p>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if notifications.has_other_pages %}
+        <div class="flex justify-center mt-8">
+            <nav class="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                {% if notifications.has_previous %}
+                    <a href="?page={{ notifications.previous_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                {% else %}
+                    <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                        <span class="sr-only">Previous</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </span>
+                {% endif %}
+                
+                {% for i in notifications.paginator.page_range %}
+                    {% if notifications.number == i %}
+                        <span class="relative inline-flex items-center px-4 py-2 border border-blue-500 bg-blue-50 text-sm font-medium text-blue-600">
+                            {{ i }}
+                        </span>
+                    {% else %}
+                        <a href="?page={{ i }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                            {{ i }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if notifications.has_next %}
+                    <a href="?page={{ notifications.next_page_number }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                {% else %}
+                    <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                        <span class="sr-only">Next</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </span>
+                {% endif %}
+            </nav>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mark notification as read
+        const markReadBtns = document.querySelectorAll('.mark-read-btn');
+        
+        markReadBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const notificationId = this.getAttribute('data-notification-id');
+                const notificationElement = this.closest('.border-l-4');
+                
+                fetch(`/mark-notification-read/${notificationId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update UI to show notification as read
+                        notificationElement.classList.remove('border-blue-500', 'bg-blue-50');
+                        notificationElement.classList.add('border-gray-300', 'bg-gray-50');
+                        
+                        // Remove the mark as read button
+                        this.remove();
+                        
+                        // Update the notification title color
+                        const title = notificationElement.querySelector('h3');
+                        title.classList.remove('text-blue-800');
+                        
+                        // Update unread count in header
+                        const unreadBadge = document.querySelector('.fa-bell + span');
+                        if (unreadBadge) {
+                            const currentCount = parseInt(unreadBadge.textContent);
+                            if (currentCount > 1) {
+                                unreadBadge.textContent = currentCount - 1;
+                            } else {
+                                unreadBadge.remove();
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+        
+        // Status update modal
+        const updateStatusBtns = document.querySelectorAll('.update-status-btn');
+        const cancelBtns = document.querySelectorAll('.cancel-btn');
+        
+        updateStatusBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const applicationId = this.getAttribute('data-application-id');
+                const modal = document.getElementById(`status-modal-${applicationId}`);
+                
+                modal.classList.remove('hidden');
+            });
+        });
+        
+        cancelBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const modal = this.closest('.fixed');
+                modal.classList.add('hidden');
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,919 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}SearchFind - Find Your Dream Job{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative rounded-lg shadow-xl mb-16 overflow-hidden">
+    <!-- Background Image -->
+    {% if hero_section.background_image %}
+        <div class="absolute inset-0 z-0 hidden md:block">
+            <img src="{{ hero_section.background_image.url }}" alt="Home background" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-indigo-900/80"></div>
+        </div>
+        <!-- Mobile Background Image -->
+        <div class="absolute inset-0 z-0 block md:hidden">
+            {% if hero_section.mobile_background_image %}
+                <img src="{{ hero_section.mobile_background_image.url }}" alt="Home background" class="w-full h-full object-cover">
+            {% else %}
+                <img src="{{ hero_section.background_image.url }}" alt="Home background" class="w-full h-full object-cover">
+            {% endif %}
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-900/80 to-indigo-900/80"></div>
+        </div>
+    {% else %}
+        <!-- Fallback Gradient Background -->
+        <div class="absolute inset-0 z-0 bg-gradient-to-r from-blue-700 to-indigo-800">
+            <!-- Background Pattern -->
+            <div class="absolute inset-0 opacity-10">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="absolute bottom-0">
+                    <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,224C672,213,768,171,864,149.3C960,128,1056,128,1152,149.3C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                </svg>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="container relative z-10 mx-auto px-4 py-16 text-center">
+        <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight text-white">{{ hero_section.title|default:"Find Your <span class='text-yellow-300'>Dream Job</span> Today"|safe }}</h1>
+            <p class="text-xl md:text-2xl mb-10 text-blue-100">{{ hero_section.subtitle|default:"Connect with top employers and discover opportunities that match your skills and career goals." }}</p>
+
+            <!-- Stats -->
+            <div class="flex flex-wrap justify-center gap-8 mb-10">
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold text-white">{{ total_jobs }}+</div>
+                    <div class="text-blue-200">Active Jobs</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold text-white">{{ total_companies }}+</div>
+                    <div class="text-blue-200">Companies</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold text-white">{{ total_categories }}+</div>
+                    <div class="text-blue-200">Categories</div>
+                </div>
+            </div>
+
+            <!-- Search Form -->
+            <div class="bg-white/20 backdrop-blur-md p-6 rounded-xl shadow-2xl max-w-4xl mx-auto border border-white/30">
+                <form action="{% url 'jobs:job_list' %}" method="get" class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="keyword" class="sr-only">What</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-600"></i>
+                            </div>
+                            <input type="text" id="keyword" name="keyword" placeholder="Job title, keywords, or company"
+                                   class="block w-full pl-10 pr-3 py-4 bg-white/70 backdrop-blur-sm border border-white/50 rounded-lg
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                                   text-gray-900 placeholder-gray-700">
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <label for="location" class="sr-only">Where</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-map-marker-alt text-gray-600"></i>
+                            </div>
+                            <input type="text" id="location" name="location" placeholder="City, state, or zip code"
+                                   class="block w-full pl-10 pr-3 py-4 bg-white/70 backdrop-blur-sm border border-white/50 rounded-lg
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                                   text-gray-900 placeholder-gray-700">
+                        </div>
+                    </div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg transition duration-300 shadow-md">
+                        Search Jobs
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How SearchFind Works Section -->
+<section class="mb-20">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">How SearchFind Works</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">Our platform connects talented professionals with top employers through a simple, streamlined process.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-xl shadow-md p-8 text-center hover:shadow-lg transition duration-300 border-t-4 border-blue-500">
+                <div class="bg-blue-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-user-plus text-2xl text-blue-600"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Create Your Profile</h3>
+                <p class="text-gray-600">Sign up and build your professional profile to showcase your skills and experience to employers.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-8 text-center hover:shadow-lg transition duration-300 border-t-4 border-green-500">
+                <div class="bg-green-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-search text-2xl text-green-600"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Find Opportunities</h3>
+                <p class="text-gray-600">Search and filter through thousands of job listings to find the perfect match for your career goals.</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-8 text-center hover:shadow-lg transition duration-300 border-t-4 border-purple-500">
+                <div class="bg-purple-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-paper-plane text-2xl text-purple-600"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">Apply with Ease</h3>
+                <p class="text-gray-600">Submit applications directly through our platform and track your application status in real-time.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trusted By Section -->
+<section class="bg-gray-50 py-16 mb-20">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold mb-4 text-gray-800">Trusted By Leading Companies</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">Join thousands of top employers who find their ideal candidates with SearchFind</p>
+        </div>
+
+        <div class="flex flex-wrap justify-center items-center gap-10 md:gap-16">
+            {% for company in trusted_companies %}
+                <div class="grayscale hover:grayscale-0 transition duration-300 transform hover:scale-105">
+                    {% if company.logo %}
+                        <a href="{{ company.website }}" target="_blank" class="block" title="{{ company.name }}">
+                            <img src="{{ company.logo.url }}" alt="{{ company.name }}" class="h-12 md:h-16 w-auto object-contain">
+                        </a>
+                    {% else %}
+                        <a href="{{ company.website }}" target="_blank" class="block" title="{{ company.name }}">
+                            <div class="text-xl font-bold text-gray-400">{{ company.name }}</div>
+                        </a>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="text-gray-500 py-8">Top companies across various industries trust SearchFind for their hiring needs.</div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Jobs Section -->
+<section class="mb-20">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-10">
+            <h2 class="text-3xl font-bold">Featured Jobs</h2>
+            <a href="{% url 'jobs:job_list' %}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                View All Jobs <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+
+        <!-- Job Carousel -->
+        <div class="relative featured-jobs-carousel">
+            <!-- Carousel Container -->
+            <div class="carousel-container overflow-hidden">
+                <div class="carousel-track flex transition-transform duration-500 ease-in-out">
+                    {% for job in featured_jobs %}
+                        <div class="carousel-item w-full sm:w-1/2 lg:w-1/4 flex-shrink-0 px-3">
+                            <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition duration-300 h-full border border-gray-100">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-xl font-semibold mb-1 line-clamp-1">
+                                            <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="text-gray-800 hover:text-blue-600">{{ job.title }}</a>
+                                        </h3>
+                                        <p class="text-gray-600">{{ job.company.company_name|default:job.company.get_full_name }}</p>
+                                    </div>
+                                    <div class="flex-shrink-0 ml-3">
+                                        {% if job.company.company_logo %}
+                                            <img src="{{ job.company.company_logo.url }}" alt="{{ job.company.company_name }}" class="w-12 h-12 object-contain rounded-md border border-gray-200">
+                                        {% else %}
+                                            <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-md border border-gray-200 flex items-center justify-center">
+                                                <i class="fas fa-building"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <div class="flex items-center text-gray-500 mb-2">
+                                        <i class="fas fa-map-marker-alt mr-2 w-4 text-center"></i>
+                                        <span class="line-clamp-1">{{ job.location }}</span>
+                                    </div>
+                                    <div class="flex items-center text-gray-500 mb-2">
+                                        <i class="fas fa-briefcase mr-2 w-4 text-center"></i>
+                                        <span>{{ job.get_job_type_display }}</span>
+                                    </div>
+                                    {% if job.is_remote %}
+                                        <div class="flex items-center text-blue-600">
+                                            <i class="fas fa-home mr-2 w-4 text-center"></i>
+                                            <span>Remote</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="flex justify-between items-center mt-auto">
+                                    {% if job.salary_min and job.salary_max %}
+                                        <span class="text-green-600 font-semibold">${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}</span>
+                                    {% elif job.salary_min %}
+                                        <span class="text-green-600 font-semibold">${{ job.salary_min|floatformat:0 }}+</span>
+                                    {% else %}
+                                        <span class="text-gray-500">Salary not specified</span>
+                                    {% endif %}
+
+                                    <span class="text-sm text-gray-500">{{ job.created_at|timesince }} ago</span>
+                                </div>
+
+                                <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="mt-4 block text-center bg-blue-50 hover:bg-blue-100 text-blue-600 font-medium py-2 px-4 rounded-lg transition duration-300">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="w-full text-center py-8">
+                            <p class="text-gray-500">No featured jobs available at the moment.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Carousel Controls -->
+            <button class="carousel-prev absolute top-1/2 left-0 transform -translate-y-1/2 bg-white rounded-full shadow-md p-3 text-blue-600 hover:text-blue-800 focus:outline-none z-10">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="carousel-next absolute top-1/2 right-0 transform -translate-y-1/2 bg-white rounded-full shadow-md p-3 text-blue-600 hover:text-blue-800 focus:outline-none z-10">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+
+            <!-- Carousel Indicators -->
+            <div class="carousel-indicators flex justify-center mt-6 gap-2">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+
+<!-- Testimonials Section -->
+<section class="mb-20 bg-gradient-to-b from-gray-50 to-white py-20">
+    <div class="container mx-auto px-4">
+        <div class="flex justify-between items-center mb-10">
+            <h2 class="text-3xl md:text-4xl font-bold">What Our Users Say</h2>
+            <a href="{% url 'jobs:testimonials' %}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                View All Testimonials <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+        <p class="text-xl text-gray-600 max-w-3xl mb-12">Hear from job seekers and employers who have found success with SearchFind</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {% for testimonial in testimonials|slice:":4" %}
+                <div class="bg-white rounded-xl shadow-lg p-6 relative border border-gray-100 hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
+                    <!-- Quote icon -->
+                    <div class="absolute -top-3 -left-3 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+                        <i class="fas fa-quote-left text-sm"></i>
+                    </div>
+
+                    <!-- Rating stars -->
+                    <div class="mb-4 mt-2">
+                        <div class="flex items-center mb-1">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= testimonial.rating %}text-yellow-400{% else %}text-gray-300{% endif %} mr-1"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Testimonial content -->
+                    <p class="text-gray-700 italic mb-6 flex-grow text-sm">"{{ testimonial.content|truncatechars:150 }}"</p>
+
+                    <!-- User info with profile picture -->
+                    <div class="flex items-center mt-auto pt-4 border-t border-gray-100">
+                        {% if testimonial.profile_image %}
+                            <img src="{{ testimonial.profile_image.url }}" alt="{{ testimonial.user.get_full_name }}" class="w-12 h-12 rounded-full object-cover mr-3 border-2 border-blue-100 shadow">
+                        {% elif testimonial.user.profile_picture %}
+                            <img src="{{ testimonial.user.profile_picture.url }}" alt="{{ testimonial.user.get_full_name }}" class="w-12 h-12 rounded-full object-cover mr-3 border-2 border-blue-100 shadow">
+                        {% else %}
+                            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 text-sm font-bold border-2 border-blue-100 shadow">
+                                {{ testimonial.user.first_name|first|upper }}{{ testimonial.user.last_name|first|upper }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="font-bold text-gray-900">{{ testimonial.user.get_full_name }}</h4>
+                            <p class="text-blue-600 text-sm">{{ testimonial.user_role }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <!-- Fallback testimonials if none in database -->
+                <div class="bg-white rounded-xl shadow-lg p-6 relative border border-gray-100 hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
+                    <div class="absolute -top-3 -left-3 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+                        <i class="fas fa-quote-left text-sm"></i>
+                    </div>
+                    <div class="mb-4 mt-2">
+                        <div class="flex items-center mb-1">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= 5 %}text-yellow-400{% else %}text-gray-300{% endif %} mr-1"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-gray-700 italic mb-6 flex-grow text-sm">"SearchFind made my job search incredibly easy. I found my dream position within weeks of signing up. The platform is intuitive and the job matches were spot on!"</p>
+                    <div class="flex items-center mt-auto pt-4 border-t border-gray-100">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 text-sm font-bold border-2 border-blue-100 shadow">JS</div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">John Smith</h4>
+                            <p class="text-blue-600 text-sm">Software Developer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 relative border border-gray-100 hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
+                    <div class="absolute -top-3 -left-3 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+                        <i class="fas fa-quote-left text-sm"></i>
+                    </div>
+                    <div class="mb-4 mt-2">
+                        <div class="flex items-center mb-1">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= 5 %}text-yellow-400{% else %}text-gray-300{% endif %} mr-1"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-gray-700 italic mb-6 flex-grow text-sm">"As an employer, I've been able to find qualified candidates quickly. The platform's filtering options help us narrow down applicants to find the perfect fit for our team."</p>
+                    <div class="flex items-center mt-auto pt-4 border-t border-gray-100">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 text-sm font-bold border-2 border-blue-100 shadow">SD</div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Sarah Davis</h4>
+                            <p class="text-blue-600 text-sm">HR Manager</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 relative border border-gray-100 hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
+                    <div class="absolute -top-3 -left-3 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+                        <i class="fas fa-quote-left text-sm"></i>
+                    </div>
+                    <div class="mb-4 mt-2">
+                        <div class="flex items-center mb-1">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= 4 %}text-yellow-400{% else %}text-gray-300{% endif %} mr-1"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-gray-700 italic mb-6 flex-grow text-sm">"The application tracking system is a game-changer. I can easily see the status of all my applications and communicate directly with employers."</p>
+                    <div class="flex items-center mt-auto pt-4 border-t border-gray-100">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 text-sm font-bold border-2 border-blue-100 shadow">RJ</div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Robert Johnson</h4>
+                            <p class="text-blue-600 text-sm">UX Designer</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 relative border border-gray-100 hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
+                    <div class="absolute -top-3 -left-3 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-md">
+                        <i class="fas fa-quote-left text-sm"></i>
+                    </div>
+                    <div class="mb-4 mt-2">
+                        <div class="flex items-center mb-1">
+                            {% for i in "12345" %}
+                                <i class="fas fa-star {% if forloop.counter <= 5 %}text-yellow-400{% else %}text-gray-300{% endif %} mr-1"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-gray-700 italic mb-6 flex-grow text-sm">"I appreciate how easy it is to filter job listings based on my preferences. The platform is user-friendly and has helped me find opportunities that match my career goals."</p>
+                    <div class="flex items-center mt-auto pt-4 border-t border-gray-100">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 text-sm font-bold border-2 border-blue-100 shadow">AL</div>
+                        <div>
+                            <h4 class="font-bold text-gray-900">Amy Lee</h4>
+                            <p class="text-blue-600 text-sm">Marketing Specialist</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-10">
+            <a href="{% url 'jobs:testimonials' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300">
+                View All Testimonials
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Our Team Section -->
+<section class="mb-20 bg-gray-50 py-20 rounded-3xl">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">Meet Our Team</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">The dedicated professionals working to connect talent with opportunity</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            {% for member in team_members %}
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden group transform transition duration-300 hover:-translate-y-2 hover:shadow-xl cursor-pointer team-member-card" data-member-id="{{ member.id }}">
+                    <div class="relative">
+                        {% if member.photo %}
+                            <img src="{{ member.photo.url }}" alt="{{ member.name }}" class="w-full h-72 object-cover">
+                        {% else %}
+                            <div class="w-full h-72 bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+                                <i class="fas fa-user text-5xl text-blue-300"></i>
+                            </div>
+                        {% endif %}
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center p-6">
+                            <div class="flex space-x-4">
+                                {% if member.linkedin %}
+                                    <a href="{{ member.linkedin }}" target="_blank" class="bg-white text-blue-600 rounded-full p-3 hover:bg-blue-600 hover:text-white transition duration-300 transform hover:scale-110" onclick="event.stopPropagation();">
+                                        <i class="fab fa-linkedin-in"></i>
+                                    </a>
+                                {% endif %}
+                                {% if member.twitter %}
+                                    <a href="{{ member.twitter }}" target="_blank" class="bg-white text-blue-400 rounded-full p-3 hover:bg-blue-400 hover:text-white transition duration-300 transform hover:scale-110" onclick="event.stopPropagation();">
+                                        <i class="fab fa-twitter"></i>
+                                    </a>
+                                {% endif %}
+                                {% if member.email %}
+                                    <a href="mailto:{{ member.email }}" class="bg-white text-red-500 rounded-full p-3 hover:bg-red-500 hover:text-white transition duration-300 transform hover:scale-110" onclick="event.stopPropagation();">
+                                        <i class="fas fa-envelope"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-xl font-bold mb-1">{{ member.name }}</h3>
+                        <p class="text-blue-600 mb-3 font-medium">{{ member.position }}</p>
+                        <p class="text-gray-600">{{ member.bio|truncatechars:100 }}</p>
+                    </div>
+
+                    <!-- Hidden content for modal -->
+                    <div class="hidden team-member-data">
+                        <div class="name">{{ member.name }}</div>
+                        <div class="position">{{ member.position }}</div>
+                        <div class="bio">{{ member.bio }}</div>
+                        {% if member.photo %}
+                            <div class="photo">{{ member.photo.url }}</div>
+                        {% endif %}
+                        {% if member.email %}
+                            <div class="email">{{ member.email }}</div>
+                        {% endif %}
+                        {% if member.linkedin %}
+                            <div class="linkedin">{{ member.linkedin }}</div>
+                        {% endif %}
+                        {% if member.twitter %}
+                            <div class="twitter">{{ member.twitter }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <!-- Fallback team members if none in database -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden group transform transition duration-300 hover:-translate-y-2 hover:shadow-xl">
+                    <div class="relative">
+                        <div class="w-full h-72 bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-user text-5xl text-blue-300"></i>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center p-6">
+                            <div class="flex space-x-4">
+                                <a href="#" class="bg-white text-blue-600 rounded-full p-3 hover:bg-blue-600 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="#" class="bg-white text-blue-400 rounded-full p-3 hover:bg-blue-400 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="bg-white text-red-500 rounded-full p-3 hover:bg-red-500 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fas fa-envelope"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-xl font-bold mb-1">Sarah Johnson</h3>
+                        <p class="text-blue-600 mb-3 font-medium">CEO & Founder</p>
+                        <p class="text-gray-600">With over 15 years of experience in HR and recruitment, Sarah leads our mission to connect talent with opportunity.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden group transform transition duration-300 hover:-translate-y-2 hover:shadow-xl">
+                    <div class="relative">
+                        <div class="w-full h-72 bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-user text-5xl text-blue-300"></i>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center p-6">
+                            <div class="flex space-x-4">
+                                <a href="#" class="bg-white text-blue-600 rounded-full p-3 hover:bg-blue-600 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="#" class="bg-white text-blue-400 rounded-full p-3 hover:bg-blue-400 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="bg-white text-red-500 rounded-full p-3 hover:bg-red-500 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fas fa-envelope"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-xl font-bold mb-1">Michael Chen</h3>
+                        <p class="text-blue-600 mb-3 font-medium">CTO</p>
+                        <p class="text-gray-600">Michael oversees our technical infrastructure, ensuring a seamless experience for job seekers and employers alike.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden group transform transition duration-300 hover:-translate-y-2 hover:shadow-xl">
+                    <div class="relative">
+                        <div class="w-full h-72 bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-user text-5xl text-blue-300"></i>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center p-6">
+                            <div class="flex space-x-4">
+                                <a href="#" class="bg-white text-blue-600 rounded-full p-3 hover:bg-blue-600 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="#" class="bg-white text-blue-400 rounded-full p-3 hover:bg-blue-400 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="bg-white text-red-500 rounded-full p-3 hover:bg-red-500 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fas fa-envelope"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-xl font-bold mb-1">Emily Rodriguez</h3>
+                        <p class="text-blue-600 mb-3 font-medium">Head of Marketing</p>
+                        <p class="text-gray-600">Emily drives our marketing strategy, helping connect employers with the perfect candidates for their teams.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden group transform transition duration-300 hover:-translate-y-2 hover:shadow-xl">
+                    <div class="relative">
+                        <div class="w-full h-72 bg-gradient-to-r from-blue-100 to-indigo-100 flex items-center justify-center">
+                            <i class="fas fa-user text-5xl text-blue-300"></i>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center p-6">
+                            <div class="flex space-x-4">
+                                <a href="#" class="bg-white text-blue-600 rounded-full p-3 hover:bg-blue-600 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                                <a href="#" class="bg-white text-blue-400 rounded-full p-3 hover:bg-blue-400 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="bg-white text-red-500 rounded-full p-3 hover:bg-red-500 hover:text-white transition duration-300 transform hover:scale-110">
+                                    <i class="fas fa-envelope"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 text-center">
+                        <h3 class="text-xl font-bold mb-1">David Wilson</h3>
+                        <p class="text-blue-600 mb-3 font-medium">Customer Success Manager</p>
+                        <p class="text-gray-600">David ensures that both job seekers and employers have a positive experience using our platform.</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Section -->
+<section class="mb-20 bg-blue-50 py-16 rounded-xl">
+    <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-4">Stay Updated with Job Opportunities</h2>
+            <p class="text-xl text-gray-600 mb-8">Subscribe to our newsletter and receive the latest job listings and career advice directly to your inbox.</p>
+
+            <form id="newsletter-form" class="max-w-2xl mx-auto" method="post" action="{% url 'jobs:subscribe_newsletter' %}">
+                {% csrf_token %}
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="email" name="email" id="newsletter-email" placeholder="Enter your email address" required
+                           class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition duration-300">
+                        Subscribe
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mt-3">We respect your privacy. Unsubscribe at any time.</p>
+            </form>
+
+            <div id="newsletter-success" class="hidden mt-4 p-4 bg-green-100 text-green-700 rounded-lg">
+                Thank you for subscribing! Please check your email to confirm your subscription.
+            </div>
+
+            <div id="newsletter-error" class="hidden mt-4 p-4 bg-red-100 text-red-700 rounded-lg">
+                There was an error processing your subscription. Please try again.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+<section class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-16 rounded-xl shadow-xl mb-8 relative overflow-hidden">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" class="absolute bottom-0">
+            <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,224C672,213,768,171,864,149.3C960,128,1056,128,1152,149.3C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+    </div>
+
+    <div class="container mx-auto px-4 text-center relative z-10">
+        <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Find Your Dream Job?</h2>
+        <p class="text-xl mb-10 max-w-3xl mx-auto">Join thousands of job seekers who have found their perfect match with SearchFind.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{% url 'jobs:job_list' %}" class="bg-white text-blue-600 hover:bg-gray-100 font-bold py-4 px-8 rounded-lg transition duration-300 shadow-md">
+                Browse All Jobs
+            </a>
+            {% if not user.is_authenticated %}
+                <a href="{% url 'accounts:signup' %}" class="bg-blue-900 hover:bg-blue-950 text-white font-bold py-4 px-8 rounded-lg transition duration-300 shadow-md">
+                    Create an Account
+                </a>
+            {% elif user.user_type == 'employer' %}
+                <a href="{% url 'jobs:create_job' %}" class="bg-blue-900 hover:bg-blue-950 text-white font-bold py-4 px-8 rounded-lg transition duration-300 shadow-md">
+                    Post a Job
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+<!-- Team Member Modal -->
+<div id="team-member-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <!-- Modal Backdrop -->
+        <div class="fixed inset-0 bg-black opacity-50 modal-backdrop"></div>
+
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-lg shadow-xl max-w-3xl w-full mx-auto z-10">
+            <!-- Close Button -->
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-500 focus:outline-none modal-close">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <!-- Modal Body -->
+            <div class="p-6 md:p-8">
+                <div class="flex flex-col md:flex-row gap-8">
+                    <!-- Member Photo -->
+                    <div class="md:w-1/3 flex-shrink-0">
+                        <div id="modal-photo" class="w-full h-64 md:h-80 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg overflow-hidden">
+                            <img src="" alt="" class="w-full h-full object-cover hidden">
+                            <div class="w-full h-full flex items-center justify-center">
+                                <i class="fas fa-user text-5xl text-blue-300"></i>
+                            </div>
+                        </div>
+
+                        <!-- Social Links -->
+                        <div class="flex justify-center space-x-4 mt-4">
+                            <a id="modal-linkedin" href="#" target="_blank" class="bg-blue-100 text-blue-600 rounded-full p-3 hover:bg-blue-600 hover:text-white transition duration-300 hidden">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a id="modal-twitter" href="#" target="_blank" class="bg-blue-100 text-blue-400 rounded-full p-3 hover:bg-blue-400 hover:text-white transition duration-300 hidden">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a id="modal-email" href="#" class="bg-blue-100 text-red-500 rounded-full p-3 hover:bg-red-500 hover:text-white transition duration-300 hidden">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Member Info -->
+                    <div class="md:w-2/3">
+                        <h2 id="modal-name" class="text-3xl font-bold mb-2 text-gray-900"></h2>
+                        <p id="modal-position" class="text-xl text-blue-600 font-medium mb-6"></p>
+                        <div id="modal-bio" class="text-gray-700 prose max-w-none"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Featured Jobs Carousel
+        initCarousel('.featured-jobs-carousel', '.carousel-track', '.carousel-item', '.carousel-prev', '.carousel-next', '.carousel-indicators');
+
+        // Testimonials Carousel
+        initCarousel('.testimonials-carousel', '.testimonials-track', '.testimonial-item', '.testimonial-prev', '.testimonial-next', '.testimonial-indicators');
+
+        // Team Member Modal
+        initTeamMemberModal();
+
+        // Newsletter Form Submission
+        const newsletterForm = document.getElementById('newsletter-form');
+        const successMessage = document.getElementById('newsletter-success');
+        const errorMessage = document.getElementById('newsletter-error');
+
+        if (newsletterForm) {
+            newsletterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const email = document.getElementById('newsletter-email').value;
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                fetch('{% url "jobs:subscribe_newsletter" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ email: email })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        successMessage.classList.remove('hidden');
+                        errorMessage.classList.add('hidden');
+                        newsletterForm.reset();
+                    } else {
+                        errorMessage.textContent = data.error || 'There was an error processing your subscription. Please try again.';
+                        errorMessage.classList.remove('hidden');
+                        successMessage.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    errorMessage.classList.remove('hidden');
+                    successMessage.classList.add('hidden');
+                });
+            });
+        }
+
+        // Carousel Initialization Function
+        function initCarousel(carouselSelector, trackSelector, itemSelector, prevSelector, nextSelector, indicatorsSelector) {
+            const carousel = document.querySelector(carouselSelector);
+            if (!carousel) return;
+
+            const track = carousel.querySelector(trackSelector);
+            const items = carousel.querySelectorAll(itemSelector);
+            const prevButton = carousel.querySelector(prevSelector);
+            const nextButton = carousel.querySelector(nextSelector);
+            const indicators = carousel.querySelector(indicatorsSelector);
+
+            if (!track || items.length === 0) return;
+
+            let currentIndex = 0;
+            let itemWidth = items[0].offsetWidth;
+            let itemsPerView = Math.floor(carousel.offsetWidth / itemWidth);
+            if (itemsPerView === 0) itemsPerView = 1;
+
+            // Create indicators
+            for (let i = 0; i < Math.ceil(items.length / itemsPerView); i++) {
+                const dot = document.createElement('button');
+                dot.classList.add('w-3', 'h-3', 'rounded-full', 'bg-gray-300');
+                dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
+                dot.addEventListener('click', () => goToSlide(i));
+                indicators.appendChild(dot);
+            }
+
+            const indicatorDots = indicators.querySelectorAll('button');
+            if (indicatorDots.length > 0) {
+                indicatorDots[0].classList.add('bg-blue-600');
+            }
+
+            // Update carousel on window resize
+            window.addEventListener('resize', () => {
+                itemWidth = items[0].offsetWidth;
+                itemsPerView = Math.floor(carousel.offsetWidth / itemWidth);
+                if (itemsPerView === 0) itemsPerView = 1;
+                goToSlide(Math.floor(currentIndex / itemsPerView));
+            });
+
+            // Previous button
+            if (prevButton) {
+                prevButton.addEventListener('click', () => {
+                    if (currentIndex > 0) {
+                        goToSlide(Math.floor((currentIndex - 1) / itemsPerView));
+                    } else {
+                        goToSlide(Math.floor((items.length - 1) / itemsPerView));
+                    }
+                });
+            }
+
+            // Next button
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    if (currentIndex < items.length - itemsPerView) {
+                        goToSlide(Math.floor((currentIndex + itemsPerView) / itemsPerView));
+                    } else {
+                        goToSlide(0);
+                    }
+                });
+            }
+
+            // Go to slide function
+            function goToSlide(index) {
+                currentIndex = index * itemsPerView;
+                if (currentIndex > items.length - itemsPerView) {
+                    currentIndex = items.length - itemsPerView;
+                }
+
+                track.style.transform = `translateX(-${currentIndex * (100 / items.length)}%)`;
+
+                // Update indicators
+                indicatorDots.forEach((dot, i) => {
+                    if (i === Math.floor(currentIndex / itemsPerView)) {
+                        dot.classList.add('bg-blue-600');
+                        dot.classList.remove('bg-gray-300');
+                    } else {
+                        dot.classList.add('bg-gray-300');
+                        dot.classList.remove('bg-blue-600');
+                    }
+                });
+            }
+
+            // Auto-advance carousel every 5 seconds
+            setInterval(() => {
+                if (document.hasFocus()) {
+                    if (currentIndex < items.length - itemsPerView) {
+                        goToSlide(Math.floor((currentIndex + itemsPerView) / itemsPerView));
+                    } else {
+                        goToSlide(0);
+                    }
+                }
+            }, 5000);
+        }
+
+        // Function to initialize team member modal
+        function initTeamMemberModal() {
+            const modal = document.getElementById('team-member-modal');
+            const modalBackdrop = modal.querySelector('.modal-backdrop');
+            const modalClose = modal.querySelector('.modal-close');
+            const teamMemberCards = document.querySelectorAll('.team-member-card');
+
+            // Modal elements
+            const modalName = document.getElementById('modal-name');
+            const modalPosition = document.getElementById('modal-position');
+            const modalBio = document.getElementById('modal-bio');
+            const modalPhoto = document.getElementById('modal-photo');
+            const modalPhotoImg = modalPhoto.querySelector('img');
+            const modalPhotoPlaceholder = modalPhoto.querySelector('div');
+            const modalLinkedin = document.getElementById('modal-linkedin');
+            const modalTwitter = document.getElementById('modal-twitter');
+            const modalEmail = document.getElementById('modal-email');
+
+            // Open modal when clicking on a team member card
+            teamMemberCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const data = this.querySelector('.team-member-data');
+
+                    // Set modal content
+                    modalName.textContent = data.querySelector('.name').textContent;
+                    modalPosition.textContent = data.querySelector('.position').textContent;
+                    modalBio.textContent = data.querySelector('.bio').textContent;
+
+                    // Handle photo
+                    const photoElement = data.querySelector('.photo');
+                    if (photoElement) {
+                        modalPhotoImg.src = photoElement.textContent;
+                        modalPhotoImg.alt = modalName.textContent;
+                        modalPhotoImg.classList.remove('hidden');
+                        modalPhotoPlaceholder.classList.add('hidden');
+                    } else {
+                        modalPhotoImg.classList.add('hidden');
+                        modalPhotoPlaceholder.classList.remove('hidden');
+                    }
+
+                    // Handle social links
+                    const linkedinElement = data.querySelector('.linkedin');
+                    if (linkedinElement) {
+                        modalLinkedin.href = linkedinElement.textContent;
+                        modalLinkedin.classList.remove('hidden');
+                    } else {
+                        modalLinkedin.classList.add('hidden');
+                    }
+
+                    const twitterElement = data.querySelector('.twitter');
+                    if (twitterElement) {
+                        modalTwitter.href = twitterElement.textContent;
+                        modalTwitter.classList.remove('hidden');
+                    } else {
+                        modalTwitter.classList.add('hidden');
+                    }
+
+                    const emailElement = data.querySelector('.email');
+                    if (emailElement) {
+                        modalEmail.href = 'mailto:' + emailElement.textContent;
+                        modalEmail.classList.remove('hidden');
+                    } else {
+                        modalEmail.classList.add('hidden');
+                    }
+
+                    // Show modal
+                    modal.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                });
+            });
+
+            // Close modal when clicking on backdrop or close button
+            modalBackdrop.addEventListener('click', closeModal);
+            modalClose.addEventListener('click', closeModal);
+
+            // Close modal when pressing Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+    });
+</script>
+{% endblock %}

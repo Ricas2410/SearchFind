@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% load job_extras %}
+
+{% block title %}{% trans "Job Match Score" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .progress-circle {
+        position: relative;
+        width: 120px;
+        height: 120px;
+    }
+    .progress-circle svg {
+        transform: rotate(-90deg);
+    }
+    .progress-circle circle {
+        fill: none;
+        stroke-width: 8;
+    }
+    .progress-circle .bg {
+        stroke: #E5E7EB;
+    }
+    .progress-circle .progress {
+        stroke: #3B82F6;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 0.5s ease;
+    }
+    .progress-circle .text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .match-meter {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #E5E7EB;
+        overflow: hidden;
+    }
+    .match-meter-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease;
+    }
+    .match-meter-fill.high {
+        background-color: #10B981;
+    }
+    .match-meter-fill.medium {
+        background-color: #F59E0B;
+    }
+    .match-meter-fill.low {
+        background-color: #EF4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i> {% trans "Back to Job Details" %}
+            </a>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h1 class="text-2xl font-bold text-gray-800">{% trans "Job Match Analysis" %}</h1>
+                <p class="text-gray-600 mt-2">{{ job.title }} at {{ job.company.name }}</p>
+            </div>
+
+            <div class="p-6">
+                {% if not has_pro %}
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-lock text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700">
+                                    {% trans "This is a preview of our Pro feature. Upgrade to Pro to see your full match analysis and get personalized recommendations." %}
+                                </p>
+                                <p class="mt-2">
+                                    <a href="{% url 'subscriptions:plans' %}" class="text-sm font-medium text-yellow-700 underline hover:text-yellow-600">
+                                        {% trans "Upgrade to Pro" %}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="flex flex-col md:flex-row items-center justify-between mb-8">
+                    <div class="text-center mb-6 md:mb-0">
+                        <div class="progress-circle mx-auto">
+                            <svg width="120" height="120" viewBox="0 0 120 120">
+                                <circle class="bg" cx="60" cy="60" r="54" />
+                                <circle class="progress" cx="60" cy="60" r="54" stroke-dasharray="339.292" stroke-dashoffset="{{ 339.292|multiply:0.01|multiply:100|subtract:match_score.overall_match|default:0 }}" />
+                            </svg>
+                            <div class="text">{{ match_score.overall_match|default:0 }}%</div>
+                        </div>
+                        <p class="text-gray-700 font-medium mt-2">{% trans "Overall Match" %}</p>
+                    </div>
+
+                    <div class="w-full md:w-2/3 space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-700 font-medium">{% trans "Skills Match" %}</span>
+                                <span class="text-gray-700 font-medium">{{ match_score.skills_match|default:0 }}%</span>
+                            </div>
+                            <div class="match-meter">
+                                <div class="match-meter-fill {% if match_score.skills_match >= 70 %}high{% elif match_score.skills_match >= 40 %}medium{% else %}low{% endif %}" style="width: {{ match_score.skills_match|default:0 }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-700 font-medium">{% trans "Experience Match" %}</span>
+                                <span class="text-gray-700 font-medium">{{ match_score.experience_match|default:0 }}%</span>
+                            </div>
+                            <div class="match-meter">
+                                <div class="match-meter-fill {% if match_score.experience_match >= 70 %}high{% elif match_score.experience_match >= 40 %}medium{% else %}low{% endif %}" style="width: {{ match_score.experience_match|default:0 }}%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-gray-700 font-medium">{% trans "Education Match" %}</span>
+                                <span class="text-gray-700 font-medium">{{ match_score.education_match|default:0 }}%</span>
+                            </div>
+                            <div class="match-meter">
+                                <div class="match-meter-fill {% if match_score.education_match >= 70 %}high{% elif match_score.education_match >= 40 %}medium{% else %}low{% endif %}" style="width: {{ match_score.education_match|default:0 }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-check-circle text-green-500 mr-2"></i> {% trans "Matching Skills" %}
+                        </h3>
+                        <ul class="space-y-2">
+                            {% for skill in match_score.matching_skills %}
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-2"></i>
+                                    <span>{{ skill }}</span>
+                                </li>
+                            {% empty %}
+                                <li class="text-gray-500">{% trans "No matching skills found" %}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="bg-red-50 rounded-lg p-4 border border-red-200">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-times-circle text-red-500 mr-2"></i> {% trans "Missing Skills" %}
+                        </h3>
+                        <ul class="space-y-2">
+                            {% for skill in match_score.missing_skills %}
+                                <li class="flex items-center">
+                                    <i class="fas fa-times text-red-500 mr-2"></i>
+                                    <span>{{ skill }}</span>
+                                </li>
+                            {% empty %}
+                                <li class="text-gray-500">{% trans "No missing skills found" %}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                {% if has_pro %}
+                    <div class="mt-8 bg-blue-50 rounded-lg p-6 border border-blue-200">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                            <i class="fas fa-lightbulb text-blue-500 mr-2"></i> {% trans "Recommendations" %}
+                        </h3>
+                        <ul class="space-y-3">
+                            {% if match_score.missing_skills %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-500 mt-1 mr-2"></i>
+                                    <span>{% trans "Consider adding these missing skills to your profile or resume: " %}
+                                        <strong>{{ match_score.missing_skills|join:", " }}</strong>
+                                    </span>
+                                </li>
+                            {% endif %}
+
+                            {% if match_score.skills_match < 70 %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-500 mt-1 mr-2"></i>
+                                    <span>{% trans "Your skills match is below 70%. Consider taking courses or certifications to improve your skills in these areas." %}</span>
+                                </li>
+                            {% endif %}
+
+                            {% if match_score.experience_match < 70 %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-500 mt-1 mr-2"></i>
+                                    <span>{% trans "Your experience match is below 70%. Highlight relevant experience in your application and cover letter." %}</span>
+                                </li>
+                            {% endif %}
+
+                            {% if match_score.overall_match >= 80 %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-500 mt-1 mr-2"></i>
+                                    <span>{% trans "You have a strong match for this position! Make sure to highlight your matching skills in your application." %}</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <div class="mt-8 flex justify-between">
+                    <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition duration-300">
+                        {% trans "Back to Job" %}
+                    </a>
+
+                    {% if not has_pro %}
+                        <a href="{% url 'subscriptions:plans' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                            {% trans "Upgrade to Pro" %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'jobs:apply_job' slug=job.slug %}" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition duration-300">
+                            {% trans "Apply Now" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

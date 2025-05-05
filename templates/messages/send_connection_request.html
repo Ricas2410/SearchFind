@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}Connect with {{ receiver.first_name|default:receiver.email }} - SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center mb-6">
+                <a href="{% url 'accounts:profile_detail' user_id=receiver.id %}" class="text-blue-600 hover:text-blue-800 mr-4">
+                    <i class="fas fa-arrow-left"></i> Back to Profile
+                </a>
+                <h1 class="text-2xl font-bold">Connect with {{ receiver.first_name|default:receiver.email }}</h1>
+            </div>
+
+            <div class="flex items-center mb-6 p-4 bg-gray-50 rounded-lg">
+                <div class="flex-shrink-0 mr-4">
+                    {% if receiver.profile_picture %}
+                        <img src="{{ receiver.profile_picture.url }}" alt="{{ receiver.first_name }}" class="w-16 h-16 rounded-full object-cover">
+                    {% else %}
+                        <div class="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl">
+                            {{ receiver.first_name|first|upper }}{{ receiver.last_name|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg">{{ receiver.first_name|default:receiver.email }}</h3>
+                    <p class="text-gray-600">
+                        {% if receiver.job_title %}
+                            {{ receiver.job_title }}
+                        {% elif receiver.company_name %}
+                            {{ receiver.company_name }}
+                        {% endif %}
+                        {% if receiver.location %}
+                            • {{ receiver.location }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <div>
+                    <label for="{{ form.message.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Add a note (optional)</label>
+                    {{ form.message }}
+                    <p class="text-sm text-gray-500 mt-1">
+                        Adding a personal note can increase the chances of your connection request being accepted.
+                    </p>
+                </div>
+
+                <div class="flex justify-end">
+                    <a href="{% url 'accounts:profile_detail' user_id=receiver.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-md mr-4">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                        <i class="fas fa-user-plus mr-2"></i> Send Connection Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

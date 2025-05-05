@@ -1,0 +1,296 @@
+{% extends 'dashboard_base.html' %}
+
+{% block title %}Edit Profile - SearchFind{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Edit Your Profile</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="md:col-span-2 space-y-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+
+                {% if user_type == 'job_seeker' %}
+                    <!-- Personal Information Section -->
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <h2 class="text-lg font-semibold mb-4">Personal Information</h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="id_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input type="text" name="phone_number" id="id_phone_number" value="{{ form.phone_number.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {% if form.phone_number.errors %}
+                                    <p class="text-red-600 text-sm mt-1">{{ form.phone_number.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label for="id_location" class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                                <input type="text" name="location" id="id_location" value="{{ form.location.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {% if form.location.errors %}
+                                    <p class="text-red-600 text-sm mt-1">{{ form.location.errors.0 }}</p>
+                                {% endif %}
+                                <p class="text-xs text-gray-500 mt-1">{{ form.location.help_text }}</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_job_title" class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                            <input type="text" name="job_title" id="id_job_title" value="{{ form.job_title.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            {% if form.job_title.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.job_title.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-1">{{ form.job_title.help_text }}</p>
+                        </div>
+
+                        <div>
+                            <label for="id_bio" class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                            <textarea name="bio" id="id_bio" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.bio.value|default:'' }}</textarea>
+                            {% if form.bio.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.bio.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Professional Information Section -->
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <h2 class="text-lg font-semibold mb-4">Professional Information</h2>
+
+                        <div class="mb-4">
+                            <label for="id_skills" class="block text-sm font-medium text-gray-700 mb-1">Skills</label>
+                            <textarea name="skills" id="id_skills" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.skills.value|default:'' }}</textarea>
+                            {% if form.skills.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.skills.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-1">{{ form.skills.help_text }}</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_experience" class="block text-sm font-medium text-gray-700 mb-1">Work Experience</label>
+                            <textarea name="experience" id="id_experience" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.experience.value|default:'' }}</textarea>
+                            {% if form.experience.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.experience.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-1">{{ form.experience.help_text }}</p>
+                        </div>
+
+                        <div>
+                            <label for="id_education" class="block text-sm font-medium text-gray-700 mb-1">Education</label>
+                            <textarea name="education" id="id_education" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.education.value|default:'' }}</textarea>
+                            {% if form.education.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.education.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-xs text-gray-500 mt-1">{{ form.education.help_text }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Profile Media Section -->
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <h2 class="text-lg font-semibold mb-4">Profile Media</h2>
+
+                        <div class="mb-6">
+                            <label for="id_profile_picture" class="block text-sm font-medium text-gray-700 mb-1">Profile Picture</label>
+                            <div class="flex items-start">
+                                <div class="mr-4">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ user.profile_picture.url }}" alt="Current profile picture" class="h-24 w-24 rounded-full object-cover">
+                                    {% else %}
+                                        <div class="h-24 w-24 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl">
+                                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <input type="file" name="profile_picture" id="id_profile_picture" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    {% if form.profile_picture.errors %}
+                                        <p class="text-red-600 text-sm mt-1">{{ form.profile_picture.errors.0 }}</p>
+                                    {% endif %}
+                                    <p class="text-xs text-gray-500 mt-1">Upload a professional profile picture. Recommended size: 400x400 pixels.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="id_resume" class="block text-sm font-medium text-gray-700 mb-1">Resume</label>
+                            <div class="flex items-start">
+                                <div class="mr-4 flex-shrink-0">
+                                    {% if user.resume %}
+                                        <div class="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-file-pdf text-red-600 text-xl"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="h-12 w-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-file text-gray-400 text-xl"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <input type="file" name="resume" id="id_resume" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    {% if form.resume.errors %}
+                                        <p class="text-red-600 text-sm mt-1">{{ form.resume.errors.0 }}</p>
+                                    {% endif %}
+                                    <p class="text-xs text-gray-500 mt-1">Upload your resume in PDF format.</p>
+                                    {% if user.resume %}
+                                        <div class="mt-2">
+                                            <a href="{{ user.resume.url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                                                <i class="fas fa-external-link-alt mr-1"></i> View current resume
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% elif user_type == 'employer' %}
+                    <!-- Personal Information Section -->
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <h2 class="text-lg font-semibold mb-4">Personal Information</h2>
+
+                        <div>
+                            <label for="id_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="text" name="phone_number" id="id_phone_number" value="{{ form.phone_number.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            {% if form.phone_number.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.phone_number.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Company Information Section -->
+                    <div class="bg-white rounded-lg p-6 border border-gray-200">
+                        <h2 class="text-lg font-semibold mb-4">Company Information</h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="id_company_name" class="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                                <input type="text" name="company_name" id="id_company_name" value="{{ form.company_name.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {% if form.company_name.errors %}
+                                    <p class="text-red-600 text-sm mt-1">{{ form.company_name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <label for="id_company_website" class="block text-sm font-medium text-gray-700 mb-1">Company Website</label>
+                                <input type="url" name="company_website" id="id_company_website" value="{{ form.company_website.value|default:'' }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {% if form.company_website.errors %}
+                                    <p class="text-red-600 text-sm mt-1">{{ form.company_website.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_company_description" class="block text-sm font-medium text-gray-700 mb-1">Company Description</label>
+                            <textarea name="company_description" id="id_company_description" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ form.company_description.value|default:'' }}</textarea>
+                            {% if form.company_description.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.company_description.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="id_company_logo" class="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
+                            <div class="flex items-start">
+                                <div class="mr-4">
+                                    {% if user.company_logo %}
+                                        <img src="{{ user.company_logo.url }}" alt="Current company logo" class="h-24 w-24 object-contain border border-gray-200 rounded-lg p-2">
+                                    {% else %}
+                                        <div class="h-24 w-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                                            <i class="fas fa-building text-gray-400 text-2xl"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <input type="file" name="company_logo" id="id_company_logo" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    {% if form.company_logo.errors %}
+                                        <p class="text-red-600 text-sm mt-1">{{ form.company_logo.errors.0 }}</p>
+                                    {% endif %}
+                                    <p class="text-xs text-gray-500 mt-1">Upload your company logo. Recommended size: 400x400 pixels.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="flex justify-between">
+                    <a href="{% url 'accounts:profile' %}?dashboard=true" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Profile Tips -->
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4">Profile Tips</h3>
+                <ul class="space-y-3 text-sm">
+                    {% if user_type == 'job_seeker' %}
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                            <span>Add a professional profile picture to make your profile stand out</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                            <span>List your skills to help employers find you for relevant positions</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                            <span>Include detailed work experience with achievements and responsibilities</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                            <span>Upload an up-to-date resume in PDF format</span>
+                        </li>
+                    {% else %}
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                            <span>Add your company logo to build brand recognition</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                            <span>Write a detailed company description to attract candidates</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                            <span>Include your company website for candidates to learn more</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Profile Completeness -->
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4">Profile Completeness</h3>
+                <div class="space-y-3">
+                    {% with completeness=user.calculate_profile_completeness %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-600">Overall</span>
+                        <span class="text-blue-600 font-medium">{{ completeness.0 }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ completeness.0 }}%"></div>
+                    </div>
+                    {% if completeness.1 %}
+                        <div class="mt-3">
+                            <p class="text-sm text-gray-700 font-medium mb-1">Missing information:</p>
+                            <ul class="text-xs text-gray-600 space-y-1 list-disc pl-5">
+                                {% for field in completeness.1 %}
+                                    <li>{{ field }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% else %}
+                        <p class="text-sm text-green-600 mt-2">Your profile is complete! 🎉</p>
+                    {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

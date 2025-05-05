@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Subscription Plans" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .plan-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .plan-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .feature-available {
+        color: #10B981;
+    }
+    .feature-unavailable {
+        color: #EF4444;
+    }
+    .popular-badge {
+        position: absolute;
+        top: -10px;
+        right: 20px;
+        background-color: #3B82F6;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="text-center mb-12">
+        <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">{% trans "Upgrade to Pro" %}</h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+            {% if user_type == 'job_seeker' %}
+                {% trans "Unlock advanced features to boost your job search and increase your chances of landing your dream job." %}
+            {% else %}
+                {% trans "Unlock advanced features to find the perfect candidates and promote your job listings more effectively." %}
+            {% endif %}
+        </p>
+    </div>
+
+    {% if active_subscription %}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 max-w-3xl mx-auto">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 mt-1">
+                    <i class="fas fa-info-circle text-blue-500 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-semibold text-blue-800">{% trans "You have an active subscription" %}</h3>
+                    <p class="text-blue-700 mt-1">
+                        {% blocktrans with plan_name=active_subscription.plan.name expiry_date=active_subscription.end_date|date:"F j, Y" %}
+                            Your {{ plan_name }} subscription is active until {{ expiry_date }}.
+                        {% endblocktrans %}
+                    </p>
+                    <div class="mt-3">
+                        <a href="{% url 'subscriptions:cancel_subscription' subscription_id=active_subscription.id %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                            {% trans "Manage Subscription" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Free Plan -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 plan-card">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800">{% trans "Free" %}</h2>
+                <p class="text-gray-600 mt-2">{% trans "Basic features to get started" %}</p>
+                <div class="mt-4">
+                    <span class="text-3xl font-bold text-gray-800">$0</span>
+                    <span class="text-gray-600">/{% trans "month" %}</span>
+                </div>
+            </div>
+            <div class="p-6">
+                <ul class="space-y-3">
+                    {% if user_type == 'job_seeker' %}
+                        <li class="flex items-center">
+                            <i class="fas fa-check mr-2 feature-available"></i>
+                            <span>{% trans "Basic job search" %}</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check mr-2 feature-available"></i>
+                            <span>{% trans "Apply to jobs" %}</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check mr-2 feature-available"></i>
+                            <span>{% trans "Create a profile" %}</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-times mr-2 feature-unavailable"></i>
+                            <span class="text-gray-500">{% trans "AI resume builder" %}</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-times mr-2 feature-unavailable"></i>
+                            <span class="text-gray-500">{% trans "Job match percentages" %}</span>
+                        </li>
+                    {% else %}
+                        <li class="flex items-center">
+                            <i class="fas fa-check mr-2 feature-available"></i>
+                            <span>{% trans "Post job listings" %}</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check mr-2 feature-available"></i>
+                            <span>{% trans "Manage applications" %}</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check mr-2 feature-available"></i>
+                            <span>{% trans "Company profile" %}</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-times mr-2 feature-unavailable"></i>
+                            <span class="text-gray-500">{% trans "Featured job listings" %}</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-times mr-2 feature-unavailable"></i>
+                            <span class="text-gray-500">{% trans "AI candidate matching" %}</span>
+                        </li>
+                    {% endif %}
+                </ul>
+                <div class="mt-6">
+                    {% if not active_subscription %}
+                    <button disabled class="w-full bg-gray-300 text-gray-600 py-3 rounded-lg font-semibold">
+                        {% trans "Current Plan" %}
+                    </button>
+                    {% else %}
+                    <button disabled class="w-full bg-gray-200 text-gray-500 py-3 rounded-lg font-semibold">
+                        {% trans "Free Plan" %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Plans -->
+        {% for plan in plans %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 plan-card relative">
+                {% if forloop.first %}
+                    <div class="popular-badge">{% trans "Most Popular" %}</div>
+                {% endif %}
+                <div class="p-6 border-b border-gray-200 {% if forloop.first %}bg-blue-50{% endif %}">
+                    <h2 class="text-2xl font-bold text-gray-800">{{ plan.name }}</h2>
+                    <p class="text-gray-600 mt-2">{{ plan.description|truncatechars:60 }}</p>
+                    <div class="mt-4">
+                        <span class="text-3xl font-bold text-gray-800">${{ plan.price }}</span>
+                        <span class="text-gray-600">/{% trans "month" %}</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <ul class="space-y-3">
+                        {% if user_type == 'job_seeker' %}
+                            <li class="flex items-center">
+                                <i class="fas fa-check mr-2 feature-available"></i>
+                                <span>{% trans "All free features" %}</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas {% if plan.resume_builder %}fa-check feature-available{% else %}fa-times feature-unavailable{% endif %} mr-2"></i>
+                                <span {% if not plan.resume_builder %}class="text-gray-500"{% endif %}>{% trans "AI resume builder" %}</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas {% if plan.resume_review %}fa-check feature-available{% else %}fa-times feature-unavailable{% endif %} mr-2"></i>
+                                <span {% if not plan.resume_review %}class="text-gray-500"{% endif %}>{% trans "Resume review & suggestions" %}</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas {% if plan.job_match_recommendations %}fa-check feature-available{% else %}fa-times feature-unavailable{% endif %} mr-2"></i>
+                                <span {% if not plan.job_match_recommendations %}class="text-gray-500"{% endif %}>{% trans "Job match percentages" %}</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas {% if plan.company_recommendations %}fa-check feature-available{% else %}fa-times feature-unavailable{% endif %} mr-2"></i>
+                                <span {% if not plan.company_recommendations %}class="text-gray-500"{% endif %}>{% trans "Company match recommendations" %}</span>
+                            </li>
+                        {% else %}
+                            <li class="flex items-center">
+                                <i class="fas fa-check mr-2 feature-available"></i>
+                                <span>{% trans "All free features" %}</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas {% if plan.featured_jobs %}fa-check feature-available{% else %}fa-times feature-unavailable{% endif %} mr-2"></i>
+                                <span {% if not plan.featured_jobs %}class="text-gray-500"{% endif %}>{% trans "Featured job listings" %}</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas {% if plan.priority_listing %}fa-check feature-available{% else %}fa-times feature-unavailable{% endif %} mr-2"></i>
+                                <span {% if not plan.priority_listing %}class="text-gray-500"{% endif %}>{% trans "Priority placement in search" %}</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas {% if plan.candidate_matching %}fa-check feature-available{% else %}fa-times feature-unavailable{% endif %} mr-2"></i>
+                                <span {% if not plan.candidate_matching %}class="text-gray-500"{% endif %}>{% trans "AI candidate matching" %}</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas {% if plan.advanced_analytics %}fa-check feature-available{% else %}fa-times feature-unavailable{% endif %} mr-2"></i>
+                                <span {% if not plan.advanced_analytics %}class="text-gray-500"{% endif %}>{% trans "Advanced analytics" %}</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <div class="mt-6">
+                        {% if active_subscription and active_subscription.plan.id == plan.id %}
+                            <button disabled class="w-full bg-gray-300 text-gray-600 py-3 rounded-lg font-semibold">
+                                {% trans "Current Plan" %}
+                            </button>
+                        {% else %}
+                            <a href="{% url 'subscriptions:subscribe' plan_id=plan.id %}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-3 rounded-lg font-semibold transition duration-300">
+                                {% trans "Subscribe Now" %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-16 max-w-4xl mx-auto">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">{% trans "Frequently Asked Questions" %}</h2>
+
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">{% trans "How does billing work?" %}</h3>
+                <p class="mt-2 text-gray-600">
+                    {% trans "You'll be billed monthly based on your selected plan. You can cancel anytime from your account settings." %}
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">{% trans "Can I change plans later?" %}</h3>
+                <p class="mt-2 text-gray-600">
+                    {% trans "Yes, you can upgrade or downgrade your plan at any time. Changes will take effect at the start of your next billing cycle." %}
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">{% trans "How do I cancel my subscription?" %}</h3>
+                <p class="mt-2 text-gray-600">
+                    {% trans "You can cancel your subscription from your account settings. Your plan will remain active until the end of your current billing period." %}
+                </p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">{% trans "Is there a free trial?" %}</h3>
+                <p class="mt-2 text-gray-600">
+                    {% trans "We don't currently offer a free trial, but you can use the free plan with basic features indefinitely." %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

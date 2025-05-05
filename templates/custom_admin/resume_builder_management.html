@@ -1,0 +1,417 @@
+{% extends 'custom_admin/management_base.html' %}
+
+{% block title %}Resume Builder Management - Admin Dashboard{% endblock %}
+{% block header %}Resume Builder Management{% endblock %}
+{% block breadcrumb %}Resume Builders{% endblock %}
+
+{% block filters %}
+<div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+    <!-- User Filter -->
+    <div>
+        <label for="user-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by User</label>
+        <select id="user-filter" class="form-control">
+            <option value="">All Users</option>
+            {% for user in all_users %}
+                <option value="{{ user.id }}" {% if user_id == user.id|stringformat:"i" %}selected{% endif %}>{{ user.get_full_name }} ({{ user.email }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Job Filter -->
+    <div>
+        <label for="job-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Job</label>
+        <select id="job-filter" class="form-control">
+            <option value="">All Jobs</option>
+            {% for job in all_jobs %}
+                <option value="{{ job.id }}" {% if job_id == job.id|stringformat:"i" %}selected{% endif %}>{{ job.title }} ({{ job.company.name }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Search Form -->
+    <div>
+        <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div class="flex">
+            <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}" placeholder="Search resumes..." 
+                   class="form-control rounded-r-none focus:z-10">
+            <button type="button" id="search-button" class="btn btn-primary rounded-l-none">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resume</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for builder in builders %}
+    <tr>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                {% if builder.user.profile_picture %}
+                    <img class="h-10 w-10 rounded-full object-cover" src="{{ builder.user.profile_picture.url }}" alt="{{ builder.user.get_full_name }}">
+                {% else %}
+                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                        {{ builder.user.first_name|first|upper }}
+                    </div>
+                {% endif %}
+                <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ builder.user.get_full_name }}</div>
+                    <div class="text-xs text-gray-500">{{ builder.user.email }}</div>
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">
+                {% if builder.resume_file %}
+                    <a href="{{ builder.resume_file.url }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-file-alt mr-1"></i> View Resume
+                    </a>
+                {% else %}
+                    <span class="text-gray-500">No file</span>
+                {% endif %}
+            </div>
+            <div class="text-xs text-gray-500">{{ builder.title|default:"Untitled Resume" }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            {% if builder.job_listing %}
+            <div class="text-sm font-medium text-gray-900">{{ builder.job_listing.title }}</div>
+            <div class="text-xs text-gray-500">{{ builder.job_listing.company.name }}</div>
+            {% else %}
+            <div class="text-sm text-gray-500">No job specified</div>
+            {% endif %}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ builder.created_at|date:"M d, Y" }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-3">
+                <button type="button" class="btn-action btn-view" data-toggle="modal" data-target="#viewBuilderModal{{ builder.id }}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deleteBuilderModal{{ builder.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    
+    <!-- View Builder Modal -->
+    <div class="modal fade" id="viewBuilderModal{{ builder.id }}" tabindex="-1" role="dialog" aria-labelledby="viewBuilderModalLabel{{ builder.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewBuilderModalLabel{{ builder.id }}">Resume Builder Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">User Information</h3>
+                            <span class="text-sm text-gray-500">{{ builder.created_at|date:"F d, Y H:i" }}</span>
+                        </div>
+                        
+                        <div class="flex items-center mb-4">
+                            {% if builder.user.profile_picture %}
+                                <img class="h-12 w-12 rounded-full object-cover" src="{{ builder.user.profile_picture.url }}" alt="{{ builder.user.get_full_name }}">
+                            {% else %}
+                                <div class="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                    {{ builder.user.first_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="ml-4">
+                                <div class="text-md font-medium">{{ builder.user.get_full_name }}</div>
+                                <div class="text-sm text-gray-500">{{ builder.user.email }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if builder.resume_file %}
+                        <div class="mb-4">
+                            <a href="{{ builder.resume_file.url }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-file-download mr-2"></i> Download Resume
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if builder.job_listing %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Target Job</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex items-start">
+                                {% if builder.job_listing.company.logo %}
+                                    <img src="{{ builder.job_listing.company.logo.url }}" alt="{{ builder.job_listing.company.name }}" class="h-12 w-12 object-cover rounded">
+                                {% else %}
+                                    <div class="h-12 w-12 rounded bg-blue-600 flex items-center justify-center text-white font-bold">
+                                        {{ builder.job_listing.company.name|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <div class="ml-4">
+                                    <h4 class="text-md font-semibold">{{ builder.job_listing.title }}</h4>
+                                    <div class="text-sm text-gray-600">{{ builder.job_listing.company.name }}</div>
+                                    <div class="text-sm text-gray-500">{{ builder.job_listing.location }}</div>
+                                    <div class="mt-2">
+                                        <a href="{% url 'jobs:job_detail' builder.job_listing.slug %}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
+                                            <i class="fas fa-external-link-alt mr-1"></i> View Job
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Resume Details</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-md font-semibold mb-2">Personal Information</h4>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="mb-2">
+                                        <span class="text-sm font-medium text-gray-500">Name:</span>
+                                        <span class="text-sm">{{ builder.full_name }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="text-sm font-medium text-gray-500">Email:</span>
+                                        <span class="text-sm">{{ builder.email }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="text-sm font-medium text-gray-500">Phone:</span>
+                                        <span class="text-sm">{{ builder.phone }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="text-sm font-medium text-gray-500">Location:</span>
+                                        <span class="text-sm">{{ builder.location }}</span>
+                                    </div>
+                                    {% if builder.website %}
+                                    <div class="mb-2">
+                                        <span class="text-sm font-medium text-gray-500">Website:</span>
+                                        <span class="text-sm">{{ builder.website }}</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if builder.linkedin %}
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">LinkedIn:</span>
+                                        <span class="text-sm">{{ builder.linkedin }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-md font-semibold mb-2">Summary</h4>
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-700">{{ builder.summary }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="text-md font-semibold mb-2">Skills</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex flex-wrap gap-2">
+                                {% for skill in builder.skills %}
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">{{ skill }}</span>
+                                {% empty %}
+                                    <span class="text-sm text-gray-500">No skills listed</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="text-md font-semibold mb-2">Experience</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            {% for experience in builder.experience %}
+                                <div class="mb-4 {% if not forloop.last %}border-b border-gray-200 pb-4{% endif %}">
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <div class="text-sm font-medium">{{ experience.title }}</div>
+                                            <div class="text-sm text-gray-600">{{ experience.company }}</div>
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ experience.start_date }} - {{ experience.end_date|default:"Present" }}
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 text-sm text-gray-700">
+                                        <p>{{ experience.description }}</p>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="text-sm text-gray-500">No experience listed</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h4 class="text-md font-semibold mb-2">Education</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            {% for education in builder.education %}
+                                <div class="mb-4 {% if not forloop.last %}border-b border-gray-200 pb-4{% endif %}">
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <div class="text-sm font-medium">{{ education.degree }}</div>
+                                            <div class="text-sm text-gray-600">{{ education.institution }}</div>
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ education.start_date }} - {{ education.end_date|default:"Present" }}
+                                        </div>
+                                    </div>
+                                    {% if education.description %}
+                                    <div class="mt-2 text-sm text-gray-700">
+                                        <p>{{ education.description }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            {% empty %}
+                                <div class="text-sm text-gray-500">No education listed</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    {% if builder.certifications %}
+                    <div class="mb-6">
+                        <h4 class="text-md font-semibold mb-2">Certifications</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            {% for certification in builder.certifications %}
+                                <div class="mb-4 {% if not forloop.last %}border-b border-gray-200 pb-4{% endif %}">
+                                    <div class="flex justify-between">
+                                        <div>
+                                            <div class="text-sm font-medium">{{ certification.name }}</div>
+                                            <div class="text-sm text-gray-600">{{ certification.issuer }}</div>
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            {{ certification.date }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    {% if builder.resume_file %}
+                    <a href="{{ builder.resume_file.url }}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-file-download mr-2"></i> Download Resume
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Builder Modal -->
+    <div class="modal fade" id="deleteBuilderModal{{ builder.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteBuilderModalLabel{{ builder.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteBuilderModalLabel{{ builder.id }}">Delete Resume</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this resume for <strong>{{ builder.user.get_full_name }}</strong>?</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Warning: This action cannot be undone. The user will lose access to this resume.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'custom_admin:resume_builder_management' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="builder_id" value="{{ builder.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <tr>
+        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+            <div class="flex flex-col items-center justify-center py-8">
+                <i class="fas fa-file-alt text-gray-400 text-5xl mb-4"></i>
+                <p class="text-lg font-medium">No resumes found</p>
+                <p class="text-sm text-gray-500 mt-1">Resumes will appear here when users create them with the resume builder</p>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+{% endblock %}
+
+{% block common_js %}
+// Filter functionality
+document.getElementById('user-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('job-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('search-button').addEventListener('click', function() {
+    applyFilters();
+});
+
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        applyFilters();
+    }
+});
+
+function applyFilters() {
+    const userId = document.getElementById('user-filter').value;
+    const jobId = document.getElementById('job-filter').value;
+    const searchQuery = document.getElementById('search-input').value;
+    
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+    
+    if (userId) {
+        params.set('user', userId);
+    } else {
+        params.delete('user');
+    }
+    
+    if (jobId) {
+        params.set('job', jobId);
+    } else {
+        params.delete('job');
+    }
+    
+    if (searchQuery) {
+        params.set('search', searchQuery);
+    } else {
+        params.delete('search');
+    }
+    
+    window.location.href = `?${params.toString()}`;
+}
+
+// Add button styling for action buttons
+document.querySelectorAll('.btn-action').forEach(function(button) {
+    button.classList.add('inline-flex', 'items-center', 'justify-center', 'p-2', 'rounded-full', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2');
+    
+    if (button.classList.contains('btn-view')) {
+        button.classList.add('text-blue-600', 'hover:text-blue-800', 'focus:ring-blue-500');
+    } else if (button.classList.contains('btn-delete')) {
+        button.classList.add('text-red-600', 'hover:text-red-800', 'focus:ring-red-500');
+    }
+});
+{% endblock %}

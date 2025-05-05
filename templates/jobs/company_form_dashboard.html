@@ -1,0 +1,420 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - SearchFind{% endblock %}
+
+{% block extra_css %}
+{{ form.media.css }}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    /* Custom styles for form fields */
+    input[type="text"],
+    input[type="url"],
+    input[type="number"],
+    input[type="file"],
+    select,
+    textarea {
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.375rem;
+        width: 100%;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    input[type="text"]:focus,
+    input[type="url"]:focus,
+    input[type="number"]:focus,
+    input[type="file"]:focus,
+    select:focus,
+    textarea:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        outline: none;
+    }
+
+    .required::after {
+        content: "*";
+        color: #ef4444;
+        margin-left: 0.25rem;
+    }
+
+    /* Select2 custom styles */
+    .select2-container--default .select2-selection--single {
+        height: 42px;
+        padding: 0.5rem 0.75rem;
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 1.25;
+        padding-left: 0;
+        color: #111827;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 42px;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #3b82f6;
+    }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">{{ title }}</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="md:col-span-2">
+            {% if company and company.status == 'pending' %}
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                Your company is pending approval. You can edit your information, but you won't be able to post jobs until your company is approved.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% elif company and company.status == 'rejected' %}
+                <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-times-circle text-red-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700">
+                                Your company registration was rejected. Please update your information and resubmit.
+                            </p>
+                            {% if company.rejection_reason %}
+                                <p class="text-sm text-red-700 mt-2">
+                                    <strong>Reason:</strong> {{ company.rejection_reason }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold mb-4">Basic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1 required">Company Name</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.industry.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1 required">Industry</label>
+                            {{ form.industry }}
+                            {% if form.industry.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.industry.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="{% if form.industry.value != 'other' %}hidden{% endif %}" id="other-industry-field">
+                            <label for="{{ form.other_industry.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1 required">Specify Industry</label>
+                            {{ form.other_industry }}
+                            {% if form.other_industry.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.other_industry.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.company_size.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1 required">Company Size</label>
+                            {{ form.company_size }}
+                            {% if form.company_size.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.company_size.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.founded_year.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Founded Year</label>
+                            {{ form.founded_year }}
+                            {% if form.founded_year.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.founded_year.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.website.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                            {{ form.website }}
+                            {% if form.website.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.website.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold mb-4">Location</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="{{ form.country.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1 required">Country</label>
+                            {{ form.country }}
+                            {% if form.country.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.country.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.country.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.country.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.headquarters.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1 required">Headquarters</label>
+                            {{ form.headquarters }}
+                            {% if form.headquarters.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.headquarters.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.headquarters.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.headquarters.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold mb-4">Description</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="{{ form.short_description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Short Description</label>
+                            {{ form.short_description }}
+                            {% if form.short_description.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.short_description.errors.0 }}</p>
+                            {% endif %}
+                            <p class="text-gray-500 text-xs mt-1">A brief description of your company (max 255 characters)</p>
+                        </div>
+
+                        <div>
+                            <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1 required">Full Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.specialties.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Specialties</label>
+                            {{ form.specialties }}
+                            {% if form.specialties.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.specialties.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.specialties.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.specialties.help_text }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold mb-4">Media</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="{{ form.logo.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Company Logo</label>
+                            {% if company and company.logo %}
+                                <div class="mb-2">
+                                    <img src="{{ company.logo.url }}" alt="{{ company.name }} logo" class="w-32 h-32 object-contain border border-gray-200 rounded-md">
+                                </div>
+                            {% endif %}
+                            {{ form.logo }}
+                            {% if form.logo.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.logo.help_text }}</p>
+                            {% endif %}
+                            {% if form.logo.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.logo.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.cover_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Cover Image</label>
+                            {% if company and company.cover_image %}
+                                <div class="mb-2">
+                                    <img src="{{ company.cover_image.url }}" alt="{{ company.name }} cover" class="w-full h-32 object-cover border border-gray-200 rounded-md">
+                                </div>
+                            {% endif %}
+                            {{ form.cover_image }}
+                            {% if form.cover_image.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.cover_image.help_text }}</p>
+                            {% endif %}
+                            {% if form.cover_image.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.cover_image.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Media -->
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h2 class="text-lg font-semibold mb-4">Social Media</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="{{ form.linkedin.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">LinkedIn</label>
+                            {{ form.linkedin }}
+                            {% if form.linkedin.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.linkedin.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.twitter.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Twitter</label>
+                            {{ form.twitter }}
+                            {% if form.twitter.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.twitter.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.facebook.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
+                            {{ form.facebook }}
+                            {% if form.facebook.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.facebook.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.instagram.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
+                            {{ form.instagram }}
+                            {% if form.instagram.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.instagram.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-between">
+                    <a href="{% url 'jobs:my_companies' %}{% if request.GET.dashboard %}?dashboard=true{% endif %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md">
+                        Cancel
+                    </a>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                        {% if company %}
+                            Update Company
+                        {% else %}
+                            Register Company
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Tips -->
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4">Tips for Success</h3>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                        <span>Add a professional logo to build brand recognition</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                        <span>Write a detailed company description to attract candidates</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                        <span>Include your social media links to increase visibility</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-600 mt-1 mr-2"></i>
+                        <span>Add specialties to help job seekers find your company</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Approval Process -->
+            <div class="bg-white rounded-lg p-6 border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4">Approval Process</h3>
+                <div class="space-y-3">
+                    <p class="text-sm text-gray-600">
+                        All company registrations are reviewed by our team to ensure quality and legitimacy. This process typically takes 1-2 business days.
+                    </p>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Submission</span>
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                    <div class="w-full bg-gray-200 h-1 relative">
+                        <div class="bg-green-600 h-1 absolute left-0" style="width: 25%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Review</span>
+                        <i class="fas fa-clock text-yellow-600"></i>
+                    </div>
+                    <div class="w-full bg-gray-200 h-1 relative">
+                        <div class="bg-yellow-600 h-1 absolute left-0" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Approval</span>
+                        <i class="fas fa-hourglass-half text-gray-400"></i>
+                    </div>
+                    <div class="w-full bg-gray-200 h-1 relative">
+                        <div class="bg-blue-600 h-1 absolute left-0" style="width: 0%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600">Ready to Post Jobs</span>
+                        <i class="fas fa-hourglass-half text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media.js }}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize Select2 for industry field
+        $('.select2-industry').select2({
+            placeholder: 'Select or type an industry',
+            allowClear: true,
+            width: '100%',
+            tags: false,  // Don't allow creating new tags
+            minimumInputLength: 0
+        });
+
+        // Initialize Select2 for country field
+        $('.select2-country').select2({
+            placeholder: 'Select a country',
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Show/hide other industry field based on selection
+        $('#id_industry').on('change', function() {
+            if ($(this).val() === 'other') {
+                $('#other-industry-field').removeClass('hidden');
+            } else {
+                $('#other-industry-field').addClass('hidden');
+            }
+        });
+
+        // Initialize year picker
+        $('#id_founded_year').on('focus', function() {
+            $(this).attr('type', 'number');
+            $(this).attr('min', '1800');
+            $(this).attr('max', new Date().getFullYear());
+        });
+    });
+</script>
+{% endblock %}

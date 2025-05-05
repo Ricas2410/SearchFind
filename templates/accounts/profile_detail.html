@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load job_extras %}
+
+{% block title %}{{ profile_user.first_name|default:profile_user.email }} - SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Profile Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6">
+            <div class="flex flex-col md:flex-row items-center md:items-start">
+                <div class="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
+                    {% if profile_user.profile_picture %}
+                        <img src="{{ profile_user.profile_picture.url }}" alt="{{ profile_user.first_name }}" class="w-32 h-32 rounded-full object-cover border-4 border-white">
+                    {% else %}
+                        <div class="w-32 h-32 rounded-full bg-blue-500 text-white flex items-center justify-center text-4xl border-4 border-white">
+                            {{ profile_user.first_name|first|upper }}{{ profile_user.last_name|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow text-center md:text-left">
+                    <h1 class="text-3xl font-bold mb-1">{{ profile_user.first_name|default:profile_user.email }}</h1>
+                    <p class="text-blue-200 mb-2">
+                        {% if profile_user.user_type == 'job_seeker' %}
+                            {{ profile_user.job_title|default:"Job Seeker" }}
+                        {% else %}
+                            {{ profile_user.company_name|default:"Employer" }}
+                        {% endif %}
+                    </p>
+                    <p class="text-blue-100 mb-4">
+                        <i class="fas fa-map-marker-alt mr-2"></i>
+                        {{ profile_user.location|default:"Location not specified" }}
+                    </p>
+
+                    {% if request.user.is_authenticated and request.user.id != profile_user.id %}
+                        <div class="flex flex-wrap justify-center md:justify-start gap-2">
+                            {% if connection %}
+                                {% if connection.status == 'accepted' %}
+                                    <a href="{% url 'messaging:new_conversation' user_id=profile_user.id %}" class="bg-white text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-md">
+                                        <i class="fas fa-comment-alt mr-2"></i> Message
+                                    </a>
+                                {% elif connection.status == 'pending' %}
+                                    {% if connection.sender == request.user %}
+                                        <button disabled class="bg-gray-200 text-gray-600 px-4 py-2 rounded-md cursor-not-allowed">
+                                            <i class="fas fa-clock mr-2"></i> Connection Pending
+                                        </button>
+                                    {% else %}
+                                        <form method="post" action="{% url 'messaging:accept_connection' connection_id=connection.id %}" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                                                <i class="fas fa-check mr-2"></i> Accept Connection
+                                            </button>
+                                        </form>
+                                        <form method="post" action="{% url 'messaging:reject_connection' connection_id=connection.id %}" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
+                                                <i class="fas fa-times mr-2"></i> Decline
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            {% else %}
+                                <a href="{% url 'messaging:send_connection_request' user_id=profile_user.id %}" class="bg-white text-blue-700 hover:bg-blue-50 px-4 py-2 rounded-md">
+                                    <i class="fas fa-user-plus mr-2"></i> Connect
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- About Section -->
+                <div class="md:col-span-2">
+                    <h2 class="text-xl font-bold mb-4">About</h2>
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        {% if profile_user.bio %}
+                            <p class="text-gray-700">{{ profile_user.bio }}</p>
+                        {% else %}
+                            <p class="text-gray-500 italic">No bio provided</p>
+                        {% endif %}
+                    </div>
+
+                    {% if profile_user.user_type == 'job_seeker' %}
+                        <!-- Skills Section -->
+                        <h2 class="text-xl font-bold mb-4">Skills</h2>
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            {% if profile_user.skills %}
+                                <div class="flex flex-wrap gap-2">
+                                    {% for skill in profile_user.skills|split:',' %}
+                                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{{ skill|trim }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-gray-500 italic">No skills listed</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Experience Section -->
+                        <h2 class="text-xl font-bold mb-4">Experience</h2>
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            {% if profile_user.experience %}
+                                <p class="text-gray-700">{{ profile_user.experience }}</p>
+                            {% else %}
+                                <p class="text-gray-500 italic">No experience listed</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Education Section -->
+                        <h2 class="text-xl font-bold mb-4">Education</h2>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            {% if profile_user.education %}
+                                <p class="text-gray-700">{{ profile_user.education }}</p>
+                            {% else %}
+                                <p class="text-gray-500 italic">No education listed</p>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <!-- Company Information -->
+                        <h2 class="text-xl font-bold mb-4">Company Information</h2>
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            {% if profile_user.company_description %}
+                                <p class="text-gray-700">{{ profile_user.company_description }}</p>
+                            {% else %}
+                                <p class="text-gray-500 italic">No company description provided</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Company Details -->
+                        <h2 class="text-xl font-bold mb-4">Company Details</h2>
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="space-y-3">
+                                {% if profile_user.company_website %}
+                                    <div class="flex items-start">
+                                        <i class="fas fa-globe text-blue-600 mt-1 mr-3 w-5"></i>
+                                        <div>
+                                            <h3 class="font-semibold">Website</h3>
+                                            <a href="{{ profile_user.company_website }}" target="_blank" class="text-blue-600 hover:text-blue-800">{{ profile_user.company_website }}</a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if profile_user.company_size %}
+                                    <div class="flex items-start">
+                                        <i class="fas fa-users text-blue-600 mt-1 mr-3 w-5"></i>
+                                        <div>
+                                            <h3 class="font-semibold">Company Size</h3>
+                                            <p>{{ profile_user.get_company_size_display }}</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if profile_user.industry %}
+                                    <div class="flex items-start">
+                                        <i class="fas fa-industry text-blue-600 mt-1 mr-3 w-5"></i>
+                                        <div>
+                                            <h3 class="font-semibold">Industry</h3>
+                                            <p>{{ profile_user.industry }}</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Sidebar -->
+                <div>
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <h3 class="font-semibold mb-3">Contact Information</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-start">
+                                <i class="fas fa-envelope text-blue-600 mt-1 mr-3 w-5"></i>
+                                <div>
+                                    <h4 class="font-semibold">Email</h4>
+                                    <a href="mailto:{{ profile_user.email }}" class="text-blue-600 hover:text-blue-800">{{ profile_user.email }}</a>
+                                </div>
+                            </div>
+
+                            {% if profile_user.phone_number %}
+                                <div class="flex items-start">
+                                    <i class="fas fa-phone text-blue-600 mt-1 mr-3 w-5"></i>
+                                    <div>
+                                        <h4 class="font-semibold">Phone</h4>
+                                        <p>{{ profile_user.phone_number }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if profile_user.location %}
+                                <div class="flex items-start">
+                                    <i class="fas fa-map-marker-alt text-blue-600 mt-1 mr-3 w-5"></i>
+                                    <div>
+                                        <h4 class="font-semibold">Location</h4>
+                                        <p>{{ profile_user.location }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if profile_user.user_type == 'job_seeker' and profile_user.resume %}
+                        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                            <h3 class="font-semibold mb-3">Resume</h3>
+                            <a href="{{ profile_user.resume.url }}" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-file-pdf text-red-600 mr-2 text-xl"></i>
+                                <span>View Resume</span>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {% if profile_user.user_type == 'employer' %}
+                        <!-- Active Job Listings -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="font-semibold mb-3">Active Job Listings</h3>
+                            {% with job_listings=profile_user.job_listings.all %}
+                                {% if job_listings %}
+                                    <div class="space-y-3">
+                                        {% for job in job_listings|slice:":5" %}
+                                            <div class="border-b border-gray-200 pb-2 last:border-0">
+                                                <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="text-blue-600 hover:text-blue-800 font-medium">
+                                                    {{ job.title }}
+                                                </a>
+                                                <p class="text-sm text-gray-600">{{ job.location }}</p>
+                                            </div>
+                                        {% endfor %}
+
+                                        {% if job_listings.count > 5 %}
+                                            <a href="{% url 'jobs:job_list' %}?company={{ profile_user.id }}" class="text-blue-600 hover:text-blue-800 text-sm">
+                                                View all {{ job_listings.count }} jobs
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-gray-500 italic">No active job listings</p>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

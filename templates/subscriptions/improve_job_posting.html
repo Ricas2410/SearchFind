@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Improve Job Posting" %} | SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "AI Job Posting Improvement" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Get suggestions to improve your job listings or create new ones" %}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <!-- Improve Existing Job -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                <div class="p-6 bg-blue-50 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">{% trans "Improve Existing Job" %}</h2>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-600 mb-6">
+                        {% trans "Get AI-powered suggestions to improve one of your existing job listings." %}
+                    </p>
+
+                    {% if jobs %}
+                        <form method="post" action="{% url 'subscriptions:improve_job_posting' %}">
+                            {% csrf_token %}
+                            
+                            <div class="mb-6">
+                                <label for="job_id" class="block text-sm font-medium text-gray-700 mb-2">{% trans "Select a job to improve" %}</label>
+                                <select id="job_id" name="job_id" class="w-full p-3 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
+                                    <option value="">{% trans "-- Select a job --" %}</option>
+                                    {% for job in jobs %}
+                                        <option value="{{ job.id }}" {% if selected_job and selected_job.id == job.id %}selected{% endif %}>{{ job.title }} - {{ job.company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="flex justify-center">
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-300 flex items-center">
+                                    <i class="fas fa-magic mr-2"></i> {% trans "Get Improvement Suggestions" %}
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-gray-600 mb-4">{% trans "You don't have any job listings yet." %}</p>
+                            <a href="{% url 'jobs:create_job' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                                <i class="fas fa-plus mr-2"></i> {% trans "Create a Job Listing" %}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Create New Job Description -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                <div class="p-6 bg-green-50 border-b border-green-200">
+                    <h2 class="text-xl font-semibold text-gray-800">{% trans "Generate Job Description" %}</h2>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-600 mb-6">
+                        {% trans "Let AI help you create a professional job description based on your requirements." %}
+                    </p>
+
+                    {% if companies %}
+                        <form method="post" action="{% url 'subscriptions:improve_job_posting' %}">
+                            {% csrf_token %}
+                            
+                            <div class="mb-4">
+                                <label for="company_id" class="block text-sm font-medium text-gray-700 mb-2">{% trans "Company" %}</label>
+                                <select id="company_id" name="company_id" class="w-full p-3 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
+                                    <option value="">{% trans "-- Select a company --" %}</option>
+                                    {% for company in companies %}
+                                        <option value="{{ company.id }}">{{ company.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="job_title" class="block text-sm font-medium text-gray-700 mb-2">{% trans "Job Title" %}</label>
+                                <input type="text" id="job_title" name="job_title" class="w-full p-3 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="responsibilities" class="block text-sm font-medium text-gray-700 mb-2">{% trans "Key Responsibilities" %}</label>
+                                <textarea id="responsibilities" name="responsibilities" rows="4" class="w-full p-3 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="{% trans 'Enter one responsibility per line' %}"></textarea>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <label for="requirements" class="block text-sm font-medium text-gray-700 mb-2">{% trans "Requirements" %}</label>
+                                <textarea id="requirements" name="requirements" rows="4" class="w-full p-3 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="{% trans 'Enter one requirement per line' %}"></textarea>
+                            </div>
+                            
+                            <div class="flex justify-center">
+                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition duration-300 flex items-center">
+                                    <i class="fas fa-file-alt mr-2"></i> {% trans "Generate Job Description" %}
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-gray-600 mb-4">{% trans "You need to register a company first." %}</p>
+                            <a href="{% url 'jobs:create_company' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                                <i class="fas fa-building mr-2"></i> {% trans "Register Company" %}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Job Posting Best Practices" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-4">{% trans "Structure" %}</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Use a clear, specific job title" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Include a brief company overview" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Clearly separate responsibilities and requirements" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Highlight benefits and perks" %}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-4">{% trans "Content" %}</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Use inclusive language" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Be specific about day-to-day responsibilities" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Include salary range when possible" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Explain your application process" %}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

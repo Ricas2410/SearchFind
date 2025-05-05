@@ -1,0 +1,332 @@
+{% extends 'custom_admin/management_base.html' %}
+
+{% block title %}Resume Analysis Management - Admin Dashboard{% endblock %}
+{% block header %}Resume Analysis Management{% endblock %}
+{% block breadcrumb %}Resume Analyses{% endblock %}
+
+{% block filters %}
+<div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+    <!-- User Filter -->
+    <div>
+        <label for="user-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by User</label>
+        <select id="user-filter" class="form-control">
+            <option value="">All Users</option>
+            {% for user in all_users %}
+                <option value="{{ user.id }}" {% if user_id == user.id|stringformat:"i" %}selected{% endif %}>{{ user.get_full_name }} ({{ user.email }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Search Form -->
+    <div>
+        <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div class="flex">
+            <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}" placeholder="Search analyses..." 
+                   class="form-control rounded-r-none focus:z-10">
+            <button type="button" id="search-button" class="btn btn-primary rounded-l-none">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block table_headers %}
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resume</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for analysis in analyses %}
+    <tr>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                {% if analysis.user.profile_picture %}
+                    <img class="h-10 w-10 rounded-full object-cover" src="{{ analysis.user.profile_picture.url }}" alt="{{ analysis.user.get_full_name }}">
+                {% else %}
+                    <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                        {{ analysis.user.first_name|first|upper }}
+                    </div>
+                {% endif %}
+                <div class="ml-4">
+                    <div class="text-sm font-medium text-gray-900">{{ analysis.user.get_full_name }}</div>
+                    <div class="text-xs text-gray-500">{{ analysis.user.email }}</div>
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">
+                {% if analysis.resume_file %}
+                    <a href="{{ analysis.resume_file.url }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-file-alt mr-1"></i> View Resume
+                    </a>
+                {% else %}
+                    <span class="text-gray-500">No file</span>
+                {% endif %}
+            </div>
+            <div class="text-xs text-gray-500">{{ analysis.resume_text|truncatechars:50 }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                <div class="w-16 bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ analysis.overall_score }}%"></div>
+                </div>
+                <span class="ml-2 text-sm font-medium text-gray-900">{{ analysis.overall_score }}%</span>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ analysis.created_at|date:"M d, Y" }}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-3">
+                <button type="button" class="btn-action btn-view" data-toggle="modal" data-target="#viewAnalysisModal{{ analysis.id }}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deleteAnalysisModal{{ analysis.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+    
+    <!-- View Analysis Modal -->
+    <div class="modal fade" id="viewAnalysisModal{{ analysis.id }}" tabindex="-1" role="dialog" aria-labelledby="viewAnalysisModalLabel{{ analysis.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewAnalysisModalLabel{{ analysis.id }}">Resume Analysis Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">User Information</h3>
+                            <span class="text-sm text-gray-500">{{ analysis.created_at|date:"F d, Y H:i" }}</span>
+                        </div>
+                        
+                        <div class="flex items-center mb-4">
+                            {% if analysis.user.profile_picture %}
+                                <img class="h-12 w-12 rounded-full object-cover" src="{{ analysis.user.profile_picture.url }}" alt="{{ analysis.user.get_full_name }}">
+                            {% else %}
+                                <div class="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                    {{ analysis.user.first_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="ml-4">
+                                <div class="text-md font-medium">{{ analysis.user.get_full_name }}</div>
+                                <div class="text-sm text-gray-500">{{ analysis.user.email }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if analysis.resume_file %}
+                        <div class="mb-4">
+                            <a href="{{ analysis.resume_file.url }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-file-download mr-2"></i> Download Resume
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Overall Score</h3>
+                        <div class="flex items-center mb-2">
+                            <div class="w-full bg-gray-200 rounded-full h-4">
+                                <div class="bg-blue-600 h-4 rounded-full" style="width: {{ analysis.overall_score }}%"></div>
+                            </div>
+                            <span class="ml-3 text-lg font-bold">{{ analysis.overall_score }}%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Category Scores</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Content</span>
+                                    <span class="text-sm font-medium">{{ analysis.content_score }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-green-600 h-2.5 rounded-full" style="width: {{ analysis.content_score }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Format</span>
+                                    <span class="text-sm font-medium">{{ analysis.format_score }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-purple-600 h-2.5 rounded-full" style="width: {{ analysis.format_score }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Skills</span>
+                                    <span class="text-sm font-medium">{{ analysis.skills_score }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-yellow-600 h-2.5 rounded-full" style="width: {{ analysis.skills_score }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium">Experience</span>
+                                    <span class="text-sm font-medium">{{ analysis.experience_score }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-red-600 h-2.5 rounded-full" style="width: {{ analysis.experience_score }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Analysis Feedback</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="text-md font-semibold mb-2">Strengths</h4>
+                            <ul class="list-disc pl-5 space-y-1 mb-4">
+                                {% for strength in analysis.strengths %}
+                                    <li class="text-green-600">{{ strength }}</li>
+                                {% empty %}
+                                    <li class="text-gray-500">No strengths identified</li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <h4 class="text-md font-semibold mb-2">Weaknesses</h4>
+                            <ul class="list-disc pl-5 space-y-1 mb-4">
+                                {% for weakness in analysis.weaknesses %}
+                                    <li class="text-red-600">{{ weakness }}</li>
+                                {% empty %}
+                                    <li class="text-gray-500">No weaknesses identified</li>
+                                {% endfor %}
+                            </ul>
+                            
+                            <h4 class="text-md font-semibold mb-2">Improvement Suggestions</h4>
+                            <ul class="list-disc pl-5 space-y-1">
+                                {% for suggestion in analysis.suggestions %}
+                                    <li class="text-blue-600">{{ suggestion }}</li>
+                                {% empty %}
+                                    <li class="text-gray-500">No suggestions provided</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Resume Text</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <pre class="text-sm text-gray-700 whitespace-pre-wrap">{{ analysis.resume_text }}</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    {% if analysis.resume_file %}
+                    <a href="{{ analysis.resume_file.url }}" target="_blank" class="btn btn-primary">
+                        <i class="fas fa-file-download mr-2"></i> Download Resume
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Analysis Modal -->
+    <div class="modal fade" id="deleteAnalysisModal{{ analysis.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteAnalysisModalLabel{{ analysis.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAnalysisModalLabel{{ analysis.id }}">Delete Resume Analysis</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this resume analysis for <strong>{{ analysis.user.get_full_name }}</strong>?</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Warning: This action cannot be undone. The user will lose access to this analysis.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'custom_admin:resume_analysis_management' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="analysis_id" value="{{ analysis.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <tr>
+        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+            <div class="flex flex-col items-center justify-center py-8">
+                <i class="fas fa-file-alt text-gray-400 text-5xl mb-4"></i>
+                <p class="text-lg font-medium">No resume analyses found</p>
+                <p class="text-sm text-gray-500 mt-1">Resume analyses will appear here when users use the resume analysis feature</p>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+{% endblock %}
+
+{% block common_js %}
+// Filter functionality
+document.getElementById('user-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('search-button').addEventListener('click', function() {
+    applyFilters();
+});
+
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        applyFilters();
+    }
+});
+
+function applyFilters() {
+    const userId = document.getElementById('user-filter').value;
+    const searchQuery = document.getElementById('search-input').value;
+    
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+    
+    if (userId) {
+        params.set('user', userId);
+    } else {
+        params.delete('user');
+    }
+    
+    if (searchQuery) {
+        params.set('search', searchQuery);
+    } else {
+        params.delete('search');
+    }
+    
+    window.location.href = `?${params.toString()}`;
+}
+
+// Add button styling for action buttons
+document.querySelectorAll('.btn-action').forEach(function(button) {
+    button.classList.add('inline-flex', 'items-center', 'justify-center', 'p-2', 'rounded-full', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2');
+    
+    if (button.classList.contains('btn-view')) {
+        button.classList.add('text-blue-600', 'hover:text-blue-800', 'focus:ring-blue-500');
+    } else if (button.classList.contains('btn-delete')) {
+        button.classList.add('text-red-600', 'hover:text-red-800', 'focus:ring-red-500');
+    }
+});
+{% endblock %}

@@ -1,0 +1,530 @@
+{% extends 'custom_admin/management_base.html' %}
+
+{% block title %}Social Application Management - Admin Dashboard{% endblock %}
+{% block header %}Social Application Management{% endblock %}
+{% block breadcrumb %}Social Applications{% endblock %}
+
+{% block filters %}
+<div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+    <!-- Provider Filter -->
+    <div>
+        <label for="provider-filter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Provider</label>
+        <select id="provider-filter" class="form-control">
+            <option value="">All Providers</option>
+            {% for provider_name in all_providers %}
+                <option value="{{ provider_name }}" {% if provider == provider_name %}selected{% endif %}>{{ provider_name|title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Search Form -->
+    <div>
+        <label for="search-input" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+        <div class="flex">
+            <input type="text" id="search-input" name="search" value="{{ search_query|default:'' }}" placeholder="Search applications..."
+                   class="form-control rounded-r-none focus:z-10">
+            <button type="button" id="search-button" class="btn btn-primary rounded-l-none">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_button_text %}Add Social Application{% endblock %}
+
+{% block table_headers %}
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Provider</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client ID</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sites</th>
+<th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+{% endblock %}
+
+{% block table_rows %}
+{% for app in applications %}
+    <tr>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                <div class="h-8 w-8 rounded-full flex items-center justify-center
+                    {% if app.provider == 'google' %}bg-red-100 text-red-600
+                    {% elif app.provider == 'facebook' %}bg-blue-100 text-blue-600
+                    {% elif app.provider == 'linkedin' %}bg-blue-800 text-white
+                    {% elif app.provider == 'github' %}bg-gray-800 text-white
+                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                    <i class="fab fa-{{ app.provider }}"></i>
+                </div>
+                <div class="ml-3 text-sm font-medium text-gray-900">{{ app.provider|title }}</div>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm font-medium text-gray-900">{{ app.name }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">{{ app.client_id|truncatechars:20 }}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="text-sm text-gray-900">
+                {% for site in app.sites.all %}
+                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 mr-1">
+                        {{ site.name }}
+                    </span>
+                {% empty %}
+                    <span class="text-gray-500">No sites</span>
+                {% endfor %}
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-3">
+                <button type="button" class="btn-action btn-view" data-toggle="modal" data-target="#viewAppModal{{ app.id }}">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button type="button" class="btn-action btn-edit" data-toggle="modal" data-target="#editAppModal{{ app.id }}">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button type="button" class="btn-action btn-delete" data-toggle="modal" data-target="#deleteAppModal{{ app.id }}">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </td>
+    </tr>
+
+    <!-- View App Modal -->
+    <div class="modal fade" id="viewAppModal{{ app.id }}" tabindex="-1" role="dialog" aria-labelledby="viewAppModalLabel{{ app.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewAppModalLabel{{ app.id }}">Social Application Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-6">
+                        <div class="flex items-center mb-4">
+                            <div class="h-12 w-12 rounded-full flex items-center justify-center
+                                {% if app.provider == 'google' %}bg-red-100 text-red-600
+                                {% elif app.provider == 'facebook' %}bg-blue-100 text-blue-600
+                                {% elif app.provider == 'linkedin' %}bg-blue-800 text-white
+                                {% elif app.provider == 'github' %}bg-gray-800 text-white
+                                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                                <i class="fab fa-{{ app.provider }} text-2xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-xl font-medium">{{ app.name }}</div>
+                                <div class="text-md text-gray-500">{{ app.provider|title }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Application Details</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="mb-4">
+                                <div class="text-sm font-medium text-gray-500">Client ID</div>
+                                <div class="relative">
+                                    <input type="password" id="client-id-{{ app.id }}" value="{{ app.client_id }}" class="form-control pr-10 mt-1" readonly>
+                                    <button type="button" id="toggle-client-id-{{ app.id }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="text-sm font-medium text-gray-500">Secret Key</div>
+                                <div class="relative">
+                                    <input type="password" id="secret-key-{{ app.id }}" value="{{ app.secret }}" class="form-control pr-10 mt-1" readonly>
+                                    <button type="button" id="toggle-secret-key-{{ app.id }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {% if app.key %}
+                            <div class="mb-4">
+                                <div class="text-sm font-medium text-gray-500">API Key</div>
+                                <div class="relative">
+                                    <input type="password" id="api-key-{{ app.id }}" value="{{ app.key }}" class="form-control pr-10 mt-1" readonly>
+                                    <button type="button" id="toggle-api-key-{{ app.id }}" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Sites</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            {% if app.sites.exists %}
+                            <div class="flex flex-wrap gap-2">
+                                {% for site in app.sites.all %}
+                                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        {{ site.name }} ({{ site.domain }})
+                                    </span>
+                                {% empty %}
+                                    <span class="text-gray-500">No sites configured</span>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
+                                <p class="text-sm">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Site configuration is not available. Please configure django.contrib.sites in your project settings.
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Usage Statistics</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Connected Accounts</div>
+                                    <div class="text-xl font-semibold">{{ app.socialaccount_set.count }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Active Tokens</div>
+                                    <div class="text-xl font-semibold">{{ app.socialtoken_set.count }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-500">Last Used</div>
+                                    <div class="text-xl font-semibold">
+                                        {% if app.socialtoken_set.exists %}
+                                            {{ app.socialtoken_set.all.0.created_at|date:"M d, Y" }}
+                                        {% else %}
+                                            Never
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" data-toggle="modal" data-target="#editAppModal{{ app.id }}">
+                        Edit Application
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit App Modal -->
+    <div class="modal fade" id="editAppModal{{ app.id }}" tabindex="-1" role="dialog" aria-labelledby="editAppModalLabel{{ app.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAppModalLabel{{ app.id }}">Edit Social Application</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{% url 'custom_admin:social_application_management' %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="app_id" value="{{ app.id }}">
+                    <div class="modal-body">
+                        <div class="form-group mb-4">
+                            <label for="edit-provider-{{ app.id }}" class="block text-gray-700 text-sm font-bold mb-2">Provider:</label>
+                            <select id="edit-provider-{{ app.id }}" name="provider" class="form-control" required>
+                                <option value="google" {% if app.provider == 'google' %}selected{% endif %}>Google</option>
+                                <option value="facebook" {% if app.provider == 'facebook' %}selected{% endif %}>Facebook</option>
+                                <option value="github" {% if app.provider == 'github' %}selected{% endif %}>GitHub</option>
+                                <option value="linkedin" {% if app.provider == 'linkedin' %}selected{% endif %}>LinkedIn</option>
+                                <option value="twitter" {% if app.provider == 'twitter' %}selected{% endif %}>Twitter</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="edit-name-{{ app.id }}" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                            <input type="text" id="edit-name-{{ app.id }}" name="name" value="{{ app.name }}" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="edit-client-id-{{ app.id }}" class="block text-gray-700 text-sm font-bold mb-2">Client ID:</label>
+                            <input type="text" id="edit-client-id-{{ app.id }}" name="client_id" value="{{ app.client_id }}" class="form-control" required>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="edit-secret-{{ app.id }}" class="block text-gray-700 text-sm font-bold mb-2">Secret Key:</label>
+                            <input type="text" id="edit-secret-{{ app.id }}" name="secret" value="{{ app.secret }}" class="form-control" required>
+                        </div>
+                        {% if app.provider == 'twitter' %}
+                        <div class="form-group mb-4">
+                            <label for="edit-key-{{ app.id }}" class="block text-gray-700 text-sm font-bold mb-2">API Key:</label>
+                            <input type="text" id="edit-key-{{ app.id }}" name="key" value="{{ app.key }}" class="form-control">
+                        </div>
+                        {% endif %}
+                        {% if all_sites %}
+                        <div class="form-group mb-4">
+                            <label for="edit-sites-{{ app.id }}" class="block text-gray-700 text-sm font-bold mb-2">Sites:</label>
+                            <select id="edit-sites-{{ app.id }}" name="sites" class="form-control" multiple>
+                                {% for site in all_sites %}
+                                    <option value="{{ site.id }}" {% if site in app.sites.all %}selected{% endif %}>{{ site.name }} ({{ site.domain }})</option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-gray-500">Hold Ctrl/Cmd to select multiple sites. If none are selected, the default site will be used.</small>
+                        </div>
+                        {% else %}
+                        <div class="form-group mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Sites:</label>
+                            <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
+                                <p class="text-sm">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Site configuration is not available. Please configure django.contrib.sites in your project settings.
+                                </p>
+                            </div>
+                            <input type="hidden" name="sites" value="1">
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete App Modal -->
+    <div class="modal fade" id="deleteAppModal{{ app.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteAppModalLabel{{ app.id }}" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteAppModalLabel{{ app.id }}">Delete Social Application</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the social application <strong>{{ app.name }}</strong>?</p>
+                    {% if app.socialaccount_set.exists %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Warning: This application has {{ app.socialaccount_set.count }} connected user accounts. Deleting it will prevent these users from logging in using {{ app.provider|title }}.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <form action="{% url 'custom_admin:social_application_management' %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="app_id" value="{{ app.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <tr>
+        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+            <div class="flex flex-col items-center justify-center py-8">
+                <i class="fas fa-plug text-gray-400 text-5xl mb-4"></i>
+                <p class="text-lg font-medium">No social applications found</p>
+                <p class="text-sm text-gray-500 mt-1">Add a social application to enable social login</p>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+{% endblock %}
+
+{% block modals %}
+<!-- Add App Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Add New Social Application</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{% url 'custom_admin:social_application_management' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+                <div class="modal-body">
+                    <div class="form-group mb-4">
+                        <label for="add-provider" class="block text-gray-700 text-sm font-bold mb-2">Provider:</label>
+                        <select id="add-provider" name="provider" class="form-control" required>
+                            <option value="">Select a provider</option>
+                            <option value="google">Google</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="github">GitHub</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="twitter">Twitter</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="add-name" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                        <input type="text" id="add-name" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="add-client-id" class="block text-gray-700 text-sm font-bold mb-2">Client ID:</label>
+                        <input type="text" id="add-client-id" name="client_id" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="add-secret" class="block text-gray-700 text-sm font-bold mb-2">Secret Key:</label>
+                        <input type="text" id="add-secret" name="secret" class="form-control" required>
+                    </div>
+                    <div id="api-key-container" class="form-group mb-4" style="display: none;">
+                        <label for="add-key" class="block text-gray-700 text-sm font-bold mb-2">API Key:</label>
+                        <input type="text" id="add-key" name="key" class="form-control">
+                        <small class="text-gray-500">Required for Twitter</small>
+                    </div>
+                    {% if all_sites %}
+                    <div class="form-group mb-4">
+                        <label for="add-sites" class="block text-gray-700 text-sm font-bold mb-2">Sites:</label>
+                        <select id="add-sites" name="sites" class="form-control" multiple>
+                            {% for site in all_sites %}
+                                <option value="{{ site.id }}">{{ site.name }} ({{ site.domain }})</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-gray-500">Hold Ctrl/Cmd to select multiple sites. If none are selected, the default site will be used.</small>
+                    </div>
+                    {% else %}
+                    <div class="form-group mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">Sites:</label>
+                        <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
+                            <p class="text-sm">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Site configuration is not available. Please configure django.contrib.sites in your project settings.
+                            </p>
+                        </div>
+                        <input type="hidden" name="sites" value="1">
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Application</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block common_js %}
+// Filter functionality
+document.getElementById('provider-filter').addEventListener('change', function() {
+    applyFilters();
+});
+
+document.getElementById('search-button').addEventListener('click', function() {
+    applyFilters();
+});
+
+document.getElementById('search-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        applyFilters();
+    }
+});
+
+function applyFilters() {
+    const provider = document.getElementById('provider-filter').value;
+    const searchQuery = document.getElementById('search-input').value;
+
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+
+    if (provider) {
+        params.set('provider', provider);
+    } else {
+        params.delete('provider');
+    }
+
+    if (searchQuery) {
+        params.set('search', searchQuery);
+    } else {
+        params.delete('search');
+    }
+
+    window.location.href = `?${params.toString()}`;
+}
+
+// Add button styling for action buttons
+document.querySelectorAll('.btn-action').forEach(function(button) {
+    button.classList.add('inline-flex', 'items-center', 'justify-center', 'p-2', 'rounded-full', 'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2');
+
+    if (button.classList.contains('btn-view')) {
+        button.classList.add('text-blue-600', 'hover:text-blue-800', 'focus:ring-blue-500');
+    } else if (button.classList.contains('btn-edit')) {
+        button.classList.add('text-indigo-600', 'hover:text-indigo-800', 'focus:ring-indigo-500');
+    } else if (button.classList.contains('btn-delete')) {
+        button.classList.add('text-red-600', 'hover:text-red-800', 'focus:ring-red-500');
+    }
+});
+
+// Toggle visibility for sensitive information
+document.querySelectorAll('[id^="toggle-client-id-"]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const id = this.id.replace('toggle-client-id-', '');
+        const input = document.getElementById('client-id-' + id);
+        const icon = this.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+});
+
+document.querySelectorAll('[id^="toggle-secret-key-"]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const id = this.id.replace('toggle-secret-key-', '');
+        const input = document.getElementById('secret-key-' + id);
+        const icon = this.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+});
+
+document.querySelectorAll('[id^="toggle-api-key-"]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        const id = this.id.replace('toggle-api-key-', '');
+        const input = document.getElementById('api-key-' + id);
+        const icon = this.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+});
+
+// Show/hide API key field based on provider selection
+document.getElementById('add-provider').addEventListener('change', function() {
+    const provider = this.value;
+    const apiKeyContainer = document.getElementById('api-key-container');
+
+    if (provider === 'twitter') {
+        apiKeyContainer.style.display = 'block';
+    } else {
+        apiKeyContainer.style.display = 'none';
+    }
+});
+{% endblock %}

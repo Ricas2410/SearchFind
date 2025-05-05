@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Analyze Cover Letter" %} | SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "AI Cover Letter Analysis" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Get professional feedback on your cover letter" %}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Submit Your Cover Letter" %}</h2>
+            </div>
+            <div class="p-6">
+                <form method="post" action="{% url 'subscriptions:analyze_cover_letter' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-6">
+                        <label for="cover_letter" class="block text-sm font-medium text-gray-700 mb-2">{% trans "Paste your cover letter here" %}</label>
+                        <textarea id="cover_letter" name="cover_letter" rows="12" class="w-full p-3 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="job_id" class="block text-sm font-medium text-gray-700 mb-2">{% trans "Select a job (optional)" %}</label>
+                        <p class="text-sm text-gray-500 mb-2">{% trans "If you're writing this cover letter for a specific job, select it for more targeted feedback." %}</p>
+                        <select id="job_id" name="job_id" class="w-full p-3 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            <option value="">{% trans "-- Select a job (optional) --" %}</option>
+                            {% for application in applications %}
+                                <option value="{{ application.job.id }}">{{ application.job.title }} - {{ application.job.company.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-300 flex items-center">
+                            <i class="fas fa-search mr-2"></i> {% trans "Analyze Cover Letter" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Cover Letter Tips" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-4">{% trans "Structure" %}</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Start with a professional greeting" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Include a strong opening paragraph that mentions the position" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Highlight relevant skills and experiences in the body" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "End with a call to action and professional closing" %}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-4">{% trans "Content" %}</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Tailor your letter to the specific job and company" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Use specific examples and achievements" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Keep it concise (250-400 words)" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Proofread carefully for grammar and spelling" %}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

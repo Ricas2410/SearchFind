@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Resume Improvement Suggestions - SearchFind{% endblock %}
+
+{% block content %}
+<div class="py-10 bg-gray-50">
+    <div class="container max-w-4xl mx-auto px-4">
+        <div class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Resume Improvement Suggestions</h1>
+            <p class="text-lg text-gray-600">
+                Enhance your chances of getting an interview for <span class="font-semibold">{{ job.title }}</span> at {{ job.company.company_name }}
+            </p>
+        </div>
+
+        <div class="flex justify-center mb-8">
+            <div class="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden w-full">
+                <div class="p-6">
+                    <!-- Match Score Banner -->
+                    <div class="flex items-center justify-between mb-6 p-4 rounded-lg {% if results.match_percentage >= 85 %}bg-green-100{% elif results.match_percentage >= 70 %}bg-blue-100{% elif results.match_percentage >= 50 %}bg-yellow-100{% else %}bg-red-100{% endif %}">
+                        <div>
+                            <h2 class="text-xl font-semibold {% if results.match_percentage >= 85 %}text-green-800{% elif results.match_percentage >= 70 %}text-blue-800{% elif results.match_percentage >= 50 %}text-yellow-800{% else %}text-red-800{% endif %}">
+                                {{ results.match_percentage }}% Match
+                            </h2>
+                            <p class="text-gray-600">Your resume's match to this job's requirements</p>
+                        </div>
+                        <div class="text-5xl {% if results.match_percentage >= 85 %}text-green-500{% elif results.match_percentage >= 70 %}text-blue-500{% elif results.match_percentage >= 50 %}text-yellow-500{% else %}text-red-500{% endif %}">
+                            {% if results.match_percentage >= 85 %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif results.match_percentage >= 70 %}
+                                <i class="fas fa-thumbs-up"></i>
+                            {% elif results.match_percentage >= 50 %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% else %}
+                                <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Match Breakdown -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Match Analysis</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Skills Match -->
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-700">Skills Match</span>
+                                    <span class="text-sm font-medium">{{ results.skill_match }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ results.skill_match }}%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Experience Match -->
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-700">Experience Match</span>
+                                    <span class="text-sm font-medium">{{ results.experience_match }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-green-600 h-2.5 rounded-full" style="width: {{ results.experience_match }}%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Education Match -->
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm font-medium text-gray-700">Education Match</span>
+                                    <span class="text-sm font-medium">{{ results.education_match }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div class="bg-purple-600 h-2.5 rounded-full" style="width: {{ results.education_match }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Missing Skills -->
+                    {% if results.missing_skills %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Missing Key Skills</h3>
+                        <p class="text-gray-600 mb-4">These skills were mentioned in the job description but weren't found in your resume:</p>
+                        <div class="flex flex-wrap gap-2">
+                            {% for skill in results.missing_skills %}
+                                <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Improvement Suggestions -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Tailored Improvement Suggestions</h3>
+                        
+                        {% if results.improvement_suggestions.critical %}
+                        <div class="mb-5">
+                            <h4 class="font-medium text-red-600 flex items-center mb-2">
+                                <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                Critical Changes
+                            </h4>
+                            <ul class="space-y-2 ml-6">
+                                {% for suggestion in results.improvement_suggestions.critical %}
+                                    <li class="flex items-start">
+                                        <span class="text-red-500 mr-2">•</span>
+                                        <span>{{ suggestion.text }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        {% if results.improvement_suggestions.important %}
+                        <div class="mb-5">
+                            <h4 class="font-medium text-orange-600 flex items-center mb-2">
+                                <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                Important Improvements
+                            </h4>
+                            <ul class="space-y-2 ml-6">
+                                {% for suggestion in results.improvement_suggestions.important %}
+                                    <li class="flex items-start">
+                                        <span class="text-orange-500 mr-2">•</span>
+                                        <span>{{ suggestion.text }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        {% if results.improvement_suggestions.recommended %}
+                        <div class="mb-5">
+                            <h4 class="font-medium text-blue-600 flex items-center mb-2">
+                                <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                Recommended Updates
+                            </h4>
+                            <ul class="space-y-2 ml-6">
+                                {% for suggestion in results.improvement_suggestions.recommended %}
+                                    <li class="flex items-start">
+                                        <span class="text-blue-500 mr-2">•</span>
+                                        <span>{{ suggestion.text }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        {% if results.improvement_suggestions.formatting %}
+                        <div class="mb-5">
+                            <h4 class="font-medium text-gray-600 flex items-center mb-2">
+                                <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z"></path>
+                                    <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd"></path>
+                                </svg>
+                                Formatting Improvements
+                            </h4>
+                            <ul class="space-y-2 ml-6">
+                                {% for suggestion in results.improvement_suggestions.formatting %}
+                                    <li class="flex items-start">
+                                        <span class="text-gray-500 mr-2">•</span>
+                                        <span>{{ suggestion.text }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        {% if results.improvement_suggestions.long_term %}
+                        <div class="mb-5">
+                            <h4 class="font-medium text-indigo-600 flex items-center mb-2">
+                                <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                                </svg>
+                                Long-Term Development
+                            </h4>
+                            <ul class="space-y-2 ml-6">
+                                {% for suggestion in results.improvement_suggestions.long_term %}
+                                    <li class="flex items-start">
+                                        <span class="text-indigo-500 mr-2">•</span>
+                                        <span>{{ suggestion.text }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Focused Resume Outline -->
+                    {% if results.focused_resume %}
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Resume Focus Areas</h3>
+                        <p class="text-gray-600 mb-4">For this job application, consider adjusting your resume to focus on:</p>
+                        
+                        <div class="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                            <div class="mb-3">
+                                <h4 class="font-medium text-blue-800">Professional Summary</h4>
+                                <p class="text-gray-700">{{ results.focused_resume.summary }}</p>
+                            </div>
+                            
+                            {% if results.focused_resume.skills_to_emphasize %}
+                            <div class="mb-3">
+                                <h4 class="font-medium text-blue-800">Key Skills to Emphasize</h4>
+                                <div class="flex flex-wrap gap-2 mt-1">
+                                    {% for skill in results.focused_resume.skills_to_emphasize %}
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <h4 class="font-medium text-blue-800">Experience Focus</h4>
+                                <p class="text-gray-700">{{ results.focused_resume.experience_focus }}</p>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h4 class="font-medium text-blue-800">Education Presentation</h4>
+                                <p class="text-gray-700">{{ results.focused_resume.education_presentation }}</p>
+                            </div>
+                            
+                            {% if results.focused_resume.additional_sections %}
+                            <div>
+                                <h4 class="font-medium text-blue-800">Consider Adding These Sections</h4>
+                                <ul class="list-disc list-inside text-gray-700">
+                                    {% for section in results.focused_resume.additional_sections %}
+                                        <li>{{ section }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-between">
+                        <div>
+                            <a href="{% url 'subscriptions:resume_builder' %}?job_id={{ job.id }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
+                                Update Your Resume
+                            </a>
+                        </div>
+                        
+                        <div class="flex space-x-4">
+                            <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="inline-block bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium">
+                                Back to Job
+                            </a>
+                            
+                            <form action="{% url 'jobs:submit_application' job_id=job.id %}" method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" name="skip_suggestions" value="true">
+                                <button type="submit" class="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium">
+                                    Apply Anyway
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Feature Badge -->
+        <div class="text-center">
+            <div class="inline-flex items-center px-4 py-2 bg-indigo-100 text-indigo-800 rounded-full">
+                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"></path>
+                </svg>
+                <span>Pro Feature</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation for suggestions - staggered entrance
+        const suggestions = document.querySelectorAll('.improvement-suggestions li');
+        suggestions.forEach((suggestion, index) => {
+            suggestion.style.opacity = '0';
+            suggestion.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                suggestion.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                suggestion.style.opacity = '1';
+                suggestion.style.transform = 'translateY(0)';
+            }, 100 * index);
+        });
+    });
+</script>
+{% endblock %}

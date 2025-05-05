@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /my-admin/
+Disallow: /accounts/login/
+Disallow: /accounts/signup/
+Disallow: /accounts/password/
+Disallow: /summernote/
+Disallow: /messages/
+Disallow: /subscriptions/payment/
+
+Sitemap: {{ site_url }}/sitemap.xml

@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Settings - SearchFind{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-6">Privacy Settings</h1>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Profile Visibility -->
+            <div class="border-b border-gray-200 pb-6">
+                <h2 class="text-lg font-semibold mb-4">Profile Visibility</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="is_profile_public" id="id_is_profile_public" 
+                                   {% if user.is_profile_public %}checked{% endif %}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="id_is_profile_public" class="font-medium text-gray-700">Make my profile public</label>
+                            <p class="text-gray-500">Allow employers to find your profile when searching for candidates</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="show_resume" id="id_show_resume" 
+                                   {% if user.show_resume %}checked{% endif %}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="id_show_resume" class="font-medium text-gray-700">Show my resume</label>
+                            <p class="text-gray-500">Make your resume visible to employers who view your profile</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Information Visibility -->
+            <div class="border-b border-gray-200 pb-6">
+                <h2 class="text-lg font-semibold mb-4">Information Visibility</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="show_contact_info" id="id_show_contact_info" 
+                                   {% if user.show_contact_info %}checked{% endif %}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="id_show_contact_info" class="font-medium text-gray-700">Show my contact information</label>
+                            <p class="text-gray-500">Make your email and phone number visible to employers</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="show_education" id="id_show_education" 
+                                   {% if user.show_education %}checked{% endif %}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="id_show_education" class="font-medium text-gray-700">Show my education</label>
+                            <p class="text-gray-500">Make your education history visible to employers</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="show_experience" id="id_show_experience" 
+                                   {% if user.show_experience %}checked{% endif %}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="id_show_experience" class="font-medium text-gray-700">Show my work experience</label>
+                            <p class="text-gray-500">Make your work experience visible to employers</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" name="show_skills" id="id_show_skills" 
+                                   {% if user.show_skills %}checked{% endif %}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="id_show_skills" class="font-medium text-gray-700">Show my skills</label>
+                            <p class="text-gray-500">Make your skills visible to employers</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blocked Users -->
+            <div>
+                <h2 class="text-lg font-semibold mb-4">Blocked Users</h2>
+                
+                {% if blocked_users %}
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <ul class="divide-y divide-gray-200">
+                            {% for blocked in blocked_users %}
+                                <li class="py-3 flex justify-between items-center">
+                                    <div class="flex items-center">
+                                        {% if blocked.blocked_user.profile_picture %}
+                                            <img class="h-10 w-10 rounded-full mr-3" src="{{ blocked.blocked_user.profile_picture.url }}" alt="{{ blocked.blocked_user.get_full_name }}">
+                                        {% else %}
+                                            <div class="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center mr-3">
+                                                {{ blocked.blocked_user.first_name|first|upper }}{{ blocked.blocked_user.last_name|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <p class="text-sm font-medium text-gray-900">{{ blocked.blocked_user.get_full_name }}</p>
+                                            <p class="text-sm text-gray-500">{{ blocked.blocked_user.email }}</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" 
+                                            onclick="document.getElementById('unblock-form-{{ blocked.id }}').submit();" 
+                                            class="text-red-600 hover:text-red-800">
+                                        Unblock
+                                    </button>
+                                    <form id="unblock-form-{{ blocked.id }}" method="post" action="{% url 'accounts:unblock_user' blocked_id=blocked.id %}" class="hidden">
+                                        {% csrf_token %}
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <p class="text-gray-500 mb-4">You haven't blocked any users.</p>
+                {% endif %}
+                
+                <p class="text-sm text-gray-500">
+                    Blocked users cannot message you or see your profile. You can unblock users at any time.
+                </p>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                    Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

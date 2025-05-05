@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Requirements Optimization" %} | SearchFind{% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-card {
+        transition: all 0.3s ease;
+    }
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "Job Requirements Optimization" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "AI analysis and suggestions for your job requirements" %}</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Original Requirements -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                    <div class="p-6 bg-blue-50 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold text-gray-800">{% trans "Original Requirements" %}</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-50 p-4 rounded-md border border-gray-200 whitespace-pre-wrap">{{ original_requirements }}</div>
+                    </div>
+                </div>
+
+                <!-- Categorized Requirements -->
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                    <div class="p-6 bg-green-50 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold text-gray-800">{% trans "Categorized Requirements" %}</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {% if optimization.categorized_requirements.technical_skills %}
+                            <div class="bg-white p-4 rounded-md border border-gray-200 category-card">
+                                <h3 class="font-semibold text-gray-800 mb-3">{% trans "Technical Skills" %}</h3>
+                                <ul class="space-y-2">
+                                    {% for skill in optimization.categorized_requirements.technical_skills %}
+                                        <li class="flex items-start">
+                                            <i class="fas fa-code text-blue-500 mt-1 mr-2"></i>
+                                            <span>{{ skill }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if optimization.categorized_requirements.soft_skills %}
+                            <div class="bg-white p-4 rounded-md border border-gray-200 category-card">
+                                <h3 class="font-semibold text-gray-800 mb-3">{% trans "Soft Skills" %}</h3>
+                                <ul class="space-y-2">
+                                    {% for skill in optimization.categorized_requirements.soft_skills %}
+                                        <li class="flex items-start">
+                                            <i class="fas fa-users text-purple-500 mt-1 mr-2"></i>
+                                            <span>{{ skill }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if optimization.categorized_requirements.education %}
+                            <div class="bg-white p-4 rounded-md border border-gray-200 category-card">
+                                <h3 class="font-semibold text-gray-800 mb-3">{% trans "Education" %}</h3>
+                                <ul class="space-y-2">
+                                    {% for item in optimization.categorized_requirements.education %}
+                                        <li class="flex items-start">
+                                            <i class="fas fa-graduation-cap text-green-500 mt-1 mr-2"></i>
+                                            <span>{{ item }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if optimization.categorized_requirements.experience %}
+                            <div class="bg-white p-4 rounded-md border border-gray-200 category-card">
+                                <h3 class="font-semibold text-gray-800 mb-3">{% trans "Experience" %}</h3>
+                                <ul class="space-y-2">
+                                    {% for item in optimization.categorized_requirements.experience %}
+                                        <li class="flex items-start">
+                                            <i class="fas fa-briefcase text-orange-500 mt-1 mr-2"></i>
+                                            <span>{{ item }}</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optimization Suggestions -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+                    <div class="p-4 bg-blue-50 border-b border-gray-200">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "Optimization Suggestions" %}</h2>
+                    </div>
+                    <div class="p-4">
+                        <ul class="space-y-2">
+                            {% for suggestion in optimization.optimization_suggestions %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                    <span>{{ suggestion }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+                    <div class="p-4 bg-green-50 border-b border-green-200">
+                        <h2 class="text-lg font-semibold text-gray-800">{% trans "Inclusive Alternatives" %}</h2>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-sm text-gray-600 mb-4">{% trans "Consider replacing these phrases with more inclusive alternatives:" %}</p>
+                        
+                        <div class="space-y-3">
+                            {% for phrase, alternative in optimization.inclusive_alternatives.items %}
+                                <div class="flex items-center">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-red-600">{{ phrase }}</p>
+                                    </div>
+                                    <div class="flex-none mx-2">
+                                        <i class="fas fa-arrow-right text-gray-400"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-green-600">{{ alternative }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{% url 'subscriptions:optimize_requirements' %}" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-arrow-left mr-1"></i> {% trans "Optimize Another Set of Requirements" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

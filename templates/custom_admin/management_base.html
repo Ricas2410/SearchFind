@@ -1,0 +1,110 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}{{ page_title|default:"Management" }} - Admin Dashboard{% endblock %}
+
+{% block header %}{{ page_title|default:"Management" }}{% endblock %}
+{% block breadcrumb %}{{ page_title|default:"Management" }}{% endblock %}
+
+{% block content %}
+    <!-- Actions -->
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            {% block filters %}
+            <!-- Search Form -->
+            {% if show_search|default:True %}
+            <form method="get" class="flex">
+                <input type="text" name="search" value="{{ search_query|default:'' }}" placeholder="Search..." 
+                       class="form-control rounded-r-none focus:z-10">
+                <button type="submit" class="btn btn-primary rounded-l-none">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+            {% endif %}
+            {% endblock %}
+        </div>
+        
+        <div>
+            {% block action_buttons %}
+            {% if show_add_button|default:True %}
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addItemModal">
+                <i class="fas fa-plus mr-2"></i> Add New {{ item_name|default:"Item" }}
+            </button>
+            {% endif %}
+            {% endblock %}
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        {% block main_content %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        {% block table_headers %}
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        {% endblock %}
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% block table_rows %}
+                    <tr>
+                        <td colspan="100%" class="px-6 py-4 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center py-8">
+                                <i class="fas fa-folder-open text-gray-400 text-5xl mb-4"></i>
+                                <p class="text-lg font-medium">No items found</p>
+                                <p class="text-sm text-gray-500 mt-1">Create your first item to get started</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endblock %}
+                </tbody>
+            </table>
+        </div>
+        {% endblock %}
+    </div>
+    
+    <!-- Modals -->
+    {% block modals %}
+    <!-- Add Item Modal -->
+    {% if show_add_button|default:True %}
+    <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="addItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addItemModalLabel">Add New {{ item_name|default:"Item" }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add">
+                    <div class="modal-body">
+                        {% block add_form_fields %}
+                        <div class="form-group mb-4">
+                            <label for="add-name" class="block text-gray-700 text-sm font-bold mb-2">Name:</label>
+                            <input type="text" id="add-name" name="name" class="form-control" required>
+                        </div>
+                        {% endblock %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add {{ item_name|default:"Item" }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Common JavaScript for management pages
+    {% block common_js %}
+    {% endblock %}
+</script>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block title %}Paystack Configuration - Admin Dashboard{% endblock %}
+
+{% block header %}Paystack Configuration{% endblock %}
+{% block breadcrumb %}Paystack Configuration{% endblock %}
+
+{% block content %}
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+        <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Payment Gateway Settings</h3>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500">Configure your Paystack payment gateway settings.</p>
+            </div>
+            <div class="flex items-center">
+                <span class="px-3 py-1 text-sm rounded-full {% if config.is_live_mode %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                    {% if config.is_live_mode %}Live Mode{% else %}Test Mode{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="border-t border-gray-200">
+            <form action="{% url 'custom_admin:paystack_config_management' %}" method="post" class="p-6">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="form-group mb-4">
+                            <label for="public_key" class="block text-gray-700 text-sm font-bold mb-2">Public Key:</label>
+                            <input type="text" id="public_key" name="public_key" value="{{ config.public_key }}" class="form-control" required>
+                            <small class="text-gray-500">Your Paystack public key</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="secret_key" class="block text-gray-700 text-sm font-bold mb-2">Secret Key:</label>
+                            <div class="relative">
+                                <input type="password" id="secret_key" name="secret_key" value="{{ config.secret_key }}" class="form-control pr-10" required>
+                                <button type="button" id="toggle-secret-key" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-gray-500">Your Paystack secret key</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="is_live_mode" name="is_live_mode" {% if config.is_live_mode %}checked{% endif %}>
+                                <label class="custom-control-label" for="is_live_mode">Live Mode</label>
+                            </div>
+                            <small class="text-gray-500 block mt-1">Enable to use live keys, disable to use test keys</small>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="form-group mb-4">
+                            <label for="webhook_url" class="block text-gray-700 text-sm font-bold mb-2">Webhook URL:</label>
+                            <div class="flex">
+                                <input type="text" id="webhook_url" value="{{ webhook_url }}" class="form-control rounded-r-none bg-gray-100" readonly>
+                                <button type="button" id="copy-webhook-url" class="btn btn-outline-primary rounded-l-none">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <small class="text-gray-500">Add this URL to your Paystack dashboard webhooks</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="webhook_secret" class="block text-gray-700 text-sm font-bold mb-2">Webhook Secret:</label>
+                            <div class="relative">
+                                <input type="password" id="webhook_secret" name="webhook_secret" value="{{ config.webhook_secret }}" class="form-control pr-10">
+                                <button type="button" id="toggle-webhook-secret" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-gray-500">Your Paystack webhook secret</small>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="callback_url" class="block text-gray-700 text-sm font-bold mb-2">Callback URL:</label>
+                            <input type="text" id="callback_url" value="{{ callback_url }}" class="form-control bg-gray-100" readonly>
+                            <small class="text-gray-500">This URL is used for payment redirects</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="currency" class="block text-gray-700 text-sm font-bold mb-2">Currency:</label>
+                    <select id="currency" name="currency" class="form-control" required>
+                        <option value="NGN" {% if config.currency == 'NGN' %}selected{% endif %}>Nigerian Naira (NGN)</option>
+                        <option value="USD" {% if config.currency == 'USD' %}selected{% endif %}>US Dollar (USD)</option>
+                        <option value="GHS" {% if config.currency == 'GHS' %}selected{% endif %}>Ghanaian Cedi (GHS)</option>
+                        <option value="ZAR" {% if config.currency == 'ZAR' %}selected{% endif %}>South African Rand (ZAR)</option>
+                        <option value="KES" {% if config.currency == 'KES' %}selected{% endif %}>Kenyan Shilling (KES)</option>
+                    </select>
+                    <small class="text-gray-500">Paystack primarily supports NGN (Nigerian Naira)</small>
+                </div>
+
+                <div class="mt-6 flex justify-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i> Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Test Payment</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Verify your Paystack integration is working correctly.</p>
+        </div>
+
+        <div class="border-t border-gray-200 p-6">
+            <div class="mb-4">
+                <p class="text-sm text-gray-600">Make a test payment to verify your Paystack integration is working correctly. This will create a real transaction in test mode.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-md border border-blue-200">
+                            <p class="text-blue-800 text-sm">We've simplified the test payment process to ensure it works correctly with Paystack's test environment.</p>
+                        </div>
+
+                        <a href="{% url 'custom_admin:simple_paystack_test' %}" class="inline-block w-full text-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-md transition duration-300">
+                            <i class="fas fa-credit-card mr-2"></i> Make Simple Test Payment
+                        </a>
+
+                        <div class="text-sm text-gray-600 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i> This will use Paystack's test keys and GHS currency (Ghanaian Cedi)
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-md font-semibold mb-2">Integration Status</h4>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    {% if config.is_configured %}
+                                    <span class="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </span>
+                                    {% else %}
+                                    <span class="h-6 w-6 rounded-full bg-red-100 flex items-center justify-center">
+                                        <i class="fas fa-times text-red-600"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900">API Keys</p>
+                                    <p class="text-xs text-gray-500">
+                                        {% if config.is_configured %}
+                                        API keys are configured
+                                        {% else %}
+                                        API keys are not configured
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    {% if config.webhook_secret %}
+                                    <span class="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </span>
+                                    {% else %}
+                                    <span class="h-6 w-6 rounded-full bg-yellow-100 flex items-center justify-center">
+                                        <i class="fas fa-exclamation text-yellow-600"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900">Webhook</p>
+                                    <p class="text-xs text-gray-500">
+                                        {% if config.webhook_secret %}
+                                        Webhook is configured
+                                        {% else %}
+                                        Webhook is not configured (recommended)
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <span class="h-6 w-6 rounded-full {% if config.is_live_mode %}bg-green-100{% else %}bg-yellow-100{% endif %} flex items-center justify-center">
+                                        <i class="fas {% if config.is_live_mode %}fa-check text-green-600{% else %}fa-exclamation text-yellow-600{% endif %}"></i>
+                                    </span>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900">Mode</p>
+                                    <p class="text-xs text-gray-500">
+                                        {% if config.is_live_mode %}
+                                        Live mode is enabled
+                                        {% else %}
+                                        Test mode is enabled
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle password visibility
+    document.getElementById('toggle-secret-key').addEventListener('click', function() {
+        const secretKeyInput = document.getElementById('secret_key');
+        const icon = this.querySelector('i');
+
+        if (secretKeyInput.type === 'password') {
+            secretKeyInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            secretKeyInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+
+    document.getElementById('toggle-webhook-secret').addEventListener('click', function() {
+        const webhookSecretInput = document.getElementById('webhook_secret');
+        const icon = this.querySelector('i');
+
+        if (webhookSecretInput.type === 'password') {
+            webhookSecretInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            webhookSecretInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+
+    // Copy webhook URL to clipboard
+    document.getElementById('copy-webhook-url').addEventListener('click', function() {
+        const webhookUrlInput = document.getElementById('webhook_url');
+        webhookUrlInput.select();
+        document.execCommand('copy');
+
+        // Show copied message
+        const originalText = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+            this.innerHTML = originalText;
+        }, 2000);
+    });
+
+    // Update currency display in test payment form
+    document.getElementById('currency').addEventListener('change', function() {
+        const currencyValue = this.value;
+        const currencyDisplay = document.querySelector('.inline-flex.items-center.px-3.rounded-l-md');
+        if (currencyDisplay) {
+            currencyDisplay.textContent = currencyValue;
+        }
+    });
+</script>
+{% endblock %}

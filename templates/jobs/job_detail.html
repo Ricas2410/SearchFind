@@ -1,0 +1,922 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} - SearchFind{% endblock %}
+
+{% block content %}
+<!-- Job Filter Bar -->
+<div class="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="flex items-center mb-4 md:mb-0">
+            <a href="{% url 'jobs:job_list' %}" class="text-blue-600 hover:text-blue-800 mr-4">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Jobs
+            </a>
+
+            <div class="hidden md:flex items-center space-x-4">
+                <a href="{% url 'jobs:job_list' %}?category={{ job.category.id }}" class="flex items-center text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-tag mr-1"></i> {{ job.category.name }}
+                </a>
+
+                <a href="{% url 'jobs:job_list' %}?job_type={{ job.job_type }}" class="flex items-center text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-briefcase mr-1"></i> {{ job.get_job_type_display }}
+                </a>
+
+                <a href="{% url 'jobs:job_list' %}?location={{ job.location }}" class="flex items-center text-gray-700 hover:text-blue-600">
+                    <i class="fas fa-map-marker-alt mr-1"></i> {{ job.location }}
+                </a>
+            </div>
+        </div>
+
+        <div class="flex space-x-3">
+            {% if user.is_authenticated and user.user_type == 'job_seeker' %}
+                <button id="save-job-btn" data-job-id="{{ job.id }}" class="{% if is_saved %}bg-red-100 text-red-700 hover:bg-red-200{% else %}bg-gray-200 text-gray-700 hover:bg-gray-300{% endif %} px-4 py-2 rounded-md flex items-center">
+                    <i class="{% if is_saved %}fas{% else %}far{% endif %} fa-heart mr-2"></i> {% if is_saved %}Saved{% else %}Save Job{% endif %}
+                </button>
+            {% endif %}
+
+            <div class="relative group">
+                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md flex items-center">
+                    <i class="fas fa-share-alt mr-2"></i> Share
+                </button>
+
+                <!-- Share Dropdown -->
+                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                        <i class="fab fa-facebook-f mr-2"></i> Facebook
+                    </a>
+                    <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text={{ job.title }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                        <i class="fab fa-twitter mr-2"></i> Twitter
+                    </a>
+                    <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.build_absolute_uri }}&title={{ job.title }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                        <i class="fab fa-linkedin-in mr-2"></i> LinkedIn
+                    </a>
+                    <a href="mailto:?subject={{ job.title }}&body={{ request.build_absolute_uri }}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                        <i class="fas fa-envelope mr-2"></i> Email
+                    </a>
+                </div>
+            </div>
+
+            <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md flex items-center" onclick="window.print()">
+                <i class="fas fa-print mr-2"></i> Print
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content - Job Details -->
+    <div class="lg:col-span-2">
+        <!-- Job Header -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+            <!-- Company Banner -->
+            <div class="h-32 bg-gradient-to-r from-blue-100 to-indigo-100 relative">
+                {% if job.company.cover_image %}
+                    <img src="{{ job.company.cover_image.url }}" alt="{{ job.company.company_name }} cover" class="w-full h-full object-cover">
+                {% endif %}
+
+                <!-- Company Logo -->
+                <div class="absolute -bottom-10 left-6 w-20 h-20 rounded-lg bg-white shadow-md p-1">
+                    {% if job.company.company_logo %}
+                        <img src="{{ job.company.company_logo.url }}" alt="{{ job.company.company_name }}" class="w-full h-full object-contain">
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center bg-blue-600 text-white text-2xl font-bold">
+                            {{ job.company.name|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Job Status Indicators -->
+                <div class="absolute top-4 right-4 flex space-x-2">
+                    {% if job.is_featured %}
+                        <span class="bg-yellow-500 text-white px-3 py-1 text-xs font-bold rounded-full">
+                            <i class="fas fa-star mr-1"></i> Featured
+                        </span>
+                    {% endif %}
+
+                    {% if job.is_remote %}
+                        <span class="bg-blue-600 text-white px-3 py-1 text-xs font-bold rounded-full">
+                            <i class="fas fa-home mr-1"></i> Remote
+                        </span>
+                    {% endif %}
+
+                    {% if job.is_expired %}
+                        <span class="bg-red-600 text-white px-3 py-1 text-xs font-bold rounded-full">
+                            <i class="fas fa-exclamation-circle mr-1"></i> Expired
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Job Info -->
+            <div class="pt-12 px-6 pb-6">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center mb-1">
+                            <a href="{% url 'jobs:company_detail' slug=job.company.slug %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                {{ job.company.company_name|default:job.company.name }}
+                            </a>
+                            <span class="mx-2 text-gray-400">•</span>
+                            <span class="text-gray-600 text-sm">Posted {{ job.created_at|timesince }} ago</span>
+                        </div>
+
+                        <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ job.title }}</h1>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="space-y-3">
+                                <div class="flex flex-wrap gap-3">
+                                    <div class="flex items-center text-gray-700">
+                                        <i class="fas fa-map-marker-alt text-gray-500 mr-2"></i>
+                                        <span>{{ job.location }}</span>
+                                    </div>
+
+                                    <div class="flex items-center text-gray-700">
+                                        <i class="fas fa-briefcase text-gray-500 mr-2"></i>
+                                        <span>{{ job.get_job_type_display }}</span>
+                                    </div>
+
+                                    <div class="flex items-center text-gray-700">
+                                        <i class="fas fa-user-graduate text-gray-500 mr-2"></i>
+                                        <span>{{ job.get_experience_level_display }}</span>
+                                    </div>
+                                </div>
+
+                                {% if job.application_deadline %}
+                                    <div class="flex items-center {% if job.is_expired %}text-red-600{% else %}text-blue-600{% endif %}">
+                                        <i class="fas fa-calendar-alt mr-2"></i>
+                                        <span>
+                                            {% if job.is_expired %}
+                                                Application deadline passed
+                                            {% else %}
+                                                Apply by {{ job.application_deadline|date:"F j, Y" }}
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    {% if job.salary_min and job.salary_max %}
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                            ${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}
+                                        </span>
+                                    {% elif job.salary_min %}
+                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                            ${{ job.salary_min|floatformat:0 }}+
+                                        </span>
+                                    {% endif %}
+
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                        {{ job.get_job_type_display }}
+                                    </span>
+
+                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
+                                        {{ job.get_experience_level_display }}
+                                    </span>
+                                </div>
+
+                                <div class="flex flex-wrap gap-2">
+                                    {% for skill in job.get_skills_as_list|slice:":3" %}
+                                        <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs">{{ skill }}</span>
+                                    {% endfor %}
+                                    {% if job.get_skills_as_list|length > 3 %}
+                                        <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-xs">+{{ job.get_skills_as_list|length|add:"-3" }} more</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-3 mt-6 border-t pt-6">
+                    {% if user.is_authenticated and user.user_type == 'job_seeker' %}
+                        {% if has_applied %}
+                            <button disabled class="bg-gray-300 text-gray-700 px-6 py-3 rounded-md cursor-not-allowed flex items-center">
+                                <i class="fas fa-check mr-2"></i> Applied
+                            </button>
+                        {% else %}
+                            {% if job.application_url %}
+                                <a href="{{ job.application_url }}" target="_blank" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md flex items-center"
+                                   onclick="return confirm('You are about to leave SearchFind and apply on the employer\'s website. {% if not job.is_external_url_verified %}This link has not been verified by our team. Please be cautious and ensure it is legitimate.{% endif %}')">
+                                    <i class="fas fa-external-link-alt mr-2"></i> Apply on Company Site
+                                    {% if not job.is_external_url_verified %}
+                                        <span class="ml-2 bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full">Unverified</span>
+                                    {% endif %}
+                                </a>
+
+                                {% if not job.is_external_url_verified %}
+                                    <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        <span>This external application link has not been verified by our team. Please be cautious of potential scams and never share sensitive personal information like bank details or passwords.</span>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <a href="#apply-section" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md flex items-center">
+                                    <i class="fas fa-paper-plane mr-2"></i> Apply Now
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    {% elif not user.is_authenticated %}
+                        <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md flex items-center">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Login to Apply
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Job Description -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Job Description</h2>
+            <div class="prose max-w-none">
+                {{ job.description|safe }}
+            </div>
+        </div>
+
+        <!-- Job Requirements -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Requirements</h2>
+            <div class="prose max-w-none">
+                {{ job.requirements|safe }}
+            </div>
+        </div>
+
+        <!-- Job Responsibilities -->
+        {% if job.responsibilities %}
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">Responsibilities</h2>
+                <div class="prose max-w-none">
+                    {{ job.responsibilities|safe }}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Skills Required -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">Skills Required</h2>
+            <div class="flex flex-wrap gap-2">
+                {% for skill in job.get_skills_as_list %}
+                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Application Form -->
+        {% if user.is_authenticated and user.user_type == 'job_seeker' and not has_applied %}
+            <div id="apply-section" class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">Apply for this Job</h2>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="{% if message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded mb-4 border">
+                            <div class="flex items-center">
+                                <i class="{% if message.tags == 'success' %}fas fa-check-circle{% elif message.tags == 'error' %}fas fa-exclamation-circle{% else %}fas fa-info-circle{% endif %} mr-2"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if job.is_expired %}
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <span>This job posting has expired and is no longer accepting applications.</span>
+                        </div>
+                    </div>
+                {% elif job.status == 'closed' %}
+                    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <span>This job posting has been closed by the employer and is no longer accepting applications.</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <form method="post" enctype="multipart/form-data" class="space-y-6" action="{% url 'jobs:job_detail' slug=job.slug %}" id="job-application-form">
+                        {% csrf_token %}
+
+                        <!-- Display form-wide errors -->
+                        {% if form.non_field_errors %}
+                            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                                {% for error in form.non_field_errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Resume Section -->
+                        {% if user.resume %}
+                            <div class="mb-4">
+                                <div class="flex items-center">
+                                    {{ form.use_profile_resume }}
+                                    <label for="{{ form.use_profile_resume.id_for_label }}" class="ml-2 block text-sm text-gray-700">Use resume from my profile</label>
+                                </div>
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-file-pdf mr-2"></i>
+                                    <a href="{{ user.resume.url }}" target="_blank" class="text-blue-600 hover:text-blue-800">{{ user.resume.name|slice:"9:" }}</a>
+                                </div>
+                            </div>
+
+                            <div id="resume-upload-field" class="hidden">
+                                <label for="{{ form.resume.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Upload Resume</label>
+                                {{ form.resume }}
+                                {% if form.resume.errors %}
+                                    <p class="text-red-600 text-sm mt-1">{{ form.resume.errors.0 }}</p>
+                                {% endif %}
+                                <p class="text-gray-500 text-xs mt-1">Accepted formats: PDF, DOC, DOCX (Max size: 5MB)</p>
+                            </div>
+                        {% else %}
+                            <div>
+                                <label for="{{ form.resume.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Upload Resume <span class="text-red-600">*</span></label>
+                                {{ form.resume }}
+                                {% if form.resume.errors %}
+                                    <p class="text-red-600 text-sm mt-1">{{ form.resume.errors.0 }}</p>
+                                {% endif %}
+                                <p class="text-gray-500 text-xs mt-1">Accepted formats: PDF, DOC, DOCX (Max size: 5MB)</p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Cover Letter Section -->
+                        <div>
+                            <label for="{{ form.cover_letter.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                Cover Letter {% if job.cover_letter_required %}<span class="text-red-600">*</span>{% else %}(Optional){% endif %}
+                            </label>
+                            {{ form.cover_letter }}
+                            {% if form.cover_letter.errors %}
+                                <p class="text-red-600 text-sm mt-1">{{ form.cover_letter.errors.0 }}</p>
+                            {% endif %}
+
+                            {% if has_pro %}
+                                <div class="mt-2">
+                                    <a href="{% url 'subscriptions:generate_cover_letter' job_id=job.id %}" class="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                                        <i class="fas fa-magic mr-1"></i> Generate AI Cover Letter
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Application Terms -->
+                        <div class="bg-gray-50 p-4 rounded-md border border-gray-200">
+                            <p class="text-sm text-gray-700">
+                                By submitting this application, you confirm that all information provided is accurate and complete.
+                                Your application will be reviewed by the employer, and you'll be notified of any status changes.
+                            </p>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="flex items-center justify-between">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium flex items-center" id="submit-application-btn">
+                                <i class="fas fa-paper-plane mr-2"></i> Submit Application
+                            </button>
+                            <span class="text-sm text-gray-500">You'll be redirected to your dashboard after submission</span>
+                        </div>
+                    </form>
+
+                    <!-- Loading Overlay (Hidden by default) -->
+                    <div id="application-loading" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+                            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                            <p class="text-lg font-semibold">Submitting your application...</p>
+                            <p class="text-gray-600 mt-2">Please wait while we process your application.</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="lg:col-span-1 space-y-6">
+        <!-- Job Actions -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="space-y-4">
+                {% if user.is_authenticated and user.user_type == 'job_seeker' %}
+                    {% if not has_applied and not job.is_expired and job.status != 'closed' %}
+                        {% if job.application_url %}
+                            <a href="{{ job.application_url }}" target="_blank" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md flex items-center justify-center font-medium"
+                               onclick="return confirm('You are about to leave SearchFind and apply on the employer\'s website. {% if not job.is_external_url_verified %}This link has not been verified by our team. Please be cautious and ensure it is legitimate.{% endif %}')">
+                                <i class="fas fa-external-link-alt mr-2"></i> Apply on Company Site
+                            </a>
+                        {% else %}
+                            <a href="#apply-section" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md flex items-center justify-center font-medium">
+                                <i class="fas fa-paper-plane mr-2"></i> Apply Now
+                            </a>
+                        {% endif %}
+                    {% elif has_applied %}
+                        <div class="w-full bg-green-100 text-green-800 px-4 py-3 rounded-md flex items-center justify-center font-medium">
+                            <i class="fas fa-check-circle mr-2"></i> You've Applied
+                        </div>
+                    {% elif job.is_expired or job.status == 'closed' %}
+                        <div class="w-full bg-red-100 text-red-800 px-4 py-3 rounded-md flex items-center justify-center font-medium">
+                            <i class="fas fa-exclamation-circle mr-2"></i> No Longer Accepting Applications
+                        </div>
+                    {% endif %}
+
+                    <button id="save-job-btn" data-job-id="{{ job.id }}" class="w-full {% if is_saved %}bg-red-100 text-red-700 hover:bg-red-200{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %} px-4 py-3 rounded-md flex items-center justify-center font-medium">
+                        <i class="{% if is_saved %}fas{% else %}far{% endif %} fa-bookmark mr-2"></i> {% if is_saved %}Saved{% else %}Save Job{% endif %}
+                    </button>
+                {% elif not user.is_authenticated %}
+                    <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md flex items-center justify-center font-medium">
+                        <i class="fas fa-sign-in-alt mr-2"></i> Login to Apply
+                    </a>
+                {% endif %}
+
+                <div class="flex space-x-2">
+                    <button class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-md flex items-center justify-center" onclick="window.print()">
+                        <i class="fas fa-print mr-2"></i> Print
+                    </button>
+
+                    <div class="relative group flex-1">
+                        <button class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-md flex items-center justify-center">
+                            <i class="fas fa-share-alt mr-2"></i> Share
+                        </button>
+
+                        <!-- Share Dropdown -->
+                        <div class="absolute left-0 right-0 mt-2 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
+                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fab fa-facebook-f mr-2"></i> Facebook
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text={{ job.title }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fab fa-twitter mr-2"></i> Twitter
+                            </a>
+                            <a href="https://www.linkedin.com/shareArticle?mini=true&url={{ request.build_absolute_uri }}&title={{ job.title }}" target="_blank" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fab fa-linkedin-in mr-2"></i> LinkedIn
+                            </a>
+                            <a href="mailto:?subject={{ job.title }}&body={{ request.build_absolute_uri }}" class="block px-4 py-2 text-gray-700 hover:bg-blue-600 hover:text-white">
+                                <i class="fas fa-envelope mr-2"></i> Email
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if user.is_authenticated and user.user_type == 'job_seeker' %}
+            <!-- Job Match Score for Pro Users -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold mb-4">Job Match</h2>
+
+                {% if has_pro %}
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                <span class="text-xl font-bold text-blue-600">{{ match_score.overall_match|default:"?" }}%</span>
+                            </div>
+                            <div>
+                                <p class="font-medium">Match Score</p>
+                                <p class="text-sm text-gray-600">Based on your profile</p>
+                            </div>
+                        </div>
+                        <a href="{% url 'subscriptions:job_match_score' job_id=job.id %}" class="text-blue-600 hover:text-blue-800">
+                            View Details
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-crown text-blue-500 mt-1"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-blue-700">Upgrade to Pro to see how well your profile matches this job.</p>
+                                <p class="mt-2">
+                                    <a href="{% url 'subscriptions:plans' %}" class="text-sm font-medium text-blue-700 underline hover:text-blue-600">
+                                        Upgrade Now
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Job Summary -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">Job Summary</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <h3 class="text-gray-600 text-sm font-medium">Posted On</h3>
+                    <p>{{ job.created_at|date:"F j, Y" }}</p>
+                </div>
+
+                <div>
+                    <h3 class="text-gray-600 text-sm font-medium">Application Deadline</h3>
+                    {% if job.application_deadline %}
+                        <p>{{ job.application_deadline|date:"F j, Y" }}</p>
+                        {% if job.is_expired %}
+                            <p class="text-red-600 text-sm mt-1 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-1"></i> This job has expired
+                            </p>
+                        {% elif job.application_deadline|timeuntil == "0 minutes" %}
+                            <p class="text-orange-600 text-sm mt-1 flex items-center">
+                                <i class="fas fa-clock mr-1"></i> Expires today
+                            </p>
+                        {% elif job.application_deadline|timeuntil|slice:"-8:" == " minutes" or job.application_deadline|timeuntil|slice:"-5:" == " hour" or job.application_deadline|timeuntil|slice:"-6:" == " hours" %}
+                            <p class="text-orange-600 text-sm mt-1 flex items-center">
+                                <i class="fas fa-clock mr-1"></i> Expires in {{ job.application_deadline|timeuntil }}
+                            </p>
+                        {% elif job.application_deadline|timeuntil|slice:"-4:" == " day" or job.application_deadline|timeuntil|slice:"-5:" == " days" %}
+                            <p class="text-blue-600 text-sm mt-1 flex items-center">
+                                <i class="fas fa-clock mr-1"></i> Expires in {{ job.application_deadline|timeuntil }}
+                            </p>
+                        {% endif %}
+                    {% else %}
+                        <p>No deadline specified</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h3 class="text-gray-600 text-sm font-medium">Job Type</h3>
+                    <p>{{ job.get_job_type_display }}</p>
+                </div>
+
+                <div>
+                    <h3 class="text-gray-600 text-sm font-medium">Experience Level</h3>
+                    <p>{{ job.get_experience_level_display }}</p>
+                </div>
+
+                <div>
+                    <h3 class="text-gray-600 text-sm font-medium">Location</h3>
+                    <p>{{ job.location }}</p>
+                </div>
+
+                <div>
+                    <h3 class="text-gray-600 text-sm font-medium">Category</h3>
+                    <p>
+                        <a href="{% url 'jobs:category_detail' slug=job.category.slug %}" class="text-blue-600 hover:text-blue-800">
+                            {{ job.category.name }}
+                        </a>
+                    </p>
+                </div>
+
+                {% if job.salary_min or job.salary_max %}
+                    <div>
+                        <h3 class="text-gray-600 text-sm font-medium">Salary Range</h3>
+                        {% if job.salary_min and job.salary_max %}
+                            <p class="text-green-600 font-medium">${{ job.salary_min|floatformat:0 }} - ${{ job.salary_max|floatformat:0 }}</p>
+                        {% elif job.salary_min %}
+                            <p class="text-green-600 font-medium">${{ job.salary_min|floatformat:0 }}+</p>
+                        {% elif job.salary_max %}
+                            <p class="text-green-600 font-medium">Up to ${{ job.salary_max|floatformat:0 }}</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Company Information -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">Company Information</h2>
+
+            <div class="flex items-center mb-4">
+                {% if job.company.company_logo %}
+                    <img src="{{ job.company.company_logo.url }}" alt="{{ job.company.company_name }}" class="w-16 h-16 object-contain rounded-lg border border-gray-200 mr-4">
+                {% else %}
+                    <div class="w-16 h-16 rounded-lg bg-blue-600 text-white flex items-center justify-center text-2xl mr-4">
+                        {{ job.company.name|first|upper }}
+                    </div>
+                {% endif %}
+
+                <div>
+                    <a href="{% url 'jobs:company_detail' slug=job.company.slug %}" class="font-semibold hover:text-blue-600">
+                        {{ job.company.company_name|default:job.company.name }}
+                    </a>
+                    <p class="text-gray-600 text-sm">{{ job.company.industry }}</p>
+                </div>
+            </div>
+
+            {% if job.company.company_description %}
+                <div class="mb-4">
+                    <p class="text-gray-700">{{ job.company.company_description|truncatewords:30 }}</p>
+                </div>
+            {% endif %}
+
+            <div class="space-y-2 mb-4">
+                {% if job.company.company_website %}
+                    <a href="{{ job.company.company_website }}" target="_blank" class="text-blue-600 hover:text-blue-800 flex items-center">
+                        <i class="fas fa-globe mr-2"></i> Visit Website
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'jobs:company_detail' slug=job.company.slug %}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                    <i class="fas fa-building mr-2"></i> View Company Profile
+                </a>
+
+                <a href="{% url 'jobs:job_list' %}?company={{ job.company.id }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+                    <i class="fas fa-briefcase mr-2"></i> View All Jobs ({{ company_job_count }})
+                </a>
+            </div>
+
+            {% if job.company.specialties %}
+                <div>
+                    <h3 class="text-gray-600 text-sm font-medium mb-2">Specialties</h3>
+                    <div class="flex flex-wrap gap-2">
+                        {% for specialty in job.company.specialties.split|slice:":5" %}
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">{{ specialty|title }}</span>
+                        {% endfor %}
+                        {% if job.company.specialties.split|length > 5 %}
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">+{{ job.company.specialties.split|length|add:"-5" }} more</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Similar Jobs -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Similar Jobs</h2>
+                <a href="{% url 'jobs:job_list' %}?category={{ job.category.id }}" class="text-blue-600 hover:text-blue-800 text-sm">
+                    View All
+                </a>
+            </div>
+
+            <div id="similar-jobs-list" class="space-y-4">
+                {% for similar_job in similar_jobs %}
+                    <div class="border-b pb-4 last:border-b-0 last:pb-0 hover:bg-blue-50 transition-colors duration-200 -mx-4 px-4">
+                        <h3 class="font-semibold mb-1">
+                            <a href="{% url 'jobs:job_detail' slug=similar_job.slug %}" class="text-gray-800 hover:text-blue-600">{{ similar_job.title }}</a>
+                        </h3>
+
+                        <div class="flex items-center mb-1">
+                            <a href="{% url 'jobs:company_detail' slug=similar_job.company.slug %}" class="text-blue-600 hover:text-blue-800 text-sm">
+                                {{ similar_job.company.company_name|default:similar_job.company.name }}
+                            </a>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 text-sm text-gray-600 mb-2">
+                            <div class="flex items-center">
+                                <i class="fas fa-map-marker-alt mr-1 text-gray-400"></i>
+                                <span>{{ similar_job.location }}</span>
+                            </div>
+
+                            <div class="flex items-center">
+                                <i class="fas fa-briefcase mr-1 text-gray-400"></i>
+                                <span>{{ similar_job.get_job_type_display }}</span>
+                            </div>
+                        </div>
+
+                        {% if similar_job.salary_min and similar_job.salary_max %}
+                            <p class="text-green-600 text-sm font-medium">${{ similar_job.salary_min|floatformat:0 }} - ${{ similar_job.salary_max|floatformat:0 }}</p>
+                        {% elif similar_job.salary_min %}
+                            <p class="text-green-600 text-sm font-medium">${{ similar_job.salary_min|floatformat:0 }}+</p>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                    <div class="text-center py-4">
+                        <p class="text-gray-600">No similar jobs found.</p>
+                        <a href="{% url 'jobs:job_list' %}" class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
+                            Browse all jobs
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Save job functionality
+        const saveJobBtn = document.getElementById('save-job-btn');
+        if (saveJobBtn) {
+            saveJobBtn.addEventListener('click', function() {
+                const jobId = this.dataset.jobId;
+                const isSaved = this.classList.contains('bg-red-100');
+
+                fetch('/jobs/save-job/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        job_id: jobId,
+                        action: isSaved ? 'unsave' : 'save'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update button state
+                        if (isSaved) {
+                            this.classList.remove('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+                            this.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                            this.querySelector('i').classList.remove('fas');
+                            this.querySelector('i').classList.add('far');
+                            this.querySelector('span').textContent = 'Save Job';
+                        } else {
+                            this.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                            this.classList.add('bg-red-100', 'text-red-700', 'hover:bg-red-200');
+                            this.querySelector('i').classList.remove('far');
+                            this.querySelector('i').classList.add('fas');
+                            this.querySelector('span').textContent = 'Saved';
+                        }
+
+                        // Show toast notification
+                        showToast(isSaved ? 'Job removed from saved jobs' : 'Job saved successfully',
+                                 isSaved ? 'info' : 'success');
+                    } else {
+                        showToast(data.error || 'An error occurred', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('An error occurred. Please try again.', 'error');
+                });
+            });
+        }
+
+        // Resume upload toggle
+        const useProfileResumeCheckbox = document.getElementById('id_use_profile_resume');
+        const resumeUploadField = document.getElementById('resume-upload-field');
+
+        if (useProfileResumeCheckbox && resumeUploadField) {
+            useProfileResumeCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    resumeUploadField.classList.add('hidden');
+                } else {
+                    resumeUploadField.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Job application form submission
+        const applicationForm = document.getElementById('job-application-form');
+        const loadingOverlay = document.getElementById('application-loading');
+
+        if (applicationForm && loadingOverlay) {
+            applicationForm.addEventListener('submit', function(e) {
+                // Basic form validation
+                const resumeInput = document.getElementById('id_resume');
+                const useProfileResume = document.getElementById('id_use_profile_resume');
+                const coverLetterInput = document.getElementById('id_cover_letter');
+
+                let isValid = true;
+
+                // Check if resume is required and provided
+                if (!useProfileResume || !useProfileResume.checked) {
+                    if (resumeInput && resumeInput.required && !resumeInput.files.length) {
+                        isValid = false;
+                        showToast('Please upload a resume', 'error');
+                    }
+                }
+
+                // Check if cover letter is required and provided
+                if (coverLetterInput && coverLetterInput.required && !coverLetterInput.value.trim()) {
+                    isValid = false;
+                    showToast('Please provide a cover letter', 'error');
+                }
+
+                if (isValid) {
+                    // Show loading overlay
+                    loadingOverlay.classList.remove('hidden');
+
+                    // Let the form submit normally
+                    return true;
+                } else {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+
+        // Dynamic loading of similar jobs
+        function loadSimilarJobs(jobId, categoryId) {
+            fetch(`/jobs/api/similar-jobs/${jobId}/?category=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const similarJobsList = document.getElementById('similar-jobs-list');
+                    if (similarJobsList && data.jobs && data.jobs.length > 0) {
+                        // Clear existing content
+                        similarJobsList.innerHTML = '';
+
+                        // Add new jobs
+                        data.jobs.forEach(job => {
+                            const jobElement = document.createElement('div');
+                            jobElement.className = 'border-b pb-4 last:border-b-0 last:pb-0 hover:bg-blue-50 transition-colors duration-200 -mx-4 px-4';
+
+                            let salaryText = '';
+                            if (job.salary_min && job.salary_max) {
+                                salaryText = `$${job.salary_min} - $${job.salary_max}`;
+                            } else if (job.salary_min) {
+                                salaryText = `$${job.salary_min}+`;
+                            }
+
+                            jobElement.innerHTML = `
+                                <h3 class="font-semibold mb-1">
+                                    <a href="/jobs/${job.slug}/" class="text-gray-800 hover:text-blue-600">${job.title}</a>
+                                </h3>
+
+                                <div class="flex items-center mb-1">
+                                    <a href="/jobs/company/${job.company_slug}/" class="text-blue-600 hover:text-blue-800 text-sm">
+                                        ${job.company_name}
+                                    </a>
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 text-sm text-gray-600 mb-2">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-map-marker-alt mr-1 text-gray-400"></i>
+                                        <span>${job.location}</span>
+                                    </div>
+
+                                    <div class="flex items-center">
+                                        <i class="fas fa-briefcase mr-1 text-gray-400"></i>
+                                        <span>${job.job_type}</span>
+                                    </div>
+                                </div>
+
+                                ${salaryText ? `<p class="text-green-600 text-sm font-medium">${salaryText}</p>` : ''}
+                            `;
+
+                            similarJobsList.appendChild(jobElement);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading similar jobs:', error);
+                });
+        }
+
+        // Uncomment this when you have the API endpoint ready
+        // const currentJobId = '{{ job.id }}';
+        // const categoryId = '{{ job.category.id }}';
+        // if (currentJobId && categoryId) {
+        //     loadSimilarJobs(currentJobId, categoryId);
+        // }
+    });
+
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'fixed bottom-4 right-4 z-50 flex flex-col space-y-2';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = 'rounded-md p-4 shadow-lg transform transition-all duration-300 translate-x-full';
+
+        // Set background color based on type
+        if (type === 'success') {
+            toast.classList.add('bg-green-100', 'border-l-4', 'border-green-500', 'text-green-700');
+        } else if (type === 'error') {
+            toast.classList.add('bg-red-100', 'border-l-4', 'border-red-500', 'text-red-700');
+        } else if (type === 'warning') {
+            toast.classList.add('bg-yellow-100', 'border-l-4', 'border-yellow-500', 'text-yellow-700');
+        } else {
+            toast.classList.add('bg-blue-100', 'border-l-4', 'border-blue-500', 'text-blue-700');
+        }
+
+        // Add message
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+                <button class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        // Add to container
+        toastContainer.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+            toast.classList.remove('translate-x-full');
+            toast.classList.add('translate-x-0');
+        }, 10);
+
+        // Add close button functionality
+        const closeButton = toast.querySelector('button');
+        closeButton.addEventListener('click', () => {
+            removeToast(toast);
+        });
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            removeToast(toast);
+        }, 3000);
+    }
+
+    function removeToast(toast) {
+        toast.classList.remove('translate-x-0');
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }
+</script>
+{% endblock %}

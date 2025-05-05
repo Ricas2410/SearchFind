@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Optimize Job Requirements" %} | SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "AI Job Requirements Optimization" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Make your job requirements more effective and inclusive" %}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Submit Your Job Requirements" %}</h2>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-600 mb-6">
+                    {% trans "Paste your job requirements below and our AI will analyze them to provide optimization suggestions." %}
+                </p>
+
+                <form method="post" action="{% url 'subscriptions:optimize_requirements' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-6">
+                        <label for="requirements" class="block text-sm font-medium text-gray-700 mb-2">{% trans "Job Requirements" %}</label>
+                        <textarea id="requirements" name="requirements" rows="10" class="w-full p-3 border border-gray-300 rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required placeholder="{% trans 'Enter your job requirements here. One requirement per line is recommended.' %}"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-300 flex items-center">
+                            <i class="fas fa-magic mr-2"></i> {% trans "Optimize Requirements" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Best Practices for Job Requirements" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-4">{% trans "Be Inclusive" %}</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Focus on skills rather than years of experience" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Use gender-neutral language" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Avoid industry jargon and acronyms" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Consider 'equivalent experience' as an alternative to degrees" %}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-4">{% trans "Be Specific" %}</h3>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Clearly separate 'must-have' from 'nice-to-have' skills" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Focus on what the candidate will do, not just what they need to have" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Be realistic about requirements - avoid 'unicorn' candidates" %}</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                <span>{% trans "Limit requirements to 5-7 essential ones" %}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

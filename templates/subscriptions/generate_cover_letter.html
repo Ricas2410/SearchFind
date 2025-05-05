@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Generate Cover Letter" %} | SearchFind{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">{% trans "AI Cover Letter Generator" %}</h1>
+            <p class="text-gray-600 mt-2">{% trans "Create a professional cover letter tailored to this job" %}</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-8">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Job Details" %}</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-4">{% trans "Job Information" %}</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-sm text-gray-500">{% trans "Title" %}</p>
+                                <p class="font-medium">{{ job.title }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">{% trans "Company" %}</p>
+                                <p class="font-medium">{{ job.company.name }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">{% trans "Location" %}</p>
+                                <p class="font-medium">{{ job.location }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-4">{% trans "Required Skills" %}</h3>
+                        <div class="flex flex-wrap gap-2">
+                            {% for skill in job.get_skills_as_list %}
+                                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+            <div class="p-6 bg-blue-50 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">{% trans "Generate Cover Letter" %}</h2>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-600 mb-6">
+                    {% trans "Our AI will generate a professional cover letter tailored to this job based on your profile information. You'll be able to edit and customize the result." %}
+                </p>
+
+                <form method="post" action="{% url 'subscriptions:generate_cover_letter' job_id=job.id %}">
+                    {% csrf_token %}
+                    
+                    <div class="flex justify-center mt-6">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-300 flex items-center">
+                            <i class="fas fa-magic mr-2"></i> {% trans "Generate Cover Letter" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{% url 'jobs:job_detail' slug=job.slug %}" class="text-blue-600 hover:text-blue-800">
+                <i class="fas fa-arrow-left mr-1"></i> {% trans "Back to Job Details" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
