@@ -57,4 +57,31 @@ staticfiles/
 
 # Backup files
 *.bak
+*.backup
+db.sqlite3.bak*
 backups/
+
+# Deployment files
+*.md
+!README.md
+Procfile
+pythonanywhere_wsgi.py
+searchfind_pythonanywhere_wsgi.py
+runtime.txt
+
+# Temporary files
+fixtures_temp/
+*.sql
+fix_migrations.py
+data.json
+*.json
+!package.json
+!package-lock.json
+
+# Batch files and scripts
+*.bat
+download_sample_images.py
+test_*.py
+
+# Stack dumps
+*.stackdump
